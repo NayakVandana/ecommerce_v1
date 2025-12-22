@@ -16,7 +16,6 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
-.env
 .DS_Store
 /DEVSENSE
 laravel-echo-server.json
