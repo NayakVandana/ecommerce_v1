@@ -35,7 +35,7 @@ class AdminCategoryController extends Controller
             'id' => 'required|exists:categories,id',
         ]);
 
-        $category = Category::with('products')->findOrFail($request->id);
+        $category = Category::findOrFail($request->id);
 
         return $this->sendJsonResponse(true, 'Category fetched successfully', $category, 200);
     }

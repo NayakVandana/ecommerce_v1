@@ -5,45 +5,34 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductVariation;
+use App\Models\Cart;
+use App\Services\SessionTrackingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CartApiController extends Controller
 {
     public function index(Request $request)
     {
-        $cart = $request->user()->cartItems ?? [];
-        $items = [];
-        $total = 0;
+        [$userId, $sessionId] = $this->resolveOwner($request, true);
 
-        foreach ($cart as $item) {
-            $product = Product::with(['media' => function($q) {
-                $q->where('is_primary', true)->orWhere('type', 'image')->orderBy('sort_order');
-            }])->find($item['product_id']);
-            
-            if ($product) {
-                $variation = null;
-                if (isset($item['variation_id'])) {
-                    $variation = ProductVariation::find($item['variation_id']);
-                }
-                
-                $price = $product->final_price ?? $product->price;
-                $quantity = $item['quantity'] ?? 1;
-                $subtotal = $price * $quantity;
-                
-                $items[] = [
-                    'id' => $item['product_id'],
-                    'product' => $product,
-                    'variation' => $variation,
-                    'quantity' => $quantity,
-                    'subtotal' => $subtotal,
-                ];
-                $total += $subtotal;
-            }
-        }
+        $cartItems = $this->getOwnerCartQuery($userId, $sessionId)
+            ->with([
+                'product' => function($q) {
+                    $q->with(['media' => function($media) {
+                        $media->where('is_primary', true)->orWhere('type', 'image')->orderBy('sort_order');
+                    }]);
+                },
+                'variation'
+            ])
+            ->get();
+
+        $formatted = $this->formatCart($cartItems);
 
         return $this->sendJsonResponse(true, 'Cart fetched successfully', [
-            'items' => $items,
-            'total' => $total,
+            'items' => $formatted['items'],
+            'total' => $formatted['total'],
+            'session_id' => $sessionId,
         ], 200);
     }
 
@@ -71,45 +60,49 @@ class CartApiController extends Controller
 
         // In a real app, you'd use a Cart model/database table
         // For now, this is a simplified version
-        $cart = $request->user()->cartItems ?? [];
+        [$userId, $sessionId] = $this->resolveOwner($request, true);
+
+        $identifiers = $userId ? ['user_id' => $userId] : ['session_id' => $sessionId];
+
         $productId = $request->product_id;
-        $quantity = $request->quantity;
         $variationId = $request->variation_id;
+        $quantity = $request->quantity;
 
-        // Check if same product with same variation already exists
-        $found = false;
-        foreach ($cart as $key => $item) {
-            if ($item['product_id'] == $productId && 
-                ($item['variation_id'] ?? null) == $variationId) {
-                $cart[$key]['quantity'] += $quantity;
-                $found = true;
-                break;
-            }
-        }
+        // Upsert cart item with unique constraint
+        DB::transaction(function () use ($identifiers, $productId, $variationId, $quantity, $request) {
+            $cartItem = Cart::where($identifiers)
+                ->where('product_id', $productId)
+                ->where('variation_id', $variationId)
+                ->first();
 
-        if (!$found) {
-            $cartItem = [
-                'product_id' => $productId,
-                'quantity' => $quantity,
-            ];
-            
-            if ($variationId) {
-                $cartItem['variation_id'] = $variationId;
+            if ($cartItem) {
+                $cartItem->quantity += $quantity;
+                $cartItem->save();
+            } else {
+                Cart::create(array_merge($identifiers, [
+                    'product_id' => $productId,
+                    'variation_id' => $variationId,
+                    'size' => $request->size,
+                    'color' => $request->color,
+                    'quantity' => $quantity,
+                ]));
             }
-            if ($request->size) {
-                $cartItem['size'] = $request->size;
-            }
-            if ($request->color) {
-                $cartItem['color'] = $request->color;
-            }
-            
-            $cart[] = $cartItem;
-        }
+        });
 
-        // Save to user's cart (you'd implement this with a Cart model)
-        // $request->user()->update(['cart_items' => $cart]);
+        // Return updated cart
+        $cartItems = $this->getOwnerCartQuery($userId, $sessionId)
+            ->with(['product.media' => function($q) {
+                $q->where('is_primary', true)->orWhere('type', 'image')->orderBy('sort_order');
+            }, 'variation'])
+            ->get();
 
-        return $this->sendJsonResponse(true, 'Product added to cart', $cart, 200);
+        $formatted = $this->formatCart($cartItems);
+
+        return $this->sendJsonResponse(true, 'Product added to cart', [
+            'items' => $formatted['items'],
+            'total' => $formatted['total'],
+            'session_id' => $sessionId,
+        ], 200);
     }
 
     public function update(Request $request)
@@ -117,38 +110,132 @@ class CartApiController extends Controller
         $request->validate([
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
+            'variation_id' => 'nullable|exists:product_variations,id',
         ]);
 
-        $cart = $request->user()->cartItems ?? [];
+        [$userId, $sessionId] = $this->resolveOwner($request, false);
+        $identifiers = $userId ? ['user_id' => $userId] : ['session_id' => $sessionId];
 
-        foreach ($cart as $key => $item) {
-            if ($item['product_id'] == $request->product_id) {
-                $cart[$key]['quantity'] = $request->quantity;
-                break;
-            }
-        }
+        Cart::where($identifiers)
+            ->where('product_id', $request->product_id)
+            ->where('variation_id', $request->variation_id)
+            ->update(['quantity' => $request->quantity]);
 
-        return $this->sendJsonResponse(true, 'Cart updated successfully', $cart, 200);
+        $cartItems = $this->getOwnerCartQuery($userId, $sessionId)
+            ->with(['product.media' => function($q) {
+                $q->where('is_primary', true)->orWhere('type', 'image')->orderBy('sort_order');
+            }, 'variation'])
+            ->get();
+
+        $formatted = $this->formatCart($cartItems);
+
+        return $this->sendJsonResponse(true, 'Cart updated successfully', [
+            'items' => $formatted['items'],
+            'total' => $formatted['total'],
+            'session_id' => $sessionId,
+        ], 200);
     }
 
     public function remove(Request $request)
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
+            'variation_id' => 'nullable|exists:product_variations,id',
         ]);
 
-        $cart = $request->user()->cartItems ?? [];
+        [$userId, $sessionId] = $this->resolveOwner($request, false);
+        $identifiers = $userId ? ['user_id' => $userId] : ['session_id' => $sessionId];
 
-        $cart = array_filter($cart, function ($item) use ($request) {
-            return $item['product_id'] != $request->product_id;
-        });
+        Cart::where($identifiers)
+            ->where('product_id', $request->product_id)
+            ->where('variation_id', $request->variation_id)
+            ->delete();
 
-        return $this->sendJsonResponse(true, 'Product removed from cart', array_values($cart), 200);
+        $cartItems = $this->getOwnerCartQuery($userId, $sessionId)
+            ->with(['product.media' => function($q) {
+                $q->where('is_primary', true)->orWhere('type', 'image')->orderBy('sort_order');
+            }, 'variation'])
+            ->get();
+
+        $formatted = $this->formatCart($cartItems);
+
+        return $this->sendJsonResponse(true, 'Product removed from cart', [
+            'items' => $formatted['items'],
+            'total' => $formatted['total'],
+            'session_id' => $sessionId,
+        ], 200);
     }
 
     public function clear(Request $request)
     {
-        return $this->sendJsonResponse(true, 'Cart cleared successfully', [], 200);
+        [$userId, $sessionId] = $this->resolveOwner($request, false);
+        $identifiers = $userId ? ['user_id' => $userId] : ['session_id' => $sessionId];
+
+        Cart::where($identifiers)->delete();
+
+        return $this->sendJsonResponse(true, 'Cart cleared successfully', [
+            'items' => [],
+            'total' => 0,
+            'session_id' => $sessionId,
+        ], 200);
+    }
+
+    /**
+     * Helper: format cart response
+     */
+    private function formatCart($cartItems)
+    {
+        $items = [];
+        $total = 0;
+
+        foreach ($cartItems as $item) {
+            if (!$item->product) {
+                continue;
+            }
+
+            $price = $item->product->final_price ?? $item->product->price;
+            $quantity = $item->quantity ?? 1;
+            $subtotal = $price * $quantity;
+
+            $items[] = [
+                'id' => $item->id,
+                'product' => $item->product,
+                'variation' => $item->variation,
+                'quantity' => $quantity,
+                'subtotal' => $subtotal,
+            ];
+            $total += $subtotal;
+        }
+
+        return ['items' => $items, 'total' => $total];
+    }
+
+    /**
+     * Helper: resolve owner (user or guest session)
+     */
+    private function resolveOwner(Request $request, bool $createSessionIfMissing = true): array
+    {
+        $userId = $request->user()?->id;
+        $sessionId = $request->input('session_id') ?? SessionTrackingService::getSessionIdFromRequest($request);
+
+        if (!$userId && !$sessionId && $createSessionIfMissing) {
+            $session = SessionTrackingService::getOrCreateSession($request);
+            $sessionId = $session->session_id;
+        }
+
+        return [$userId, $sessionId];
+    }
+
+    /**
+     * Helper: base cart query for owner
+     */
+    private function getOwnerCartQuery($userId, $sessionId)
+    {
+        if ($userId) {
+            return Cart::where('user_id', $userId);
+        }
+
+        return Cart::where('session_id', $sessionId);
     }
 }
 

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+Route::prefix('admin')->middleware(['auth.token', 'admin'])->group(function () {
     
     // Dashboard
     Route::post('/dashboard', [AdminDashboardController::class, 'index']);

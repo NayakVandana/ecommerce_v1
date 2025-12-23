@@ -1,8 +1,10 @@
 import AppLayout from '../Layouts/AppLayout';
 import { Link, usePage } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useProductStore } from './useProductStore';
 import { useCartStore } from '../Cart/useCartStore';
+import ImageGallery from 'react-image-gallery';
+import 'react-image-gallery/styles/css/image-gallery.css';
 
 export default function Show() {
     const { props } = usePage();
@@ -10,7 +12,6 @@ export default function Show() {
     const [product, setProduct] = useState<any>(null);
     const [quantity, setQuantity] = useState(1);
     const [selectedVariation, setSelectedVariation] = useState<any>(null);
-    const [selectedImage, setSelectedImage] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [addingToCart, setAddingToCart] = useState(false);
 
@@ -27,12 +28,6 @@ export default function Show() {
             if (response.data?.status && response.data?.data) {
                 const productData = response.data.data;
                 setProduct(productData);
-                
-                // Set default selected image
-                if (productData.media && productData.media.length > 0) {
-                    const primaryImage = productData.media.find((m: any) => m.is_primary) || productData.media[0];
-                    setSelectedImage(primaryImage);
-                }
                 
                 // Set default variation if available
                 if (productData.variations && productData.variations.length > 0) {
@@ -81,6 +76,49 @@ export default function Show() {
         }
     };
 
+    // Prepare images for react-image-gallery (must be before conditional returns)
+    const galleryImages = useMemo(() => {
+        if (!product?.media || product.media.length === 0) {
+            return [{
+                original: '/placeholder-image.png',
+                thumbnail: '/placeholder-image.png',
+                originalAlt: product?.product_name || 'Product',
+                thumbnailAlt: product?.product_name || 'Product',
+            }];
+        }
+
+        // Sort media by is_primary first, then by sort_order
+        const sortedMedia = [...product.media].sort((a: any, b: any) => {
+            if (a.is_primary && !b.is_primary) return -1;
+            if (!a.is_primary && b.is_primary) return 1;
+            return (a.sort_order || 0) - (b.sort_order || 0);
+        });
+
+        // First available image to use as thumbnail fallback for videos/empties
+        const fallbackImageUrl =
+            sortedMedia.find((m: any) => m.type !== 'video')?.url ||
+            sortedMedia.find((m: any) => m.type !== 'video')?.file_path ||
+            '/placeholder-image.png';
+
+        return sortedMedia.map((media: any) => {
+            const isVideo = media.type === 'video';
+            const mediaUrl = media.url || media.file_path || (isVideo ? '' : '/placeholder-image.png');
+            const thumbnailUrl = isVideo
+                ? fallbackImageUrl // use an image thumbnail for videos
+                : mediaUrl || fallbackImageUrl;
+            
+            return {
+                original: isVideo ? (mediaUrl || fallbackImageUrl) : (mediaUrl || fallbackImageUrl),
+                thumbnail: thumbnailUrl,
+                originalAlt: product.product_name,
+                thumbnailAlt: product.product_name,
+                description: media.color ? `Color: ${media.color}` : undefined,
+                // Store media type for renderItem to use
+                mediaType: media.type,
+            };
+        });
+    }, [product]);
+
     if (loading) {
         return (
             <AppLayout>
@@ -108,77 +146,98 @@ export default function Show() {
                     ← Back to Products
                 </Link>
 
-                <div className="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div className="md:flex">
-                        <div className="md:w-1/2">
-                            {/* Main Image */}
-                            <div className="h-96 bg-gray-200 flex items-center justify-center mb-4">
-                                {selectedImage ? (
-                                    <img 
-                                        src={selectedImage.url || selectedImage.file_path} 
-                                        alt={product.product_name} 
-                                        className="h-full w-full object-cover" 
-                                    />
-                                ) : (
-                                    <span className="text-gray-400">No Image</span>
-                                )}
-                            </div>
-                            
-                            {/* Image Gallery */}
-                            {product.media && product.media.length > 1 && (
-                                <div className="grid grid-cols-4 gap-2">
-                                    {product.media.map((media: any) => (
-                                        <button
-                                            key={media.id}
-                                            onClick={() => setSelectedImage(media)}
-                                            className={`h-20 border-2 rounded overflow-hidden ${
-                                                selectedImage?.id === media.id ? 'border-indigo-600' : 'border-gray-200'
-                                            }`}
-                                        >
-                                            <img 
-                                                src={media.url || media.file_path} 
-                                                alt={product.product_name}
-                                                className="h-full w-full object-cover"
+                <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div className="md:flex md:gap-8">
+                        {/* Left Section - Image Gallery */}
+                        <div className="md:w-2/5 lg:w-1/2 p-6">
+                            <div className="sticky top-4">
+                                <ImageGallery
+                                    items={galleryImages}
+                                    showPlayButton={false}
+                                    showFullscreenButton={true}
+                                    showThumbnails={galleryImages.length > 1}
+                                    thumbnailPosition="bottom"
+                                    lazyLoad={true}
+                                    slideInterval={3000}
+                                    slideDuration={450}
+                                    showNav={true}
+                                    showBullets={false}
+                                    autoPlay={false}
+                                    disableSwipe={false}
+                                    useBrowserFullscreen={true}
+                                    additionalClass="product-gallery"
+                                    renderItem={(item: any) => {
+                                        // Check if this is a video using the mediaType stored in the item
+                                        if (item.mediaType === 'video') {
+                                            return (
+                                                <div className="image-gallery-image">
+                                                    <video
+                                                        src={item.original}
+                                                        controls
+                                                        className="w-full h-auto max-h-[600px] object-contain mx-auto"
+                                                        style={{ maxHeight: '600px' }}
+                                                        preload="metadata"
+                                                    >
+                                                        Your browser does not support the video tag.
+                                                    </video>
+                                                </div>
+                                            );
+                                        }
+                                        
+                                        // Default image rendering
+                                        return (
+                                            <img
+                                                src={item.original}
+                                                alt={item.originalAlt || product.product_name}
+                                                className="image-gallery-image"
                                             />
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
+                                        );
+                                    }}
+                                />
+                            </div>
                         </div>
-                        <div className="md:w-1/2 p-8">
-                            <h1 className="text-3xl font-bold mb-2">{product.product_name}</h1>
+                        
+                        {/* Right Section - Product Details */}
+                        <div className="md:w-3/5 lg:w-1/2 p-6 md:p-8">
+                            {/* Product Title */}
+                            <h1 className="text-3xl font-bold text-gray-900 mb-3">{product.product_name}</h1>
+                            
+                            {/* Brand */}
                             {product.brand && (
-                                <p className="text-gray-500 mb-2">Brand: {product.brand}</p>
+                                <p className="text-gray-600 mb-2 text-base">Brand: <span className="font-medium">{product.brand}</span></p>
                             )}
+                            
+                            {/* SKU */}
                             {product.sku && (
-                                <p className="text-xs text-gray-400 mb-4">SKU: {product.sku}</p>
+                                <p className="text-xs text-gray-400 mb-6">SKU: {product.sku}</p>
                             )}
                             
                             {/* Price Section */}
-                            <div className="mb-4">
-                                <div className="flex items-center gap-3">
+                            <div className="mb-6">
+                                <div className="flex items-center gap-3 flex-wrap">
                                     <p className="text-3xl font-bold text-indigo-600">
-                                        ${product.final_price || product.price}
+                                        ${Number(product.final_price || product.price || 0).toFixed(2)}
                                     </p>
-                                    {product.mrp && product.mrp > (product.final_price || product.price) && (
+                                    {product.mrp && Number(product.mrp) > Number(product.final_price || product.price || 0) && (
                                         <>
-                                            <p className="text-xl text-gray-400 line-through">${product.mrp}</p>
+                                            <p className="text-xl text-gray-400 line-through">${Number(product.mrp).toFixed(2)}</p>
                                             {product.discount_percent > 0 && (
-                                                <span className="bg-red-500 text-white px-2 py-1 rounded text-sm font-bold">
-                                                    {product.discount_percent}% OFF
+                                                <span className="bg-red-500 text-white px-3 py-1 rounded-md text-sm font-bold">
+                                                    {Number(product.discount_percent).toFixed(2)}% OFF
                                                 </span>
                                             )}
                                         </>
                                     )}
                                 </div>
                                 {product.gst > 0 && (
-                                    <p className="text-sm text-gray-500 mt-1">
+                                    <p className="text-sm text-gray-500 mt-2">
                                         Inclusive of {product.gst}% GST
                                     </p>
                                 )}
                             </div>
                             
-                            <p className="text-gray-600 mb-6">{product.description}</p>
+                            {/* Description */}
+                            <p className="text-gray-700 mb-8 leading-relaxed">{product.description}</p>
                             
                             {/* Features */}
                             {product.features && Array.isArray(product.features) && product.features.length > 0 && (
@@ -195,21 +254,21 @@ export default function Show() {
                             {/* Variations */}
                             {product.variations && product.variations.length > 0 && (
                                 <div className="mb-6">
-                                    <h3 className="font-semibold mb-2">Available Variations:</h3>
-                                    <div className="space-y-2">
+                                    <h3 className="font-semibold text-gray-900 mb-3">Available Variations:</h3>
+                                    <div className="flex flex-wrap gap-2">
                                         {product.variations.map((variation: any) => (
                                             <button
                                                 key={variation.id}
                                                 onClick={() => setSelectedVariation(variation)}
-                                                className={`mr-2 px-4 py-2 border rounded ${
+                                                className={`px-4 py-2.5 border-2 rounded-lg transition-all ${
                                                     selectedVariation?.id === variation.id
-                                                        ? 'border-indigo-600 bg-indigo-50'
-                                                        : 'border-gray-300 hover:border-indigo-400'
+                                                        ? 'border-indigo-600 bg-indigo-50 text-indigo-900 font-medium'
+                                                        : 'border-gray-300 hover:border-indigo-400 bg-white text-gray-700'
                                                 }`}
                                             >
-                                                {variation.size && <span>Size: {variation.size} </span>}
-                                                {variation.color && <span>Color: {variation.color} </span>}
-                                                <span className="text-xs text-gray-500">
+                                                {variation.size && <span className="mr-1">Size: {variation.size}</span>}
+                                                {variation.color && <span className="mr-1">Color: {variation.color}</span>}
+                                                <span className="text-xs text-gray-500 ml-1">
                                                     ({variation.stock_quantity} in stock)
                                                 </span>
                                             </button>
@@ -241,38 +300,49 @@ export default function Show() {
                                 ) : null}
                             </div>
 
+                            {/* Quantity Selector */}
                             <div className="mb-6">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-3">Quantity</label>
                                 <div className="flex items-center space-x-4">
                                     <button
                                         onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                                        className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                                        className="px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors font-semibold text-lg"
                                     >
                                         -
                                     </button>
-                                    <span className="text-lg font-semibold">{quantity}</span>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        value={quantity}
+                                        onChange={(e) => {
+                                            const val = parseInt(e.target.value) || 1;
+                                            setQuantity(Math.max(1, val));
+                                        }}
+                                        className="w-20 px-4 py-2 border-2 border-gray-300 rounded-lg text-center text-lg font-semibold focus:outline-none focus:border-indigo-600"
+                                    />
                                     <button
                                         onClick={() => setQuantity(quantity + 1)}
-                                        className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+                                        className="px-4 py-2 border-2 border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors font-semibold text-lg"
                                     >
                                         +
                                     </button>
                                 </div>
                             </div>
 
+                            {/* Add to Cart Button */}
                             <button
                                 onClick={addToCart}
                                 disabled={addingToCart || (selectedVariation ? !selectedVariation.in_stock : (product.total_quantity !== null && product.total_quantity === 0))}
-                                className="w-full bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full bg-indigo-600 text-white px-6 py-4 rounded-lg font-semibold text-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
                             >
                                 {addingToCart ? 'Adding...' : 'Add to Cart'}
                             </button>
                             
                             {/* Hashtags */}
                             {product.hashtags && (
-                                <div className="mt-4">
+                                <div className="mt-6 pt-6 border-t border-gray-200">
                                     <p className="text-sm text-gray-500">
-                                        Tags: {product.hashtags}
+                                        Tags: <span className="text-indigo-600">{product.hashtags}</span>
                                     </p>
                                 </div>
                             )}

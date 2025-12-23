@@ -7,7 +7,8 @@ import {
     HomeIcon,
     Squares2X2Icon,
     TagIcon,
-    ArrowRightOnRectangleIcon
+    ArrowRightOnRectangleIcon,
+    ShieldCheckIcon
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/Pages/Auth/useAuthStore';
@@ -141,6 +142,16 @@ export default function Navigation() {
                         </Link>
                         {currentUser ? (
                             <div className="flex items-center space-x-2">
+                                {currentUser.role === 'admin' && (
+                                    <Link
+                                        href="/admin"
+                                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
+                                        title="Admin Panel"
+                                    >
+                                        <ShieldCheckIcon className="h-6 w-6 mr-2" />
+                                        <span className="hidden md:inline">Admin</span>
+                                    </Link>
+                                )}
                                 <Link
                                     href="/orders"
                                     className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
@@ -213,6 +224,16 @@ export default function Navigation() {
                         </Link>
                         {currentUser ? (
                             <>
+                                {currentUser.role === 'admin' && (
+                                    <Link
+                                        href="/admin"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600"
+                                    >
+                                        <ShieldCheckIcon className="h-5 w-5 mr-3" />
+                                        Admin Panel
+                                    </Link>
+                                )}
                                 <Link
                                     href="/orders"
                                     onClick={() => setMobileMenuOpen(false)}

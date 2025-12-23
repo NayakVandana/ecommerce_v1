@@ -103,6 +103,29 @@ Route::get('/terms', function () {
 |
 */
 
+// Admin Routes
+Route::prefix('admin')->group(function () {
+    Route::get('/', function () {
+        return Inertia::render('Admin/Dashboard/index');
+    })->name('admin.dashboard');
+    
+    Route::get('/products', function () {
+        return Inertia::render('Admin/Product/index');
+    })->name('admin.products');
+    
+    Route::get('/categories', function () {
+        return Inertia::render('Admin/Category/index');
+    })->name('admin.categories');
+    
+    Route::get('/orders', function () {
+        return Inertia::render('Admin/Order/index');
+    })->name('admin.orders');
+    
+    Route::get('/users', function () {
+        return Inertia::render('Admin/User/index');
+    })->name('admin.users');
+});
+
 // Guest Routes (only accessible when not authenticated)
 Route::middleware('guest')->group(function () {
     Route::get('/login', function () {

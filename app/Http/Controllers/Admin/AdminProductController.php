@@ -10,17 +10,18 @@ class AdminProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::with('category');
+        $query = Product::with(['categoryRelation', 'media']);
 
         if ($request->has('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('product_name', 'like', '%' . $request->search . '%')
+                  ->orWhere('description', 'like', '%' . $request->search . '%');
         }
 
-        if ($request->has('status')) {
-            $query->where('status', $request->status);
+        if ($request->has('is_approve')) {
+            $query->where('is_approve', $request->is_approve);
         }
 
-        $products = $query->paginate(15);
+        $products = $query->orderBy('created_at', 'desc')->paginate(15);
 
         return $this->sendJsonResponse(true, 'Products fetched successfully', $products, 200);
     }
@@ -28,13 +29,12 @@ class AdminProductController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'product_name' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
-            'category_id' => 'required|exists:categories,id',
-            'stock' => 'required|integer|min:0',
-            'status' => 'required|in:active,inactive',
-            'image' => 'nullable|string',
+            'category' => 'required|exists:categories,id',
+            'total_quantity' => 'required|integer|min:0',
+            'is_approve' => 'sometimes|integer|in:0,1',
         ]);
 
         $product = Product::create($request->all());
@@ -48,7 +48,7 @@ class AdminProductController extends Controller
             'id' => 'required|exists:products,id',
         ]);
 
-        $product = Product::with('category')->findOrFail($request->id);
+        $product = Product::with(['categoryRelation', 'media', 'variations'])->findOrFail($request->id);
 
         return $this->sendJsonResponse(true, 'Product fetched successfully', $product, 200);
     }
@@ -57,13 +57,12 @@ class AdminProductController extends Controller
     {
         $request->validate([
             'id' => 'required|exists:products,id',
-            'name' => 'sometimes|string|max:255',
+            'product_name' => 'sometimes|string|max:255',
             'description' => 'sometimes|string',
             'price' => 'sometimes|numeric|min:0',
-            'category_id' => 'sometimes|exists:categories,id',
-            'stock' => 'sometimes|integer|min:0',
-            'status' => 'sometimes|in:active,inactive',
-            'image' => 'nullable|string',
+            'category' => 'sometimes|exists:categories,id',
+            'total_quantity' => 'sometimes|integer|min:0',
+            'is_approve' => 'sometimes|integer|in:0,1',
         ]);
 
         $product = Product::findOrFail($request->id);
@@ -91,7 +90,7 @@ class AdminProductController extends Controller
         ]);
 
         $product = Product::findOrFail($request->id);
-        $product->status = $product->status === 'active' ? 'inactive' : 'active';
+        $product->is_approve = $product->is_approve === 1 ? 0 : 1;
         $product->save();
 
         return $this->sendJsonResponse(true, 'Product status updated successfully', $product, 200);

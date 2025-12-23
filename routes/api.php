@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CategoryApiController;
 use App\Http\Controllers\Api\CartApiController;
 use App\Http\Controllers\Api\OrderApiController;
 use App\Http\Controllers\Api\AuthApiController;
+use App\Http\Controllers\Api\RecentlyViewedProductApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -37,8 +38,15 @@ Route::prefix('v1')->group(function () {
     Route::post('/categories', [CategoryApiController::class, 'index']);
     Route::post('/categories/show', [CategoryApiController::class, 'show']);
     
+    // Recently Viewed Products (public - works with session)
+    Route::prefix('recently-viewed')->group(function () {
+        Route::post('/', [RecentlyViewedProductApiController::class, 'index']);
+        Route::post('/clear', [RecentlyViewedProductApiController::class, 'clear']);
+        Route::post('/remove', [RecentlyViewedProductApiController::class, 'remove']);
+    });
+    
     // Protected Routes (require authentication)
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware('auth.token')->group(function () {
         
         // User Profile
         Route::post('/user', [AuthApiController::class, 'getUser']);

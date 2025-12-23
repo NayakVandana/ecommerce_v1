@@ -92,6 +92,11 @@ class Product extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function recentlyViewedProducts()
+    {
+        return $this->hasMany(RecentlyViewedProduct::class);
+    }
+
     // Helper method for backward compatibility
     public function getNameAttribute()
     {

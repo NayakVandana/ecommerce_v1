@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\RecentlyViewedProduct;
+use App\Services\SessionTrackingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProductApiController extends Controller
 {
@@ -59,6 +62,9 @@ class ProductApiController extends Controller
             'user'
         ])->findOrFail($request->id);
 
+        // Track recently viewed product
+        $this->trackRecentlyViewed($request, $product->id);
+
         return $this->sendJsonResponse(true, 'Product fetched successfully', $product, 200);
     }
 
@@ -83,5 +89,52 @@ class ProductApiController extends Controller
 
         return $this->sendJsonResponse(true, 'Products searched successfully', $products, 200);
     }
+
+    /**
+     * Track recently viewed product
+     */
+    private function trackRecentlyViewed(Request $request, $productId)
+    {
+        $userId = $request->user()?->id;
+        $sessionId = $request->input('session_id') ?? SessionTrackingService::getSessionIdFromRequest($request);
+
+        // Ensure we have either user_id or session_id
+        if (!$userId && !$sessionId) {
+            return;
+        }
+
+        // Use database transaction to handle unique constraint
+        try {
+            DB::transaction(function () use ($userId, $sessionId, $productId) {
+                if ($userId) {
+                    // For logged-in users, use user_id
+                    RecentlyViewedProduct::updateOrCreate(
+                        [
+                            'user_id' => $userId,
+                            'product_id' => $productId,
+                        ],
+                        [
+                            'viewed_at' => now(),
+                        ]
+                    );
+                } elseif ($sessionId) {
+                    // For guests, use session_id
+                    RecentlyViewedProduct::updateOrCreate(
+                        [
+                            'session_id' => $sessionId,
+                            'product_id' => $productId,
+                        ],
+                        [
+                            'viewed_at' => now(),
+                        ]
+                    );
+                }
+            });
+        } catch (\Exception $e) {
+            // Silently fail if there's a constraint violation
+            // This can happen in race conditions
+        }
+    }
+
 }
 
