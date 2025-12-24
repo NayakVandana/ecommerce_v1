@@ -92,11 +92,18 @@ class ProductApiController extends Controller
 
     /**
      * Track recently viewed product
+     * Automatically creates guest session if needed
      */
     private function trackRecentlyViewed(Request $request, $productId)
     {
         $userId = $request->user()?->id;
         $sessionId = $request->input('session_id') ?? SessionTrackingService::getSessionIdFromRequest($request);
+
+        // If no session exists for guest, create one
+        if (!$userId && !$sessionId) {
+            $session = SessionTrackingService::getOrCreateSession($request);
+            $sessionId = $session->session_id;
+        }
 
         // Ensure we have either user_id or session_id
         if (!$userId && !$sessionId) {

@@ -212,12 +212,17 @@ class CartApiController extends Controller
 
     /**
      * Helper: resolve owner (user or guest session)
+     * Session ID is automatically set by TrackSession middleware
      */
     private function resolveOwner(Request $request, bool $createSessionIfMissing = true): array
     {
         $userId = $request->user()?->id;
-        $sessionId = $request->input('session_id') ?? SessionTrackingService::getSessionIdFromRequest($request);
+        
+        // Session ID is set by TrackSession middleware, or from request input, or from Laravel session
+        $sessionId = $request->input('session_id') 
+            ?? SessionTrackingService::getSessionIdFromRequest($request);
 
+        // If no session exists and we need one, create it
         if (!$userId && !$sessionId && $createSessionIfMissing) {
             $session = SessionTrackingService::getOrCreateSession($request);
             $sessionId = $session->session_id;

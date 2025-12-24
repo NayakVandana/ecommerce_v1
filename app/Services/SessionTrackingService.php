@@ -54,11 +54,20 @@ class SessionTrackingService
         
         if ($sessionId) {
             Session::where('session_id', $sessionId)->update([
-                'user_id' => $userId,
+                'user_id' => $userId ?? Session::where('session_id', $sessionId)->value('user_id'),
                 'last_activity' => now(),
                 'ip_address' => $request->ip(),
             ]);
         }
+    }
+
+    /**
+     * Get session ID for guest (creates if doesn't exist)
+     */
+    public static function getGuestSessionId(Request $request): ?string
+    {
+        $session = self::getOrCreateSession($request);
+        return $session->session_id ?? null;
     }
 
     /**

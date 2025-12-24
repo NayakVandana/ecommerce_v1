@@ -44,15 +44,24 @@ export default function Register() {
         try {
             setProcessing(true);
             setErrors({});
+            
+            // Get session_id from localStorage to merge guest cart/recently viewed
+            const sessionId = localStorage.getItem('guest_session_id');
+            
             const response = await useAuthStore.register({
                 name: data.name,
                 email: data.email,
                 password: data.password,
                 password_confirmation: data.password_confirmation,
+                ...(sessionId && { session_id: sessionId }),
             });
             
             if (response.data?.status && response.data?.data?.token) {
                 localStorage.setItem('auth_token', response.data.data.token);
+                // Clear guest session_id after successful registration (cart/recently viewed merged to user account)
+                if (sessionId) {
+                    localStorage.removeItem('guest_session_id');
+                }
                 router.visit('/');
             }
         } catch (error: any) {

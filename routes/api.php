@@ -45,6 +45,15 @@ Route::prefix('v1')->group(function () {
         Route::post('/remove', [RecentlyViewedProductApiController::class, 'remove']);
     });
     
+    // Cart Routes (public - works with both authenticated users and guest sessions)
+    Route::prefix('cart')->group(function () {
+        Route::post('/', [CartApiController::class, 'index']);
+        Route::post('/add', [CartApiController::class, 'add']);
+        Route::post('/update', [CartApiController::class, 'update']);
+        Route::post('/remove', [CartApiController::class, 'remove']);
+        Route::post('/clear', [CartApiController::class, 'clear']);
+    });
+    
     // Protected Routes (require authentication)
     Route::middleware('auth.token')->group(function () {
         
@@ -52,15 +61,6 @@ Route::prefix('v1')->group(function () {
         Route::post('/user', [AuthApiController::class, 'getUser']);
         Route::post('/user/update', [AuthApiController::class, 'updateProfile']);
         Route::post('/logout', [AuthApiController::class, 'logout']);
-        
-        // Cart Routes
-        Route::prefix('cart')->group(function () {
-            Route::post('/', [CartApiController::class, 'index']);
-            Route::post('/add', [CartApiController::class, 'add']);
-            Route::post('/update', [CartApiController::class, 'update']);
-            Route::post('/remove', [CartApiController::class, 'remove']);
-            Route::post('/clear', [CartApiController::class, 'clear']);
-        });
         
         // Order Routes
         Route::prefix('orders')->group(function () {

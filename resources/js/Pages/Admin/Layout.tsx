@@ -49,6 +49,8 @@ export default function AdminLayout({ children, currentPath }: { children: React
         } finally {
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
+            // Clear guest session on logout
+            localStorage.removeItem('guest_session_id');
             router.visit('/');
         }
     };

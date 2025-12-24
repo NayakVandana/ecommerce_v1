@@ -11,16 +11,27 @@ class TrackSession
 {
     /**
      * Handle an incoming request.
+     * Automatically creates/updates guest sessions for cart and recently viewed products
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Track session activity
+        // Get or create session (works for both authenticated users and guests)
         $userId = $request->user()?->id;
-        SessionTrackingService::updateSessionActivity($request, $userId);
+        $session = SessionTrackingService::getOrCreateSession($request, $userId);
         
-        return $next($request);
+        // Attach session_id to request for easy access in controllers
+        $request->merge(['session_id' => $session->session_id]);
+        
+        $response = $next($request);
+        
+        // Add session_id to response headers for frontend to store
+        if (method_exists($response, 'header')) {
+            $response->header('X-Session-ID', $session->session_id);
+        }
+        
+        return $response;
     }
 }
 

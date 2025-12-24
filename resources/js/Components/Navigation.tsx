@@ -90,6 +90,8 @@ export default function Navigation() {
         } finally {
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
+            // Clear guest session on logout (backend will merge cart/recently viewed on login)
+            localStorage.removeItem('guest_session_id');
             setUser(null);
             router.visit('/');
         }

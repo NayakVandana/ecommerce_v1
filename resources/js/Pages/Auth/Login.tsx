@@ -35,9 +35,14 @@ export default function Login() {
         try {
             setProcessing(true);
             setErrors({});
+            
+            // Get session_id from localStorage to merge guest cart/recently viewed
+            const sessionId = localStorage.getItem('guest_session_id');
+            
             const response = await useAuthStore.login({
                 email: data.email,
                 password: data.password,
+                ...(sessionId && { session_id: sessionId }),
             });
             
             if (response.data?.status && response.data?.data?.token) {
@@ -45,6 +50,10 @@ export default function Login() {
                 // Store user data for immediate header update
                 if (response.data.data.user) {
                     localStorage.setItem('auth_user', JSON.stringify(response.data.data.user));
+                }
+                // Clear guest session_id after successful login (cart/recently viewed merged to user account)
+                if (sessionId) {
+                    localStorage.removeItem('guest_session_id');
                 }
                 // Force page reload to update header
                 window.location.href = '/';
