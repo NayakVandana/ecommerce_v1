@@ -26,18 +26,21 @@ export default function Index() {
         }
     };
 
-    const updateQuantity = async (productId: number, quantity: number) => {
+    const updateQuantity = async (item: any, quantity: number) => {
         if (quantity < 1) return;
         
         try {
-            setUpdating(productId);
+            setUpdating(item.id);
             const response = await useCartStore.update({
-                product_id: productId,
+                product_id: item.product?.id,
+                variation_id: item.variation?.id,
                 quantity: quantity,
             });
             
             if (response.data?.status) {
                 await fetchCart();
+                // Dispatch event to update cart count in navigation
+                window.dispatchEvent(new Event('cartUpdated'));
             }
         } catch (error) {
             console.error('Error updating cart:', error);
@@ -47,17 +50,20 @@ export default function Index() {
         }
     };
 
-    const removeItem = async (productId: number) => {
+    const removeItem = async (item: any) => {
         if (!confirm('Are you sure you want to remove this item from cart?')) return;
         
         try {
-            setUpdating(productId);
+            setUpdating(item.id);
             const response = await useCartStore.remove({
-                product_id: productId,
+                product_id: item.product?.id,
+                variation_id: item.variation?.id,
             });
             
             if (response.data?.status) {
                 await fetchCart();
+                // Dispatch event to update cart count in navigation
+                window.dispatchEvent(new Event('cartUpdated'));
             }
         } catch (error) {
             console.error('Error removing item:', error);
@@ -74,6 +80,8 @@ export default function Index() {
             const response = await useCartStore.clear();
             if (response.data?.status) {
                 setCart({ items: [], total: 0 });
+                // Dispatch event to update cart count in navigation
+                window.dispatchEvent(new Event('cartUpdated'));
             }
         } catch (error) {
             console.error('Error clearing cart:', error);
@@ -156,7 +164,7 @@ export default function Index() {
                                                     <div className="flex items-center justify-between mt-4">
                                                         <div className="flex items-center gap-2">
                                                             <button
-                                                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                                onClick={() => updateQuantity(item, item.quantity - 1)}
                                                                 disabled={updating === item.id || item.quantity <= 1}
                                                                 className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
                                                             >
@@ -164,7 +172,7 @@ export default function Index() {
                                                             </button>
                                                             <span className="w-12 text-center">{item.quantity}</span>
                                                             <button
-                                                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                                onClick={() => updateQuantity(item, item.quantity + 1)}
                                                                 disabled={updating === item.id}
                                                                 className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50"
                                                             >
@@ -182,7 +190,7 @@ export default function Index() {
                                                         </div>
                                                         
                                                         <button
-                                                            onClick={() => removeItem(item.id)}
+                                                            onClick={() => removeItem(item)}
                                                             disabled={updating === item.id}
                                                             className="text-red-600 hover:text-red-800 disabled:opacity-50"
                                                         >

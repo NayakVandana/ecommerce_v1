@@ -67,6 +67,8 @@ export default function Show() {
             
             if (response.data?.status) {
                 alert('Product added to cart successfully!');
+                // Dispatch event to update cart count in navigation
+                window.dispatchEvent(new Event('cartUpdated'));
             }
         } catch (error) {
             console.error('Error adding to cart:', error);

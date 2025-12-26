@@ -218,8 +218,10 @@ class CartApiController extends Controller
     {
         $userId = $request->user()?->id;
         
-        // Session ID is set by TrackSession middleware, or from request input, or from Laravel session
+        // Session ID is set by TrackSession middleware, or from request input/query, or from Laravel session
+        // Check both input (POST body) and query (GET params) for session_id
         $sessionId = $request->input('session_id') 
+            ?? $request->query('session_id')
             ?? SessionTrackingService::getSessionIdFromRequest($request);
 
         // If no session exists and we need one, create it

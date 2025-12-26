@@ -13,7 +13,16 @@ class SessionTrackingService
      */
     public static function getOrCreateSession(Request $request, $userId = null)
     {
-        $sessionId = $request->input('session_id') ?? self::getSessionIdFromRequest($request) ?? Str::random(40);
+        // Priority: 1. Request input (from frontend), 2. Laravel session, 3. Generate new one
+        $sessionId = $request->input('session_id') 
+            ?? $request->query('session_id')
+            ?? self::getSessionIdFromRequest($request);
+        
+        // Only create a new session_id if we don't have one
+        // This prevents creating multiple sessions for the same guest
+        if (!$sessionId) {
+            $sessionId = Str::random(40);
+        }
         
         // Try to find existing session
         $session = Session::where('session_id', $sessionId)->first();
@@ -35,11 +44,24 @@ class SessionTrackingService
             ]);
         } else {
             // Update existing session
-            $session->update([
-                'user_id' => $userId ?? $session->user_id,
+            // If userId is provided and session doesn't have a user_id, associate it
+            // If session already has a user_id, only update if the new userId matches (prevents hijacking)
+            $updateData = [
                 'last_activity' => now(),
                 'ip_address' => $request->ip(),
-            ]);
+            ];
+            
+            // Only update user_id if:
+            // 1. userId is provided AND
+            // 2. (session has no user_id OR session's user_id matches the provided userId)
+            if ($userId !== null) {
+                if ($session->user_id === null || $session->user_id === $userId) {
+                    $updateData['user_id'] = $userId;
+                }
+                // If session has a different user_id, don't overwrite it (security measure)
+            }
+            
+            $session->update($updateData);
         }
         
         return $session;

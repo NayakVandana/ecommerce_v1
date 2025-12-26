@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/Pages/Auth/useAuthStore';
+import { useCartStore } from '@/Pages/Cart/useCartStore';
 
 const navigation = [
     { name: 'Home', href: '/', icon: HomeIcon },
@@ -24,23 +25,36 @@ export default function Navigation() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [cartCount, setCartCount] = useState(0);
 
     useEffect(() => {
         checkAuth();
+        fetchCartCount();
         
         // Listen for storage changes (when login happens)
         const handleStorageChange = () => {
             checkAuth();
+            fetchCartCount();
         };
         
         window.addEventListener('storage', handleStorageChange);
         
         // Also check on focus (in case login happened in same tab)
         window.addEventListener('focus', checkAuth);
+        window.addEventListener('focus', fetchCartCount);
+        
+        // Listen for cart updates
+        const handleCartUpdate = () => {
+            fetchCartCount();
+        };
+        
+        window.addEventListener('cartUpdated', handleCartUpdate);
         
         return () => {
             window.removeEventListener('storage', handleStorageChange);
             window.removeEventListener('focus', checkAuth);
+            window.removeEventListener('focus', fetchCartCount);
+            window.removeEventListener('cartUpdated', handleCartUpdate);
         };
     }, []);
 
@@ -80,6 +94,24 @@ export default function Navigation() {
             setUser(null);
         }
         setLoading(false);
+    };
+
+    const fetchCartCount = async () => {
+        try {
+            const response = await useCartStore.list();
+            if (response.data?.status && response.data?.data?.items) {
+                // Sum up all quantities to get total cart count
+                const totalCount = response.data.data.items.reduce((sum: number, item: any) => {
+                    return sum + (item.quantity || 0);
+                }, 0);
+                setCartCount(totalCount);
+            } else {
+                setCartCount(0);
+            }
+        } catch (error) {
+            console.error('Error fetching cart count:', error);
+            setCartCount(0);
+        }
     };
 
     const handleLogout = async () => {
@@ -138,9 +170,11 @@ export default function Navigation() {
                             className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
                         >
                             <ShoppingCartIcon className="h-6 w-6" />
-                            <span className="absolute -top-1 -right-1 block h-4 w-4 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center">
-                                0
-                            </span>
+                            {cartCount > 0 && (
+                                <span className="absolute -top-1 -right-1 block min-w-[1rem] h-4 px-1 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center">
+                                    {cartCount > 99 ? '99+' : cartCount}
+                                </span>
+                            )}
                         </Link>
                         {currentUser ? (
                             <div className="flex items-center space-x-2">
@@ -223,6 +257,11 @@ export default function Navigation() {
                         >
                             <ShoppingCartIcon className="h-5 w-5 mr-3" />
                             Cart
+                            {cartCount > 0 && (
+                                <span className="ml-2 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-indigo-600 text-white text-xs">
+                                    {cartCount > 99 ? '99+' : cartCount}
+                                </span>
+                            )}
                         </Link>
                         {currentUser ? (
                             <>

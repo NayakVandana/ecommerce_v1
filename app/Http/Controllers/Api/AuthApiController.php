@@ -33,8 +33,27 @@ class AuthApiController extends Controller
         $deviceType = SessionTrackingService::detectDeviceType($request);
         $token = TokenService::createToken($user, $deviceType, $request->input('device_token'));
 
-        // Track session
-        SessionTrackingService::getOrCreateSession($request, $user->id);
+        // Get session_id from request (set by middleware or from frontend)
+        // The middleware already ran and created/retrieved a session, so session_id should be in the request
+        $sessionId = $request->input('session_id') 
+            ?? $request->query('session_id')
+            ?? SessionTrackingService::getSessionIdFromRequest($request);
+
+        // Update existing session to associate with user
+        // The middleware already created/retrieved a session, so we just need to update it with user_id
+        if ($sessionId) {
+            // Find the session created by middleware
+            $session = \App\Models\Session::where('session_id', $sessionId)->first();
+            if ($session) {
+                // Update the session to associate with user
+                $session->update([
+                    'user_id' => $user->id,
+                    'last_activity' => now(),
+                ]);
+            }
+            // If session doesn't exist (shouldn't happen), the middleware would have created it
+        }
+        // Note: We don't create a new session here because the middleware already handled it
 
         // Merge guest data (recently viewed, cart) if session existed
         $this->mergeGuestData($request, $user->id);
@@ -79,8 +98,27 @@ class AuthApiController extends Controller
         $deviceType = $loginType === 'app' ? 'mobile' : SessionTrackingService::detectDeviceType($request);
         $token = TokenService::createToken($user, $deviceType, $request->input('device_token'));
 
-        // Track session
-        SessionTrackingService::getOrCreateSession($request, $user->id);
+        // Get session_id from request (set by middleware or from frontend)
+        // The middleware already ran and created/retrieved a session, so session_id should be in the request
+        $sessionId = $request->input('session_id') 
+            ?? $request->query('session_id')
+            ?? SessionTrackingService::getSessionIdFromRequest($request);
+
+        // Update existing session to associate with user
+        // The middleware already created/retrieved a session, so we just need to update it with user_id
+        if ($sessionId) {
+            // Find the session created by middleware
+            $session = \App\Models\Session::where('session_id', $sessionId)->first();
+            if ($session) {
+                // Update the session to associate with user
+                $session->update([
+                    'user_id' => $user->id,
+                    'last_activity' => now(),
+                ]);
+            }
+            // If session doesn't exist (shouldn't happen), the middleware would have created it
+        }
+        // Note: We don't create a new session here because the middleware already handled it
 
         // Merge guest data (recently viewed, cart) if session existed
         $this->mergeGuestData($request, $user->id);
