@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\RecentlyViewedProduct;
+use App\Models\UserToken;
 use App\Services\SessionTrackingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ProductApiController extends Controller
@@ -96,51 +98,120 @@ class ProductApiController extends Controller
      */
     private function trackRecentlyViewed(Request $request, $productId)
     {
+        // First check if user is authenticated via middleware (for protected routes)
         $userId = $request->user()?->id;
-        $sessionId = $request->input('session_id') ?? SessionTrackingService::getSessionIdFromRequest($request);
+        
+        // If not authenticated via middleware, check for token manually (for public routes)
+        if (!$userId) {
+            $userId = $this->getUserIdFromToken($request);
+        }
+        
+        // For authenticated users, ignore session_id completely
+        if ($userId) {
+            try {
+                DB::transaction(function () use ($userId, $productId) {
+                    // Create or update entry with user_id and null session_id
+                    // This ensures authenticated users never have entries with session_id
+                    // First, check if there's an existing entry with user_id and null session_id
+                    $existing = RecentlyViewedProduct::where('user_id', $userId)
+                        ->whereNull('session_id')
+                        ->where('product_id', $productId)
+                        ->first();
+                    
+                    if ($existing) {
+                        // Update viewed_at
+                        $existing->update(['viewed_at' => now()]);
+                    } else {
+                        // Create new entry with user_id and session_id = null
+                        RecentlyViewedProduct::create([
+                            'user_id' => $userId,
+                            'session_id' => null, // Always null for authenticated users
+                            'product_id' => $productId,
+                            'viewed_at' => now(),
+                        ]);
+                    }
+                });
+            } catch (\Exception $e) {
+                // Silently fail if there's a constraint violation
+                // This can happen in race conditions
+            }
+            return;
+        }
+        
+        // For guests, get and use session_id
+        $sessionId = $request->input('session_id') 
+            ?? $request->query('session_id')
+            ?? $request->header('X-Session-ID')
+            ?? SessionTrackingService::getSessionIdFromRequest($request);
+        
+        // Normalize: convert empty string to null
+        if ($sessionId === '' || $sessionId === 'null') {
+            $sessionId = null;
+        }
 
         // If no session exists for guest, create one
-        if (!$userId && !$sessionId) {
+        if (!$sessionId) {
             $session = SessionTrackingService::getOrCreateSession($request);
             $sessionId = $session->session_id;
         }
 
-        // Ensure we have either user_id or session_id
-        if (!$userId && !$sessionId) {
-            return;
-        }
-
         // Use database transaction to handle unique constraint
         try {
-            DB::transaction(function () use ($userId, $sessionId, $productId) {
-                if ($userId) {
-                    // For logged-in users, use user_id
-                    RecentlyViewedProduct::updateOrCreate(
-                        [
-                            'user_id' => $userId,
-                            'product_id' => $productId,
-                        ],
-                        [
-                            'viewed_at' => now(),
-                        ]
-                    );
-                } elseif ($sessionId) {
-                    // For guests, use session_id
-                    RecentlyViewedProduct::updateOrCreate(
-                        [
-                            'session_id' => $sessionId,
-                            'product_id' => $productId,
-                        ],
-                        [
-                            'viewed_at' => now(),
-                        ]
-                    );
+            DB::transaction(function () use ($sessionId, $productId) {
+                // For guests, check if entry exists with session_id and null user_id
+                $existing = RecentlyViewedProduct::where('session_id', $sessionId)
+                    ->whereNull('user_id')
+                    ->where('product_id', $productId)
+                    ->first();
+                
+                if ($existing) {
+                    // Update viewed_at
+                    $existing->update(['viewed_at' => now()]);
+                } else {
+                    // Create new entry with session_id and user_id = null
+                    RecentlyViewedProduct::create([
+                        'user_id' => null, // Always null for guests
+                        'session_id' => $sessionId,
+                        'product_id' => $productId,
+                        'viewed_at' => now(),
+                    ]);
                 }
             });
         } catch (\Exception $e) {
             // Silently fail if there's a constraint violation
             // This can happen in race conditions
         }
+    }
+
+    /**
+     * Helper: Get user ID from token for public routes
+     * Since product routes are public, we need to manually check for authentication
+     */
+    private function getUserIdFromToken(Request $request): ?int
+    {
+        $token = $request->bearerToken() ?? $request->header('Authorization');
+        
+        // Remove "Bearer " prefix if present
+        if ($token && str_starts_with($token, 'Bearer ')) {
+            $token = substr($token, 7);
+        }
+        
+        if (!$token) {
+            return null;
+        }
+        
+        $userToken = UserToken::where(function ($q) use ($token) {
+            $q->where('web_access_token', $token)
+              ->orWhere('app_access_token', $token);
+        })->first();
+        
+        if ($userToken && $userToken->user) {
+            // Set user in request for this request (so $request->user() works)
+            Auth::login($userToken->user);
+            return $userToken->user->id;
+        }
+        
+        return null;
     }
 
 }

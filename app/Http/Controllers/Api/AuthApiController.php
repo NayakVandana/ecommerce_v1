@@ -37,7 +37,13 @@ class AuthApiController extends Controller
         // The middleware already ran and created/retrieved a session, so session_id should be in the request
         $sessionId = $request->input('session_id') 
             ?? $request->query('session_id')
+            ?? $request->header('X-Session-ID')
             ?? SessionTrackingService::getSessionIdFromRequest($request);
+        
+        // Normalize: convert empty string to null
+        if ($sessionId === '' || $sessionId === 'null') {
+            $sessionId = null;
+        }
 
         // Update existing session to associate with user
         // The middleware already created/retrieved a session, so we just need to update it with user_id
@@ -102,7 +108,13 @@ class AuthApiController extends Controller
         // The middleware already ran and created/retrieved a session, so session_id should be in the request
         $sessionId = $request->input('session_id') 
             ?? $request->query('session_id')
+            ?? $request->header('X-Session-ID')
             ?? SessionTrackingService::getSessionIdFromRequest($request);
+        
+        // Normalize: convert empty string to null
+        if ($sessionId === '' || $sessionId === 'null') {
+            $sessionId = null;
+        }
 
         // Update existing session to associate with user
         // The middleware already created/retrieved a session, so we just need to update it with user_id
@@ -218,49 +230,146 @@ class AuthApiController extends Controller
 
     /**
      * Merge guest session data into user account on login/register
+     * 
+     * Flow:
+     * 1. Guest entries: user_id = null, session_id = X
+     * 2. After login: Update guest entries to user_id = Y, session_id = null
+     * 3. If user already has same item, merge quantities/dates and delete guest entry
+     * 4. Clean up any orphaned entries that have both user_id and session_id
+     * 
+     * Also cleans up any orphaned entries and ensures all user data uses user_id
      */
     private function mergeGuestData(Request $request, int $userId): void
     {
-        $sessionId = $request->input('session_id') ?? SessionTrackingService::getSessionIdFromRequest($request);
-
-        if (!$sessionId) {
-            return;
+        $sessionId = $request->input('session_id') 
+            ?? $request->query('session_id')
+            ?? $request->header('X-Session-ID')
+            ?? SessionTrackingService::getSessionIdFromRequest($request);
+        
+        // Normalize: convert empty string to null
+        if ($sessionId === '' || $sessionId === 'null') {
+            $sessionId = null;
         }
 
-        // Merge recently viewed
-        $guestViews = RecentlyViewedProduct::where('session_id', $sessionId)->get();
-        foreach ($guestViews as $view) {
-            RecentlyViewedProduct::updateOrCreate(
-                [
-                    'user_id' => $userId,
-                    'product_id' => $view->product_id,
-                ],
-                [
-                    'viewed_at' => $view->viewed_at ?? now(),
-                ]
-            );
+        // Merge recently viewed products from guest session
+        // Update all guest entries (session_id exists, user_id is null) to user account
+        if ($sessionId) {
+            // Get all guest views for this session (user_id is null, session_id matches)
+            $guestViews = RecentlyViewedProduct::where('session_id', $sessionId)
+                ->whereNull('user_id')
+                ->get();
+            
+            foreach ($guestViews as $view) {
+                // Check if user already has this product in recently viewed
+                $existing = RecentlyViewedProduct::where('user_id', $userId)
+                    ->where('product_id', $view->product_id)
+                    ->whereNull('session_id')
+                    ->first();
+                
+                if ($existing) {
+                    // User already has this product - update viewed_at if guest viewed it more recently
+                    if ($view->viewed_at && (!$existing->viewed_at || $view->viewed_at > $existing->viewed_at)) {
+                        $existing->update(['viewed_at' => $view->viewed_at]);
+                    }
+                    // Delete the guest entry
+                    $view->delete();
+                } else {
+                    // Migrate guest entry to user account - update directly
+                    $view->update([
+                        'user_id' => $userId,
+                        'session_id' => null, // Set session_id to null
+                    ]);
+                }
+            }
         }
-        // Remove guest entries after merge
-        RecentlyViewedProduct::where('session_id', $sessionId)->delete();
 
-        // Merge cart items
-        $guestCartItems = Cart::where('session_id', $sessionId)->get();
-        foreach ($guestCartItems as $item) {
+        // Clean up any orphaned recently viewed entries that have session_id but should have user_id
+        // This handles cases where entries were created incorrectly
+        $orphanedViews = RecentlyViewedProduct::where('user_id', $userId)
+            ->whereNotNull('session_id')
+            ->get();
+        foreach ($orphanedViews as $view) {
+            // Check if there's a duplicate without session_id
+            $existing = RecentlyViewedProduct::where('user_id', $userId)
+                ->where('product_id', $view->product_id)
+                ->whereNull('session_id')
+                ->first();
+            
+            if ($existing) {
+                // Keep the one without session_id, delete the orphaned one
+                $view->delete();
+            } else {
+                // Update to remove session_id
+                $view->update(['session_id' => null]);
+            }
+        }
+
+        // Merge cart items from guest session
+        // Update all guest entries (session_id exists, user_id is null) to user account
+        if ($sessionId) {
+            // Get all guest cart items for this session (user_id is null, session_id matches)
+            $guestCartItems = Cart::where('session_id', $sessionId)
+                ->whereNull('user_id')
+                ->get();
+            
+            foreach ($guestCartItems as $item) {
+                // Check if user already has this exact product/variation combination
+                $existing = Cart::where('user_id', $userId)
+                    ->whereNull('session_id')
+                    ->where('product_id', $item->product_id)
+                    ->where('variation_id', $item->variation_id)
+                    ->first();
+
+                if ($existing) {
+                    // User already has this item - merge quantities
+                    $existing->quantity += $item->quantity;
+                    $existing->save();
+                    // Delete the guest entry after merging
+                    $item->delete();
+                } else {
+                    // Migrate guest item to user account - update directly
+                    $item->update([
+                        'user_id' => $userId,
+                        'session_id' => null, // Set session_id to null
+                    ]);
+                }
+            }
+        }
+
+        // Clean up any orphaned cart entries that have both user_id and session_id
+        // Or entries with user_id but session_id is not null
+        $orphanedCartItems = Cart::where('user_id', $userId)
+            ->whereNotNull('session_id')
+            ->get();
+        
+        foreach ($orphanedCartItems as $item) {
+            // Check if there's a duplicate without session_id
             $existing = Cart::where('user_id', $userId)
                 ->where('product_id', $item->product_id)
                 ->where('variation_id', $item->variation_id)
+                ->whereNull('session_id')
                 ->first();
-
+            
             if ($existing) {
+                // Merge quantities and delete orphaned entry
                 $existing->quantity += $item->quantity;
                 $existing->save();
                 $item->delete();
             } else {
-                $item->user_id = $userId;
-                $item->session_id = null;
-                $item->save();
+                // Just remove session_id from this entry
+                $item->update(['session_id' => null]);
             }
         }
+
+        // Also ensure all user's cart and recently viewed entries have user_id set correctly
+        // and session_id is null (for authenticated users)
+        Cart::where('user_id', $userId)
+            ->whereNotNull('session_id')
+            ->update(['session_id' => null]);
+        
+        RecentlyViewedProduct::where('user_id', $userId)
+            ->whereNotNull('session_id')
+            ->update(['session_id' => null]);
     }
 }
 

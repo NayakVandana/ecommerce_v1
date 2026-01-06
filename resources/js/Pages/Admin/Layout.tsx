@@ -12,6 +12,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/Pages/Auth/useAuthStore';
+import { clearSession } from '@/utils/sessionStorage';
 
 const adminNavigation = [
     { name: 'Dashboard', href: '/admin', icon: ChartBarIcon },
@@ -49,8 +50,8 @@ export default function AdminLayout({ children, currentPath }: { children: React
         } finally {
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
-            // Clear guest session on logout
-            localStorage.removeItem('guest_session_id');
+            // Clear session on logout (backend will create new session for next guest session)
+            clearSession();
             router.visit('/');
         }
     };

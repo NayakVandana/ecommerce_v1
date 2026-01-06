@@ -4,6 +4,7 @@ import { useState } from 'react';
 import FormInput from '../../Components/FormInput/FormInput';
 import Button from '../../Components/Button';
 import { useAuthStore } from './useAuthStore';
+import { getSessionId } from '../../utils/sessionStorage';
 
 export default function Register() {
     const [data, setData] = useState({
@@ -46,7 +47,7 @@ export default function Register() {
             setErrors({});
             
             // Get session_id from localStorage to merge guest cart/recently viewed
-            const sessionId = localStorage.getItem('guest_session_id');
+            const sessionId = getSessionId();
             
             const response = await useAuthStore.register({
                 name: data.name,
@@ -58,10 +59,8 @@ export default function Register() {
             
             if (response.data?.status && response.data?.data?.token) {
                 localStorage.setItem('auth_token', response.data.data.token);
-                // Clear guest session_id after successful registration (cart/recently viewed merged to user account)
-                if (sessionId) {
-                    localStorage.removeItem('guest_session_id');
-                }
+                // Session_id will be updated by the API interceptor from response headers
+                // No need to manually clear it - it will be associated with the user account
                 router.visit('/');
             }
         } catch (error: any) {

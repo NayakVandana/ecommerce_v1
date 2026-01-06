@@ -21,13 +21,22 @@ class TrackSession
         $userId = $request->user()?->id;
         $session = SessionTrackingService::getOrCreateSession($request, $userId);
         
-        // Attach session_id to request for easy access in controllers
-        $request->merge(['session_id' => $session->session_id]);
+        // For authenticated users, do NOT merge session_id into request
+        // Controllers should use user_id only for authenticated users
+        // For guests, merge session_id so controllers can use it
+        if (!$userId) {
+            $request->merge(['session_id' => $session->session_id]);
+        } else {
+            // For authenticated users, explicitly set session_id to null in request
+            // This ensures controllers don't accidentally use session_id
+            $request->merge(['session_id' => null]);
+        }
         
         $response = $next($request);
         
-        // Add session_id to response headers for frontend to store
-        if (method_exists($response, 'header')) {
+        // Add session_id to response headers for frontend to store (only for guests)
+        // For authenticated users, frontend should not need session_id
+        if (method_exists($response, 'header') && !$userId) {
             $response->header('X-Session-ID', $session->session_id);
         }
         

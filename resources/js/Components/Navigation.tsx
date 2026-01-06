@@ -13,6 +13,7 @@ import {
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/Pages/Auth/useAuthStore';
 import { useCartStore } from '@/Pages/Cart/useCartStore';
+import { clearSession } from '@/utils/sessionStorage';
 
 const navigation = [
     { name: 'Home', href: '/', icon: HomeIcon },
@@ -122,8 +123,8 @@ export default function Navigation() {
         } finally {
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
-            // Clear guest session on logout (backend will merge cart/recently viewed on login)
-            localStorage.removeItem('guest_session_id');
+            // Clear session on logout (backend will create new session for next guest session)
+            clearSession();
             setUser(null);
             router.visit('/');
         }

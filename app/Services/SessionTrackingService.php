@@ -13,21 +13,62 @@ class SessionTrackingService
      */
     public static function getOrCreateSession(Request $request, $userId = null)
     {
-        // Priority: 1. Request input (from frontend), 2. Laravel session, 3. Generate new one
+        // Priority: 1. Request input/query (from frontend), 2. Request header, 3. Laravel session, 4. Generate new one
         $sessionId = $request->input('session_id') 
             ?? $request->query('session_id')
+            ?? $request->header('X-Session-ID')
             ?? self::getSessionIdFromRequest($request);
         
-        // Only create a new session_id if we don't have one
-        // This prevents creating multiple sessions for the same guest
-        if (!$sessionId) {
-            $sessionId = Str::random(40);
+        // Normalize: convert empty string to null
+        if ($sessionId === '' || $sessionId === 'null') {
+            $sessionId = null;
         }
         
-        // Try to find existing session
-        $session = Session::where('session_id', $sessionId)->first();
+        // Try to find existing session by session_id first
+        $session = null;
+        if ($sessionId) {
+            $session = Session::where('session_id', $sessionId)->first();
+        }
         
+        // If user is authenticated and no session found by session_id,
+        // check for existing active session by user_id to prevent duplicate entries
+        if (!$session && $userId !== null) {
+            // Find the most recent active session for this user (within last 24 hours)
+            // This prevents creating multiple sessions for the same user
+            $session = Session::where('user_id', $userId)
+                ->where('last_activity', '>=', now()->subHours(24))
+                ->orderBy('last_activity', 'desc')
+                ->first();
+            
+            // If no recent session found, check for any session (might be from different device)
+            if (!$session) {
+                $session = Session::where('user_id', $userId)
+                    ->orderBy('last_activity', 'desc')
+                    ->first();
+            }
+            
+            // If found existing session and frontend sent a session_id, update it
+            if ($session && $sessionId && $session->session_id !== $sessionId) {
+                // Check if the new session_id is already in use by another session
+                $existingSessionWithId = Session::where('session_id', $sessionId)
+                    ->where('id', '!=', $session->id)
+                    ->first();
+                
+                // Only update if the new session_id is not in use
+                if (!$existingSessionWithId) {
+                    $session->update(['session_id' => $sessionId]);
+                }
+            }
+        }
+        
+        // If still no session found, create a new one
         if (!$session) {
+            // Only create a new session_id if we don't have one
+            // This prevents creating multiple sessions for the same guest
+            if (!$sessionId) {
+                $sessionId = Str::random(40);
+            }
+            
             $session = Session::create([
                 'session_id' => $sessionId,
                 'user_id' => $userId,
@@ -61,6 +102,18 @@ class SessionTrackingService
                 // If session has a different user_id, don't overwrite it (security measure)
             }
             
+            // Update session_id if provided and different (handles guest-to-user conversion)
+            if ($sessionId && $session->session_id !== $sessionId) {
+                // Check if the new session_id is already in use by another session
+                $existingSessionWithId = Session::where('session_id', $sessionId)
+                    ->where('id', '!=', $session->id)
+                    ->first();
+                
+                if (!$existingSessionWithId) {
+                    $updateData['session_id'] = $sessionId;
+                }
+            }
+            
             $session->update($updateData);
         }
         
@@ -72,7 +125,15 @@ class SessionTrackingService
      */
     public static function updateSessionActivity(Request $request, $userId = null)
     {
-        $sessionId = $request->input('session_id') ?? self::getSessionIdFromRequest($request);
+        $sessionId = $request->input('session_id') 
+            ?? $request->query('session_id')
+            ?? $request->header('X-Session-ID')
+            ?? self::getSessionIdFromRequest($request);
+        
+        // Normalize: convert empty string to null
+        if ($sessionId === '' || $sessionId === 'null') {
+            $sessionId = null;
+        }
         
         if ($sessionId) {
             Session::where('session_id', $sessionId)->update([

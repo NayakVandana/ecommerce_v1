@@ -43,13 +43,13 @@ Route::get('/categories/{slug}', function ($slug) {
     ]);
 })->name('categories.show');
 
+// Cart Route (public - works with both authenticated users and guest sessions)
+Route::get('/cart', function () {
+    return Inertia::render('Cart/Index');
+})->name('cart.index');
+
 // Protected Routes (require authentication)
 Route::middleware('auth')->group(function () {
-    // Cart Routes
-    Route::get('/cart', function () {
-        return Inertia::render('Cart/Index');
-    })->name('cart.index');
-
     // Checkout Routes
     Route::get('/checkout', function () {
         return Inertia::render('Checkout/Index');

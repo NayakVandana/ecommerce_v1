@@ -5,6 +5,7 @@ import FormInput from '../../Components/FormInput/FormInput';
 import FormCheckbox from '../../Components/FormInput/FormCheckbox';
 import Button from '../../Components/Button';
 import { useAuthStore } from './useAuthStore';
+import { getSessionId } from '../../utils/sessionStorage';
 
 export default function Login() {
     const [data, setData] = useState({
@@ -37,7 +38,7 @@ export default function Login() {
             setErrors({});
             
             // Get session_id from localStorage to merge guest cart/recently viewed
-            const sessionId = localStorage.getItem('guest_session_id');
+            const sessionId = getSessionId();
             
             const response = await useAuthStore.login({
                 email: data.email,
@@ -51,10 +52,8 @@ export default function Login() {
                 if (response.data.data.user) {
                     localStorage.setItem('auth_user', JSON.stringify(response.data.data.user));
                 }
-                // Clear guest session_id after successful login (cart/recently viewed merged to user account)
-                if (sessionId) {
-                    localStorage.removeItem('guest_session_id');
-                }
+                // Session_id will be updated by the API interceptor from response headers
+                // No need to manually clear it - it will be associated with the user account
                 // Force page reload to update header
                 window.location.href = '/';
             }

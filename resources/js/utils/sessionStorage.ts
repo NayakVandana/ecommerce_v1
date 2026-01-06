@@ -1,18 +1,36 @@
 /**
  * Session Storage Utility
- * Manages guest session_id in localStorage for cart and recently viewed products
+ * Manages session_id in localStorage for both authenticated and guest users
+ * This helps track sessions correctly and prevent duplicate entries
  */
 
-const SESSION_ID_KEY = 'guest_session_id';
+const SESSION_ID_KEY = 'session_id';
+const OLD_SESSION_ID_KEY = 'guest_session_id'; // For backward compatibility
 
 /**
  * Get session ID from localStorage
+ * Migrates from old key if needed for backward compatibility
  */
 export const getSessionId = (): string | null => {
     if (typeof window === 'undefined') {
         return null;
     }
-    return localStorage.getItem(SESSION_ID_KEY);
+    
+    // Check for new key first
+    let sessionId = localStorage.getItem(SESSION_ID_KEY);
+    
+    // If not found, check for old key and migrate
+    if (!sessionId) {
+        const oldSessionId = localStorage.getItem(OLD_SESSION_ID_KEY);
+        if (oldSessionId) {
+            // Migrate from old key to new key
+            localStorage.setItem(SESSION_ID_KEY, oldSessionId);
+            localStorage.removeItem(OLD_SESSION_ID_KEY);
+            sessionId = oldSessionId;
+        }
+    }
+    
+    return sessionId;
 };
 
 /**
@@ -49,10 +67,8 @@ export const isAuthenticated = (): boolean => {
  * Clear session when user logs out
  */
 export const clearSession = (): void => {
-    // Only clear guest session if user is logging out
-    // Don't clear on page refresh
-    if (isAuthenticated()) {
-        removeSessionId();
-    }
+    // Clear session_id when user logs out
+    // This ensures a new session is created for the next guest session
+    removeSessionId();
 };
 
