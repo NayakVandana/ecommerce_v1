@@ -18,16 +18,36 @@ class ProductSeeder extends Seeder
         }
 
         $products = [
+            // Electronics (no sizes)
             ['name' => 'Smartphone X', 'category' => 'Electronics', 'price' => 699.00, 'mrp' => 799.00, 'brand' => 'TechBrand'],
             ['name' => 'Laptop Pro', 'category' => 'Electronics', 'price' => 1299.00, 'mrp' => 1499.00, 'brand' => 'TechBrand'],
             ['name' => 'Wireless Earbuds', 'category' => 'Electronics', 'price' => 149.00, 'mrp' => 199.00, 'brand' => 'AudioTech'],
+            ['name' => 'Smart Watch', 'category' => 'Electronics', 'price' => 299.00, 'mrp' => 349.00, 'brand' => 'TechBrand'],
+            
+            // Fashion (with sizes XS, S, M, L, XL, XXL)
+            ['name' => 'Denim Jacket', 'category' => 'Fashion', 'price' => 59.00, 'mrp' => 79.00, 'brand' => 'FashionBrand'],
+            ['name' => 'Cotton T-Shirt', 'category' => 'Fashion', 'price' => 29.00, 'mrp' => 39.00, 'brand' => 'FashionBrand'],
+            ['name' => 'Jeans', 'category' => 'Fashion', 'price' => 49.00, 'mrp' => 69.00, 'brand' => 'FashionBrand'],
+            ['name' => 'Summer Dress', 'category' => 'Fashion', 'price' => 79.00, 'mrp' => 99.00, 'brand' => 'FashionBrand'],
+            ['name' => 'Hoodie', 'category' => 'Fashion', 'price' => 69.00, 'mrp' => 89.00, 'brand' => 'FashionBrand'],
+            
+            // Sports (no sizes)
             ['name' => 'Running Shoes', 'category' => 'Sports', 'price' => 89.00, 'mrp' => 119.00, 'brand' => 'SportBrand'],
             ['name' => 'Yoga Mat', 'category' => 'Sports', 'price' => 29.00, 'mrp' => 39.00, 'brand' => 'FitnessPro'],
+            ['name' => 'Basketball', 'category' => 'Sports', 'price' => 39.00, 'mrp' => 49.00, 'brand' => 'SportBrand'],
+            
+            // Home & Kitchen (no sizes)
             ['name' => 'Cookware Set', 'category' => 'Home & Kitchen', 'price' => 199.00, 'mrp' => 249.00, 'brand' => 'HomeBrand'],
             ['name' => 'Coffee Maker', 'category' => 'Home & Kitchen', 'price' => 99.00, 'mrp' => 129.00, 'brand' => 'KitchenPro'],
+            ['name' => 'Dining Table', 'category' => 'Home & Kitchen', 'price' => 399.00, 'mrp' => 499.00, 'brand' => 'HomeBrand'],
+            
+            // Beauty (no sizes)
             ['name' => 'Skincare Kit', 'category' => 'Beauty', 'price' => 79.00, 'mrp' => 99.00, 'brand' => 'BeautyBrand'],
+            ['name' => 'Makeup Palette', 'category' => 'Beauty', 'price' => 49.00, 'mrp' => 59.00, 'brand' => 'BeautyBrand'],
+            
+            // Books (no sizes)
             ['name' => 'Classic Novel', 'category' => 'Books', 'price' => 19.00, 'mrp' => 24.00, 'brand' => 'BookHouse'],
-            ['name' => 'Denim Jacket', 'category' => 'Fashion', 'price' => 59.00, 'mrp' => 79.00, 'brand' => 'FashionBrand'],
+            ['name' => 'Cookbook', 'category' => 'Books', 'price' => 24.00, 'mrp' => 29.00, 'brand' => 'BookHouse'],
         ];
 
         foreach ($products as $index => $productData) {

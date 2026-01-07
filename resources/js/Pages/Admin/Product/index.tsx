@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
+import { usePage } from '@inertiajs/react';
 import { useProductStore } from './useProductStore';
 import AdminLayout from '../Layout';
+import Pagination from '../../../Components/Pagination';
 import {
     PlusIcon,
     PencilIcon,
@@ -10,21 +12,27 @@ import {
 } from '@heroicons/react/24/outline';
 
 export default function ProductIndex() {
+    const { url } = usePage();
+    const urlParams = new URLSearchParams(url.split('?')[1] || '');
+    const currentPage = parseInt(urlParams.get('page') || '1', 10);
+    
     const [products, setProducts] = useState<any[]>([]);
+    const [pagination, setPagination] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>(null);
 
     useEffect(() => {
         loadProducts();
-    }, []);
+    }, [currentPage]);
 
     const loadProducts = async () => {
         try {
             setLoading(true);
-            const response = await useProductStore.list();
+            const response = await useProductStore.list({ page: currentPage });
             if (response.data?.status) {
                 setProducts(response.data.data?.data || []);
+                setPagination(response.data.data);
             }
         } catch (error) {
             console.error('Error loading products:', error);
@@ -192,6 +200,14 @@ export default function ProductIndex() {
                                 )}
                             </tbody>
                         </table>
+                        
+                        {/* Pagination */}
+                        {pagination && pagination.last_page > 1 && (
+                            <Pagination 
+                                data={pagination} 
+                                baseUrl="/admin/products"
+                            />
+                        )}
                     </div>
                 )}
             </div>

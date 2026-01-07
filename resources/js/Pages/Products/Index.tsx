@@ -3,11 +3,13 @@ import { Link, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { useProductStore } from './useProductStore';
 import { useCategoryStore } from '../Categories/useCategoryStore';
+import Pagination from '../../Components/Pagination';
 
 export default function Index() {
     const { url } = usePage();
     const urlParams = new URLSearchParams(url.split('?')[1] || '');
     const selectedCategory = urlParams.get('category') || '';
+    const currentPage = parseInt(urlParams.get('page') || '1', 10);
     
     const [products, setProducts] = useState<any>(null);
     const [categories, setCategories] = useState<any>([]);
@@ -15,13 +17,16 @@ export default function Index() {
 
     useEffect(() => {
         fetchData();
-    }, [selectedCategory]);
+    }, [selectedCategory, currentPage]);
 
     const fetchData = async () => {
         try {
             setLoading(true);
             const [productsRes, categoriesRes] = await Promise.all([
-                useProductStore.list({ category: selectedCategory || undefined }),
+                useProductStore.list({ 
+                    category: selectedCategory || undefined,
+                    page: currentPage 
+                }),
                 useCategoryStore.list()
             ]);
             
@@ -129,6 +134,17 @@ export default function Index() {
                         ) : (
                             <div className="text-center py-12">
                                 <p className="text-gray-500 text-lg">No products found.</p>
+                            </div>
+                        )}
+                        
+                        {/* Pagination */}
+                        {products && products.data && products.data.length > 0 && products.current_page && (
+                            <div className="mt-8">
+                                <Pagination 
+                                    data={products} 
+                                    baseUrl="/products"
+                                    queryParams={selectedCategory ? { category: selectedCategory } : undefined}
+                                />
                             </div>
                         )}
                     </div>

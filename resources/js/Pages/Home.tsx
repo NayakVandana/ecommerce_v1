@@ -2,31 +2,81 @@ import AppLayout from './Layouts/AppLayout';
 import Container from '../Components/Container';
 import Card from '../Components/Card';
 import Button from '../Components/Button';
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { useProductStore } from './Products/useProductStore';
 import { useCategoryStore } from './Categories/useCategoryStore';
+import { useCartStore } from './Cart/useCartStore';
+import Pagination from '../Components/Pagination';
 
 export default function Home() {
+    const { url } = usePage();
+    const urlParams = new URLSearchParams(url.split('?')[1] || '');
+    const currentPage = parseInt(urlParams.get('page') || '1', 10);
+    
     const [products, setProducts] = useState<any[]>([]);
+    const [pagination, setPagination] = useState<any>(null);
     const [featuredCategories, setFeaturedCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
+    const [addingToCart, setAddingToCart] = useState<{ [key: number]: boolean }>({});
 
     useEffect(() => {
         fetchData();
-    }, []);
+    }, [currentPage]);
+
+    const handleQuantityChange = (productId: number, change: number) => {
+        setQuantities(prev => {
+            const current = prev[productId] || 1;
+            const newQuantity = Math.max(1, current + change);
+            return { ...prev, [productId]: newQuantity };
+        });
+    };
+
+    const handleAddToCart = async (e: React.MouseEvent, product: any) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const quantity = quantities[product.id] || 1;
+        
+        // Check stock availability
+        if (product.total_quantity !== null && product.total_quantity < quantity) {
+            alert(`Only ${product.total_quantity} items available in stock`);
+            return;
+        }
+        
+        try {
+            setAddingToCart(prev => ({ ...prev, [product.id]: true }));
+            const response = await useCartStore.add({
+                product_id: product.id,
+                quantity: quantity,
+            });
+            
+            if (response.data?.status) {
+                // Open cart sidebar
+                window.dispatchEvent(new Event('openCart'));
+                // Update cart count in navigation
+                window.dispatchEvent(new Event('cartUpdated'));
+            }
+        } catch (error) {
+            console.error('Error adding to cart:', error);
+            alert('Failed to add product to cart');
+        } finally {
+            setAddingToCart(prev => ({ ...prev, [product.id]: false }));
+        }
+    };
 
     const fetchData = async () => {
         try {
             setLoading(true);
             const [productsRes, categoriesRes] = await Promise.all([
-                useProductStore.list({}),
+                useProductStore.list({ page: currentPage, per_page: 8 }),
                 useCategoryStore.list(),
             ]);
 
-            if (productsRes.data?.status && productsRes.data?.data?.data) {
-                // products is paginated; take first 8 for home
-                setProducts(productsRes.data.data.data.slice(0, 8));
+            if (productsRes.data?.status && productsRes.data?.data) {
+                setProducts(productsRes.data.data.data || []);
+                setPagination(productsRes.data.data);
             }
 
             if (categoriesRes.data?.status && categoriesRes.data?.data) {
@@ -87,9 +137,12 @@ export default function Home() {
                                         const mrp = product.mrp;
                                         const discount = product.discount_percent;
                                         
+                                        const quantity = quantities[product.id] || 1;
+                                        const isAdding = addingToCart[product.id] || false;
+                                        
                                         return (
-                                            <Link key={product.id} href={`/products/${product.id}`}>
-                                                <Card hover padding="none" className="overflow-hidden">
+                                            <Card key={product.id} hover padding="none" className="overflow-hidden flex flex-col">
+                                                <Link href={`/products/${product.id}`}>
                                                     <div className="h-48 bg-gray-200 flex items-center justify-center relative">
                                                         {imageUrl ? (
                                                             <img src={imageUrl} alt={product.product_name} className="h-full w-full object-cover" />
@@ -102,24 +155,86 @@ export default function Home() {
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <div className="p-4">
-                                                        <h3 className="font-semibold text-lg mb-2 line-clamp-1">{product.product_name}</h3>
+                                                </Link>
+                                                <div className="p-4 flex-1 flex flex-col">
+                                                    <Link href={`/products/${product.id}`}>
+                                                        <h3 className="font-semibold text-lg mb-2 line-clamp-1 hover:text-indigo-600">{product.product_name}</h3>
                                                         {product.brand && (
                                                             <p className="text-gray-500 text-xs mb-1">{product.brand}</p>
                                                         )}
                                                         <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.description}</p>
-                                                        <div className="flex items-center gap-2">
-                                                            <p className="text-indigo-600 font-bold">${displayPrice}</p>
-                                                            {mrp && mrp > displayPrice && (
-                                                                <p className="text-gray-400 line-through text-sm">${mrp}</p>
-                                                            )}
+                                                    </Link>
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <p className="text-indigo-600 font-bold">${displayPrice}</p>
+                                                        {mrp && mrp > displayPrice && (
+                                                            <p className="text-gray-400 line-through text-sm">${mrp}</p>
+                                                        )}
+                                                    </div>
+                                                    
+                                                    {/* Quantity Selector */}
+                                                    <div className="flex items-center gap-2 mb-3">
+                                                        <label className="text-sm text-gray-700">Quantity:</label>
+                                                        <div className="flex items-center border border-gray-300 rounded">
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    handleQuantityChange(product.id, -1);
+                                                                }}
+                                                                className="px-3 py-1 hover:bg-gray-100 transition-colors"
+                                                            >
+                                                                -
+                                                            </button>
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                value={quantity}
+                                                                onChange={(e) => {
+                                                                    const val = parseInt(e.target.value) || 1;
+                                                                    setQuantities(prev => ({ ...prev, [product.id]: Math.max(1, val) }));
+                                                                }}
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                }}
+                                                                className="w-16 px-2 py-1 text-center border-x border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                            />
+                                                            <button
+                                                                onClick={(e) => {
+                                                                    e.preventDefault();
+                                                                    e.stopPropagation();
+                                                                    handleQuantityChange(product.id, 1);
+                                                                }}
+                                                                className="px-3 py-1 hover:bg-gray-100 transition-colors"
+                                                            >
+                                                                +
+                                                            </button>
                                                         </div>
                                                     </div>
-                                                </Card>
-                                            </Link>
+                                                    
+                                                    {/* Add to Cart Button */}
+                                                    <button
+                                                        onClick={(e) => handleAddToCart(e, product)}
+                                                        disabled={isAdding || (product.total_quantity !== null && product.total_quantity === 0)}
+                                                        className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {isAdding ? 'Adding...' : 'ADD TO CART'}
+                                                    </button>
+                                                </div>
+                                            </Card>
                                         );
                                     })}
                                 </div>
+                                
+                                {/* Pagination */}
+                                {pagination && pagination.last_page > 1 && (
+                                    <div className="mt-8">
+                                        <Pagination 
+                                            data={pagination} 
+                                            baseUrl="/"
+                                        />
+                                    </div>
+                                )}
                             </div>
                         )}
                     </>

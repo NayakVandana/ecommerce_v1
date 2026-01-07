@@ -37,7 +37,13 @@ class ProductApiController extends Controller
             $query->where('brand', $request->brand);
         }
 
-        $products = $query->orderBy('created_at', 'desc')->paginate(12);
+        $perPage = $request->input('per_page', 12);
+        $page = $request->input('page', $request->query('page', 1));
+        
+        // Set page in query string for paginate() to work correctly
+        $request->query->set('page', $page);
+        
+        $products = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return $this->sendJsonResponse(true, 'Products fetched successfully', $products, 200);
     }

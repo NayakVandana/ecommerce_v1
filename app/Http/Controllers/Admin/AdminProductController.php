@@ -21,7 +21,13 @@ class AdminProductController extends Controller
             $query->where('is_approve', $request->is_approve);
         }
 
-        $products = $query->orderBy('created_at', 'desc')->paginate(15);
+        $perPage = $request->input('per_page', 15);
+        $page = $request->input('page', $request->query('page', 1));
+        
+        // Set page in query string for paginate() to work correctly
+        $request->query->set('page', $page);
+        
+        $products = $query->orderBy('created_at', 'desc')->paginate($perPage);
 
         return $this->sendJsonResponse(true, 'Products fetched successfully', $products, 200);
     }

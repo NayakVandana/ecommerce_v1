@@ -10,19 +10,26 @@ class ProductVariationSeeder extends Seeder
 {
     public function run(): void
     {
-        $products = Product::all();
-        $sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+        $products = Product::with('categoryRelation')->get();
+        $fashionSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
         $colors = ['Red', 'Blue', 'Green', 'Black', 'White', 'Gray', 'Yellow', 'Pink'];
 
         foreach ($products as $product) {
+            // Get category name to check if it's Fashion
+            $category = $product->categoryRelation;
+            $isFashion = $category && strtolower($category->name) === 'fashion';
+            
             // Create 3-6 variations per product
             $variationCount = rand(3, 6);
             $usedCombinations = [];
 
             for ($i = 0; $i < $variationCount; $i++) {
-                $size = $sizes[array_rand($sizes)];
+                // Only use sizes for Fashion category
+                $size = $isFashion ? $fashionSizes[array_rand($fashionSizes)] : null;
                 $color = $colors[array_rand($colors)];
-                $combination = "{$size}-{$color}";
+                
+                // Create unique combination key
+                $combination = $isFashion ? "{$size}-{$color}" : "null-{$color}";
 
                 // Avoid duplicate combinations
                 if (in_array($combination, $usedCombinations)) {
