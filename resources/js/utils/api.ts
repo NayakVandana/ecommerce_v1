@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getSessionId, setSessionId, isAuthenticated } from './sessionStorage';
 
 const api = axios.create({
-    baseURL: '/api/v1',
+    baseURL: '/api',
     headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',

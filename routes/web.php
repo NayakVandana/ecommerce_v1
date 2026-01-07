@@ -48,6 +48,11 @@ Route::get('/cart', function () {
     return Inertia::render('Cart/Index');
 })->name('cart.index');
 
+// Recently Viewed Products Route (public - works with both authenticated users and guest sessions)
+Route::get('/recently-viewed', function () {
+    return Inertia::render('RecentlyViewed/Index');
+})->name('recently-viewed.index');
+
 // Protected Routes (require authentication)
 Route::middleware('auth')->group(function () {
     // Checkout Routes

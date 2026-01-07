@@ -6,10 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductVariation;
 use App\Models\Cart;
-use App\Models\UserToken;
 use App\Services\SessionTrackingService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CartApiController extends Controller
@@ -305,13 +303,9 @@ class CartApiController extends Controller
      */
     private function resolveOwner(Request $request, bool $createSessionIfMissing = true): array
     {
-        // First check if user is authenticated via middleware (for protected routes)
-        $userId = $request->user()?->id;
-        
-        // If not authenticated via middleware, check for token manually (for public routes)
-        if (!$userId) {
-            $userId = $this->getUserIdFromToken($request);
-        }
+        // Get user ID from authenticated user (set by auth.optional middleware if token provided)
+        // Using auth()->id() is secure and works with Laravel's authentication system
+        $userId = auth()->id();
         
         // For authenticated users, always return null for session_id
         // This ensures all operations use user_id only
@@ -381,35 +375,5 @@ class CartApiController extends Controller
             ->sum('quantity') ?? 0;
     }
 
-    /**
-     * Helper: Get user ID from token for public routes
-     * Since cart routes are public, we need to manually check for authentication
-     */
-    private function getUserIdFromToken(Request $request): ?int
-    {
-        $token = $request->bearerToken() ?? $request->header('Authorization');
-        
-        // Remove "Bearer " prefix if present
-        if ($token && str_starts_with($token, 'Bearer ')) {
-            $token = substr($token, 7);
-        }
-        
-        if (!$token) {
-            return null;
-        }
-        
-        $userToken = UserToken::where(function ($q) use ($token) {
-            $q->where('web_access_token', $token)
-              ->orWhere('app_access_token', $token);
-        })->first();
-        
-        if ($userToken && $userToken->user) {
-            // Set user in request for this request (so $request->user() works)
-            Auth::login($userToken->user);
-            return $userToken->user->id;
-        }
-        
-        return null;
-    }
 }
 

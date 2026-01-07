@@ -1,30 +1,64 @@
-import AppLayout from './Layouts/AppLayout';
-import Container from '../Components/Container';
-import Card from '../Components/Card';
-import Button from '../Components/Button';
+import AppLayout from '../Layouts/AppLayout';
+import Container from '../../Components/Container';
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
-import { useProductStore } from './Products/useProductStore';
-import { useCategoryStore } from './Categories/useCategoryStore';
-import { useCartStore } from './Cart/useCartStore';
-import RecentlyViewedProducts from '../Components/RecentlyViewedProducts';
-import Pagination from '../Components/Pagination';
+import { useRecentlyViewedStore } from '../Products/useRecentlyViewedStore';
+import { useCartStore } from '../Cart/useCartStore';
+import { getSessionId } from '../../utils/sessionStorage';
+import Card from '../../Components/Card';
+import Pagination from '../../Components/Pagination';
 
-export default function Home() {
+export default function RecentlyViewedIndex() {
     const { url } = usePage();
     const urlParams = new URLSearchParams(url.split('?')[1] || '');
     const currentPage = parseInt(urlParams.get('page') || '1', 10);
     
-    const [products, setProducts] = useState<any[]>([]);
+    const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
     const [pagination, setPagination] = useState<any>(null);
-    const [featuredCategories, setFeaturedCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
     const [addingToCart, setAddingToCart] = useState<{ [key: number]: boolean }>({});
 
     useEffect(() => {
-        fetchData();
+        fetchRecentlyViewed();
     }, [currentPage]);
+
+    const fetchRecentlyViewed = async () => {
+        try {
+            setLoading(true);
+            const sessionId = getSessionId();
+            
+            const requestData: any = { 
+                per_page: 12,
+                page: currentPage,
+                session_id: sessionId || null
+            };
+            
+            const response = await useRecentlyViewedStore.list(requestData);
+            
+            if (response.data?.status && response.data?.data) {
+                // Products are in the 'data' field (Laravel pagination structure)
+                const products = response.data.data.data || response.data.data.products || [];
+                setRecentlyViewed(products);
+                
+                // Set pagination data (Laravel pagination structure)
+                if (response.data.data.current_page !== undefined) {
+                    setPagination({
+                        current_page: response.data.data.current_page,
+                        last_page: response.data.data.last_page,
+                        per_page: response.data.data.per_page,
+                        total: response.data.data.total,
+                        from: response.data.data.from,
+                        to: response.data.data.to,
+                    });
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching recently viewed products:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleQuantityChange = (productId: number, change: number) => {
         setQuantities(prev => {
@@ -40,7 +74,6 @@ export default function Home() {
         
         const quantity = quantities[product.id] || 1;
         
-        // Check stock availability
         if (product.total_quantity !== null && product.total_quantity < quantity) {
             alert(`Only ${product.total_quantity} items available in stock`);
             return;
@@ -54,9 +87,7 @@ export default function Home() {
             });
             
             if (response.data?.status) {
-                // Open cart sidebar
                 window.dispatchEvent(new Event('openCart'));
-                // Update cart count in navigation
                 window.dispatchEvent(new Event('cartUpdated'));
             }
         } catch (error) {
@@ -67,31 +98,33 @@ export default function Home() {
         }
     };
 
-    const fetchData = async () => {
+    const handleRemove = async (productId: number) => {
         try {
-            setLoading(true);
-            const [productsRes, categoriesRes] = await Promise.all([
-                useProductStore.list({ page: currentPage, per_page: 8 }),
-                useCategoryStore.list(),
-            ]);
-
-            if (productsRes.data?.status && productsRes.data?.data) {
-                setProducts(productsRes.data.data.data || []);
-                setPagination(productsRes.data.data);
-            }
-
-            if (categoriesRes.data?.status && categoriesRes.data?.data) {
-                const featured = categoriesRes.data.data.filter((cat: any) => cat.is_featured);
-                setFeaturedCategories(featured.slice(0, 6));
+            const response = await useRecentlyViewedStore.remove({ product_id: productId });
+            if (response.data?.status) {
+                // Remove from local state
+                setRecentlyViewed(prev => prev.filter(p => p.id !== productId));
             }
         } catch (error) {
-            console.error('Error loading home data:', error);
-        } finally {
-            setLoading(false);
+            console.error('Error removing product:', error);
+            alert('Failed to remove product');
         }
     };
 
-    // Helper function to render product card
+    const handleClearAll = async () => {
+        if (!confirm('Are you sure you want to clear all recently viewed products?')) return;
+        
+        try {
+            const response = await useRecentlyViewedStore.clear();
+            if (response.data?.status) {
+                setRecentlyViewed([]);
+            }
+        } catch (error) {
+            console.error('Error clearing recently viewed:', error);
+            alert('Failed to clear recently viewed products');
+        }
+    };
+
     const renderProductCard = (product: any) => {
         const primaryImage = product.media?.find((m: any) => m.is_primary) || product.media?.[0];
         const imageUrl = primaryImage?.url || primaryImage?.file_path || '';
@@ -178,9 +211,17 @@ export default function Home() {
                     <button
                         onClick={(e) => handleAddToCart(e, product)}
                         disabled={isAdding || (product.total_quantity !== null && product.total_quantity === 0)}
-                        className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-2"
                     >
                         {isAdding ? 'Adding...' : 'ADD TO CART'}
+                    </button>
+                    
+                    {/* Remove Button */}
+                    <button
+                        onClick={() => handleRemove(product.id)}
+                        className="w-full text-red-600 hover:text-red-800 text-sm font-semibold py-1"
+                    >
+                        Remove
                     </button>
                 </div>
             </Card>
@@ -190,62 +231,48 @@ export default function Home() {
     return (
         <AppLayout>
             <Container className="py-8">
-                {/* Hero Section */}
-                <Card className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white mb-12 border-0 shadow-xl">
-                    <div className="text-center">
-                        <h1 className="text-4xl md:text-5xl font-bold mb-4">Welcome to Our Ecommerce Store</h1>
-                        <p className="text-xl mb-6">Discover amazing products at great prices</p>
-                        <Button as="link" href="/products" variant="secondary" size="lg">
-                            Shop Now
-                        </Button>
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <h1 className="text-3xl font-bold">Recently Viewed Products</h1>
+                        <p className="text-gray-600 mt-2">Products you've recently viewed</p>
                     </div>
-                </Card>
+                    {recentlyViewed.length > 0 && (
+                        <button
+                            onClick={handleClearAll}
+                            className="text-red-600 hover:text-red-800 font-semibold"
+                        >
+                            Clear All
+                        </button>
+                    )}
+                </div>
 
                 {loading ? (
-                    <div className="text-center py-12 text-gray-500">Loading...</div>
+                    <div className="text-center py-12 text-gray-500">Loading recently viewed products...</div>
+                ) : recentlyViewed.length === 0 ? (
+                    <div className="bg-white rounded-lg shadow-md p-12 text-center">
+                        <p className="text-gray-500 text-lg mb-4">You haven't viewed any products yet</p>
+                        <Link
+                            href="/products"
+                            className="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
+                        >
+                            Browse Products
+                        </Link>
+                    </div>
                 ) : (
                     <>
-                        {/* Featured Categories */}
-                        {featuredCategories.length > 0 && (
-                            <div className="mb-12">
-                                <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {featuredCategories.map((category) => (
-                                        <Link key={category.id} href={`/categories/${category.slug}`}>
-                                            <Card hover>
-                                                <h3 className="text-xl font-semibold mb-2">{category.name}</h3>
-                                                <p className="text-gray-600">{category.description}</p>
-                                            </Card>
-                                        </Link>
-                                    ))}
-                                </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {recentlyViewed.map((item: any) => renderProductCard(item))}
+                        </div>
+                        
+                        {/* Pagination */}
+                        {pagination && pagination.last_page > 1 && (
+                            <div className="mt-8">
+                                <Pagination 
+                                    data={pagination} 
+                                    baseUrl="/recently-viewed"
+                                />
                             </div>
                         )}
-
-                     
-
-                        {/* Featured Products */}
-                        {products.length > 0 && (
-                            <div>
-                                <h2 className="text-2xl font-bold mb-6">Featured Products</h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    {products.map((product: any) => renderProductCard(product))}
-                                </div>
-                                
-                                {/* Pagination */}
-                                {pagination && pagination.last_page > 1 && (
-                                    <div className="mt-8">
-                                        <Pagination 
-                                            data={pagination} 
-                                            baseUrl="/"
-                                        />
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Recently Viewed Products */}
-                        <RecentlyViewedProducts limit={4} showMoreLink={true} />
                     </>
                 )}
             </Container>

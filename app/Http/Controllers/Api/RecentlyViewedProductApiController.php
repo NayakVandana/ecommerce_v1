@@ -5,9 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\RecentlyViewedProduct;
 use App\Models\Product;
-use App\Models\UserToken;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use App\Services\SessionTrackingService;
 
 class RecentlyViewedProductApiController extends Controller
@@ -18,13 +16,9 @@ class RecentlyViewedProductApiController extends Controller
      */
     public function index(Request $request)
     {
-        // First check if user is authenticated via middleware (for protected routes)
-        $userId = $request->user()?->id;
-        
-        // If not authenticated via middleware, check for token manually (for public routes)
-        if (!$userId) {
-            $userId = $this->getUserIdFromToken($request);
-        }
+        // Get user ID from authenticated user (set by auth.optional middleware if token provided)
+        // Using auth()->id() is secure and works with Laravel's authentication system
+        $userId = auth()->id();
         
         // For authenticated users, ignore session_id completely
         if ($userId) {
@@ -73,15 +67,34 @@ class RecentlyViewedProductApiController extends Controller
             ], 200);
         }
 
-        $recentlyViewed = $query->orderBy('viewed_at', 'desc')
-            ->limit($request->input('limit', 20))
-            ->get();
+        $perPage = $request->input('per_page', 12);
+        $page = $request->input('page', $request->query('page', 1));
         
+        // Set page in query string for paginate() to work correctly
+        $request->query->set('page', $page);
+        
+        $recentlyViewed = $query->orderBy('viewed_at', 'desc')->paginate($perPage);
+        
+        // Transform paginated data: extract products from RecentlyViewedProduct items
+        $products = $recentlyViewed->getCollection()->map(function($item) {
+            return $item->product;
+        })->filter(function($product) {
+            return $product !== null;
+        })->values();
+
         // Calculate count based on user_id for authenticated users, session_id for guests
         $count = $this->getRecentlyViewedCount($userId, $sessionId);
 
+        // Return paginated response (Laravel pagination structure)
+        // Note: total count is based on RecentlyViewedProduct records, not filtered products
         return $this->sendJsonResponse(true, 'Recently viewed products fetched successfully', [
-            'products' => $recentlyViewed,
+            'data' => $products->all(),
+            'current_page' => $recentlyViewed->currentPage(),
+            'last_page' => $recentlyViewed->lastPage(),
+            'per_page' => $recentlyViewed->perPage(),
+            'total' => $recentlyViewed->total(),
+            'from' => $recentlyViewed->firstItem(),
+            'to' => $recentlyViewed->lastItem(),
             'count' => $count,
             'session_id' => $sessionId,
         ], 200);
@@ -93,13 +106,8 @@ class RecentlyViewedProductApiController extends Controller
      */
     public function clear(Request $request)
     {
-        // First check if user is authenticated via middleware (for protected routes)
-        $userId = $request->user()?->id;
-        
-        // If not authenticated via middleware, check for token manually (for public routes)
-        if (!$userId) {
-            $userId = $this->getUserIdFromToken($request);
-        }
+        // Get user ID from authenticated user (set by auth.optional middleware if token provided)
+        $userId = auth()->id();
         
         // For authenticated users, ignore session_id completely
         if ($userId) {
@@ -153,13 +161,8 @@ class RecentlyViewedProductApiController extends Controller
             'product_id' => 'required|exists:products,id',
         ]);
 
-        // First check if user is authenticated via middleware (for protected routes)
-        $userId = $request->user()?->id;
-        
-        // If not authenticated via middleware, check for token manually (for public routes)
-        if (!$userId) {
-            $userId = $this->getUserIdFromToken($request);
-        }
+        // Get user ID from authenticated user (set by auth.optional middleware if token provided)
+        $userId = auth()->id();
         
         // For authenticated users, ignore session_id completely
         if ($userId) {
@@ -226,36 +229,6 @@ class RecentlyViewedProductApiController extends Controller
             ->count();
     }
 
-    /**
-     * Helper: Get user ID from token for public routes
-     * Since recently viewed routes are public, we need to manually check for authentication
-     */
-    private function getUserIdFromToken(Request $request): ?int
-    {
-        $token = $request->bearerToken() ?? $request->header('Authorization');
-        
-        // Remove "Bearer " prefix if present
-        if ($token && str_starts_with($token, 'Bearer ')) {
-            $token = substr($token, 7);
-        }
-        
-        if (!$token) {
-            return null;
-        }
-        
-        $userToken = UserToken::where(function ($q) use ($token) {
-            $q->where('web_access_token', $token)
-              ->orWhere('app_access_token', $token);
-        })->first();
-        
-        if ($userToken && $userToken->user) {
-            // Set user in request for this request (so $request->user() works)
-            Auth::login($userToken->user);
-            return $userToken->user->id;
-        }
-        
-        return null;
-    }
 
 }
 

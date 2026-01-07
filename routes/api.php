@@ -18,34 +18,60 @@ use Illuminate\Support\Facades\Route;
 | Do NOT create API routes in web.php or other route files.
 |
 | All API routes use POST method only for consistency.
-| All routes are prefixed with /api/v1/
+| All routes are prefixed with /api/ (set in RouteServiceProvider)
 |
 */
 
-// Public API Routes
-Route::prefix('v1')->group(function () {
-    
-    // Authentication Routes
-    Route::post('/register', [AuthApiController::class, 'register']);
-    Route::post('/login', [AuthApiController::class, 'login']);
-    
-    // Public Product Routes
-    Route::post('/products', [ProductApiController::class, 'index']);
-    Route::post('/products/show', [ProductApiController::class, 'show']);
-    Route::post('/products/search', [ProductApiController::class, 'search']);
-    
-    // Public Category Routes
-    Route::post('/categories', [CategoryApiController::class, 'index']);
-    Route::post('/categories/show', [CategoryApiController::class, 'show']);
-    
-    // Recently Viewed Products (public - works with session)
+// Authentication Routes
+Route::post('/register', [AuthApiController::class, 'register']);
+Route::post('/login', [AuthApiController::class, 'login']);
+
+// Public Product Routes
+Route::post('/products', [ProductApiController::class, 'index']);
+Route::post('/products/show', [ProductApiController::class, 'show']);
+Route::post('/products/search', [ProductApiController::class, 'search']);
+
+// Public Category Routes
+Route::post('/categories', [CategoryApiController::class, 'index']);
+Route::post('/categories/show', [CategoryApiController::class, 'show']);
+
+// Routes with optional auth (work for both authenticated users and guest sessions)
+// Uses optional auth middleware to set user if token is provided, but allows guests
+// Guest users use these routes directly (no auth prefix)
+Route::middleware('auth.optional')->group(function () {
+    // Recently Viewed Products (works with both authenticated users and guest sessions)
     Route::prefix('recently-viewed')->group(function () {
         Route::post('/', [RecentlyViewedProductApiController::class, 'index']);
         Route::post('/clear', [RecentlyViewedProductApiController::class, 'clear']);
         Route::post('/remove', [RecentlyViewedProductApiController::class, 'remove']);
     });
     
-    // Cart Routes (public - works with both authenticated users and guest sessions)
+    // Cart Routes (works with both authenticated users and guest sessions)
+    Route::prefix('cart')->group(function () {
+        Route::post('/', [CartApiController::class, 'index']);
+        Route::post('/add', [CartApiController::class, 'add']);
+        Route::post('/update', [CartApiController::class, 'update']);
+        Route::post('/remove', [CartApiController::class, 'remove']);
+        Route::post('/clear', [CartApiController::class, 'clear']);
+    });
+});
+
+// Protected Routes (require authentication) - only for authenticated users
+Route::middleware('auth.token')->prefix('auth')->group(function () {
+    // User Profile (require authentication)
+    Route::post('/user', [AuthApiController::class, 'getUser']);
+    Route::post('/user/update', [AuthApiController::class, 'updateProfile']);
+    Route::post('/logout', [AuthApiController::class, 'logout']);
+    
+    // Order Routes (require authentication)
+    Route::prefix('orders')->group(function () {
+        Route::post('/', [OrderApiController::class, 'index']);
+        Route::post('/store', [OrderApiController::class, 'store']);
+        Route::post('/show', [OrderApiController::class, 'show']);
+        Route::post('/cancel', [OrderApiController::class, 'cancel']);
+    });
+    
+    // Cart Routes for authenticated users (optional - can also use /cart)
     Route::prefix('cart')->group(function () {
         Route::post('/', [CartApiController::class, 'index']);
         Route::post('/add', [CartApiController::class, 'add']);
@@ -54,20 +80,10 @@ Route::prefix('v1')->group(function () {
         Route::post('/clear', [CartApiController::class, 'clear']);
     });
     
-    // Protected Routes (require authentication)
-    Route::middleware('auth.token')->group(function () {
-        
-        // User Profile
-        Route::post('/user', [AuthApiController::class, 'getUser']);
-        Route::post('/user/update', [AuthApiController::class, 'updateProfile']);
-        Route::post('/logout', [AuthApiController::class, 'logout']);
-        
-        // Order Routes
-        Route::prefix('orders')->group(function () {
-            Route::post('/', [OrderApiController::class, 'index']);
-            Route::post('/store', [OrderApiController::class, 'store']);
-            Route::post('/show', [OrderApiController::class, 'show']);
-            Route::post('/cancel', [OrderApiController::class, 'cancel']);
-        });
+    // Recently Viewed Products for authenticated users (optional - can also use /recently-viewed)
+    Route::prefix('recently-viewed')->group(function () {
+        Route::post('/', [RecentlyViewedProductApiController::class, 'index']);
+        Route::post('/clear', [RecentlyViewedProductApiController::class, 'clear']);
+        Route::post('/remove', [RecentlyViewedProductApiController::class, 'remove']);
     });
 });
