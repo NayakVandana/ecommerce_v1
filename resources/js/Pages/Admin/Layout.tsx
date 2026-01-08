@@ -4,6 +4,7 @@ import {
     Squares2X2Icon,
     TagIcon,
     ShoppingBagIcon,
+    ShoppingCartIcon,
     UsersIcon,
     ChartBarIcon,
     ArrowRightOnRectangleIcon,
@@ -19,6 +20,7 @@ const adminNavigation = [
     { name: 'Products', href: '/admin/products', icon: Squares2X2Icon },
     { name: 'Categories', href: '/admin/categories', icon: TagIcon },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingBagIcon },
+    { name: 'Carts', href: '/admin/carts', icon: ShoppingCartIcon },
     { name: 'Users', href: '/admin/users', icon: UsersIcon },
 ];
 

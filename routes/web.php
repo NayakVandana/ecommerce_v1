@@ -129,6 +129,10 @@ Route::prefix('admin')->group(function () {
     Route::get('/users', function () {
         return Inertia::render('Admin/User/index');
     })->name('admin.users');
+    
+    Route::get('/carts', function () {
+        return Inertia::render('Admin/Cart/index');
+    })->name('admin.carts');
 });
 
 // Guest Routes (only accessible when not authenticated)

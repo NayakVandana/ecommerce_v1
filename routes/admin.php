@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminCategoryController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminCartController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -56,5 +57,12 @@ Route::prefix('admin')->middleware(['auth.token', 'admin'])->group(function () {
         Route::post('/update', [AdminUserController::class, 'update']);
         Route::post('/delete', [AdminUserController::class, 'destroy']);
         Route::post('/toggle-role', [AdminUserController::class, 'toggleRole']);
+    });
+    
+    // Cart Management
+    Route::prefix('carts')->group(function () {
+        Route::post('/', [AdminCartController::class, 'index']);
+        Route::post('/show', [AdminCartController::class, 'show']);
+        Route::post('/delete', [AdminCartController::class, 'destroy']);
     });
 });
