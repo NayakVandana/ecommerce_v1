@@ -19,6 +19,10 @@ export default defineConfig({
             '@': path.resolve(__dirname, './resources/js'),
         },
     },
+    optimizeDeps: {
+        include: ['react-tailwindcss-datepicker'],
+        force: true,
+    },
     server: {
         host: '0.0.0.0',
         port: 5173,

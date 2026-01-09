@@ -21,6 +21,14 @@ class AdminProductController extends Controller
             $query->where('is_approve', $request->is_approve);
         }
 
+        // Date range filter
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $query->whereBetween('created_at', [
+                \Carbon\Carbon::parse($request->start_date)->startOfDay(),
+                \Carbon\Carbon::parse($request->end_date)->endOfDay()
+            ]);
+        }
+
         $perPage = $request->input('per_page', 15);
         $page = $request->input('page', $request->query('page', 1));
         

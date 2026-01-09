@@ -2,6 +2,7 @@ import AppLayout from '../Layouts/AppLayout';
 import { Link } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { useCartStore } from './useCartStore';
+import { EyeIcon } from '@heroicons/react/24/outline';
 
 export default function Index() {
     const [cart, setCart] = useState<any>(null);
@@ -131,19 +132,24 @@ export default function Index() {
                                     return (
                                         <div key={item.id} className="border-b last:border-b-0 p-6">
                                             <div className="flex gap-4">
-                                                <Link href={`/products/${product?.id}`} className="flex-shrink-0">
-                                                    <div className="w-24 h-24 bg-gray-200 rounded overflow-hidden">
-                                                        {imageUrl ? (
-                                                            <img 
-                                                                src={imageUrl} 
-                                                                alt={product?.product_name} 
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        ) : (
-                                                            <span className="text-gray-400 text-xs flex items-center justify-center h-full">No Image</span>
-                                                        )}
-                                                    </div>
-                                                </Link>
+                                                <div className="flex-shrink-0 relative group">
+                                                    <Link href={`/products/${product?.id}`}>
+                                                        <div className="w-24 h-24 bg-gray-200 rounded overflow-hidden relative">
+                                                            {imageUrl ? (
+                                                                <img 
+                                                                    src={imageUrl} 
+                                                                    alt={product?.product_name} 
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            ) : (
+                                                                <span className="text-gray-400 text-xs flex items-center justify-center h-full">No Image</span>
+                                                            )}
+                                                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                                                <EyeIcon className="h-6 w-6 text-white" />
+                                                            </div>
+                                                        </div>
+                                                    </Link>
+                                                </div>
                                                 
                                                 <div className="flex-1">
                                                     <Link href={`/products/${product?.id}`}>

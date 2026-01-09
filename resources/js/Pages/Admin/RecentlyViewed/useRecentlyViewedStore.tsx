@@ -29,9 +29,9 @@ adminApi.interceptors.response.use(
     }
 );
 
-export const useDashboardStore = {
-    dashboard: (data?: any) => adminApi.post('/dashboard', data || {}),
-    stats: (data?: any) => adminApi.post('/stats', data || {}),
-    revenue: (data?: any) => adminApi.post('/revenue', data || {}),
+export const useRecentlyViewedStore = {
+    list: (data?: any) => adminApi.post('/recently-viewed', data || {}),
+    show: (data: any) => adminApi.post('/recently-viewed/show', data),
+    delete: (data: any) => adminApi.post('/recently-viewed/delete', data),
 };
 

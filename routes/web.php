@@ -118,6 +118,12 @@ Route::prefix('admin')->group(function () {
         return Inertia::render('Admin/Product/index');
     })->name('admin.products');
     
+    Route::get('/products/{id}', function ($id) {
+        return Inertia::render('Admin/Product/Show', [
+            'id' => $id
+        ]);
+    })->name('admin.products.show');
+    
     Route::get('/categories', function () {
         return Inertia::render('Admin/Category/index');
     })->name('admin.categories');
@@ -133,6 +139,14 @@ Route::prefix('admin')->group(function () {
     Route::get('/carts', function () {
         return Inertia::render('Admin/Cart/index');
     })->name('admin.carts');
+    
+    Route::get('/recently-viewed', function () {
+        return Inertia::render('Admin/RecentlyViewed/index');
+    })->name('admin.recently-viewed');
+    
+    Route::get('/revenue', function () {
+        return Inertia::render('Admin/Revenue/index');
+    })->name('admin.revenue');
 });
 
 // Guest Routes (only accessible when not authenticated)

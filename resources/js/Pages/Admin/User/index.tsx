@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useUserStore } from './useUserStore';
 import AdminLayout from '../Layout';
+import FormDatePicker from '../../../Components/FormInput/FormDatePicker';
 import {
     PencilIcon,
     TrashIcon,
@@ -11,15 +12,26 @@ import {
 export default function UserIndex() {
     const [users, setUsers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [dateRange, setDateRange] = useState<any>({
+        startDate: null,
+        endDate: null,
+    });
 
     useEffect(() => {
         loadUsers();
-    }, []);
+    }, [dateRange]);
 
     const loadUsers = async () => {
         try {
             setLoading(true);
-            const response = await useUserStore.list();
+            const requestData: any = {};
+            
+            if (dateRange.startDate && dateRange.endDate) {
+                requestData.start_date = dateRange.startDate;
+                requestData.end_date = dateRange.endDate;
+            }
+            
+            const response = await useUserStore.list(requestData);
             if (response.data?.status) {
                 setUsers(response.data.data?.data || []);
             }
@@ -28,6 +40,10 @@ export default function UserIndex() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDateChange = (dates: any) => {
+        setDateRange(dates);
     };
 
     const handleToggleRole = async (userId: number) => {
@@ -57,9 +73,31 @@ export default function UserIndex() {
     return (
         <AdminLayout currentPath="/admin/users">
             <div className="space-y-6">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Users</h1>
-                    <p className="mt-2 text-sm text-gray-600">Manage user accounts</p>
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">Users</h1>
+                        <p className="mt-2 text-sm text-gray-600">Manage user accounts</p>
+                    </div>
+                    <div className="w-full sm:w-auto min-w-[280px]">
+                        <FormDatePicker
+                            title="Filter by Date"
+                            isRange={true}
+                            useRange={true}
+                            value={dateRange.startDate && dateRange.endDate ? {
+                                startDate: typeof dateRange.startDate === 'string' 
+                                    ? new Date(dateRange.startDate) 
+                                    : dateRange.startDate,
+                                endDate: typeof dateRange.endDate === 'string' 
+                                    ? new Date(dateRange.endDate) 
+                                    : dateRange.endDate
+                            } : null}
+                            handleDateChange={handleDateChange}
+                            noMaxDate={false}
+                            noMinLimit={false}
+                            className="text-sm"
+                            popoverDirection="down"
+                        />
+                    </div>
                 </div>
 
                 {loading ? (

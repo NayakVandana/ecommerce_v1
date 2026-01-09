@@ -9,7 +9,9 @@ import {
     ChartBarIcon,
     ArrowRightOnRectangleIcon,
     Bars3Icon,
-    XMarkIcon
+    XMarkIcon,
+    EyeIcon,
+    CurrencyDollarIcon
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/Pages/Auth/useAuthStore';
@@ -17,10 +19,12 @@ import { clearSession } from '@/utils/sessionStorage';
 
 const adminNavigation = [
     { name: 'Dashboard', href: '/admin', icon: ChartBarIcon },
+    { name: 'Revenue', href: '/admin/revenue', icon: CurrencyDollarIcon },
     { name: 'Products', href: '/admin/products', icon: Squares2X2Icon },
     { name: 'Categories', href: '/admin/categories', icon: TagIcon },
     { name: 'Orders', href: '/admin/orders', icon: ShoppingBagIcon },
     { name: 'Carts', href: '/admin/carts', icon: ShoppingCartIcon },
+    { name: 'Recently Viewed', href: '/admin/recently-viewed', icon: EyeIcon },
     { name: 'Users', href: '/admin/users', icon: UsersIcon },
 ];
 

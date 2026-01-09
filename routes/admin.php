@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminCartController;
+use App\Http\Controllers\Admin\AdminRecentlyViewedController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,6 +23,7 @@ Route::prefix('admin')->middleware(['auth.token', 'admin'])->group(function () {
     // Dashboard
     Route::post('/dashboard', [AdminDashboardController::class, 'index']);
     Route::post('/stats', [AdminDashboardController::class, 'stats']);
+    Route::post('/revenue', [AdminDashboardController::class, 'revenue']);
     
     // Product Management
     Route::prefix('products')->group(function () {
@@ -64,5 +66,12 @@ Route::prefix('admin')->middleware(['auth.token', 'admin'])->group(function () {
         Route::post('/', [AdminCartController::class, 'index']);
         Route::post('/show', [AdminCartController::class, 'show']);
         Route::post('/delete', [AdminCartController::class, 'destroy']);
+    });
+    
+    // Recently Viewed Products Management
+    Route::prefix('recently-viewed')->group(function () {
+        Route::post('/', [AdminRecentlyViewedController::class, 'index']);
+        Route::post('/show', [AdminRecentlyViewedController::class, 'show']);
+        Route::post('/delete', [AdminRecentlyViewedController::class, 'destroy']);
     });
 });

@@ -4,6 +4,7 @@ import { useRecentlyViewedStore } from '@/Pages/Products/useRecentlyViewedStore'
 import { useCartStore } from '@/Pages/Cart/useCartStore';
 import { getSessionId } from '@/utils/sessionStorage';
 import Card from './Card';
+import { EyeIcon } from '@heroicons/react/24/outline';
 
 interface RecentlyViewedProductsProps {
     limit?: number;
@@ -122,17 +123,20 @@ export default function RecentlyViewedProducts({
         return (
             <Card key={product.id} hover padding="none" className="overflow-hidden flex flex-col">
                 <Link href={`/products/${product.id}`}>
-                    <div className="h-48 bg-gray-200 flex items-center justify-center relative">
+                    <div className="h-48 bg-gray-200 flex items-center justify-center relative group">
                         {imageUrl ? (
                             <img src={imageUrl} alt={product.product_name} className="h-full w-full object-cover" />
                         ) : (
                             <span className="text-gray-400">No Image</span>
                         )}
                         {discount > 0 && (
-                            <span className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
+                            <span className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold z-10">
                                 {discount}% OFF
                             </span>
                         )}
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center opacity-0 group-hover:opacity-100">
+                            <EyeIcon className="h-8 w-8 text-white" />
+                        </div>
                     </div>
                 </Link>
                 <div className="p-4 flex-1 flex flex-col">

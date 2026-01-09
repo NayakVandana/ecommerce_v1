@@ -24,6 +24,14 @@ class AdminUserController extends Controller
             $query->where('role', $request->role);
         }
 
+        // Date range filter
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $query->whereBetween('created_at', [
+                \Carbon\Carbon::parse($request->start_date)->startOfDay(),
+                \Carbon\Carbon::parse($request->end_date)->endOfDay()
+            ]);
+        }
+
         $users = $query->latest()->paginate(15);
 
         return $this->sendJsonResponse(true, 'Users fetched successfully', $users, 200);

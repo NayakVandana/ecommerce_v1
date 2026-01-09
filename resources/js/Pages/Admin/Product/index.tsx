@@ -3,6 +3,7 @@ import { usePage } from '@inertiajs/react';
 import { useProductStore } from './useProductStore';
 import AdminLayout from '../Layout';
 import Pagination from '../../../Components/Pagination';
+import FormDatePicker from '../../../Components/FormInput/FormDatePicker';
 import {
     PlusIcon,
     PencilIcon,
@@ -10,6 +11,7 @@ import {
     CheckCircleIcon,
     XCircleIcon
 } from '@heroicons/react/24/outline';
+import { Link } from '@inertiajs/react';
 
 export default function ProductIndex() {
     const { url } = usePage();
@@ -21,15 +23,26 @@ export default function ProductIndex() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>(null);
+    const [dateRange, setDateRange] = useState<any>({
+        startDate: null,
+        endDate: null,
+    });
 
     useEffect(() => {
         loadProducts();
-    }, [currentPage]);
+    }, [currentPage, dateRange]);
 
     const loadProducts = async () => {
         try {
             setLoading(true);
-            const response = await useProductStore.list({ page: currentPage });
+            const requestData: any = { page: currentPage };
+            
+            if (dateRange.startDate && dateRange.endDate) {
+                requestData.start_date = dateRange.startDate;
+                requestData.end_date = dateRange.endDate;
+            }
+            
+            const response = await useProductStore.list(requestData);
             if (response.data?.status) {
                 setProducts(response.data.data?.data || []);
                 setPagination(response.data.data);
@@ -39,6 +52,10 @@ export default function ProductIndex() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDateChange = (dates: any) => {
+        setDateRange(dates);
     };
 
     const handleToggleStatus = async (productId: number) => {
@@ -68,21 +85,43 @@ export default function ProductIndex() {
     return (
         <AdminLayout currentPath="/admin/products">
             <div className="space-y-6">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">Products</h1>
                         <p className="mt-2 text-sm text-gray-600">Manage your product catalog</p>
                     </div>
-                    <button
-                        onClick={() => {
-                            setEditingProduct(null);
-                            setShowModal(true);
-                        }}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
-                    >
-                        <PlusIcon className="h-5 w-5 mr-2" />
-                        Add Product
-                    </button>
+                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+                        <div className="w-full sm:w-auto min-w-[280px]">
+                            <FormDatePicker
+                                title="Filter by Date"
+                                isRange={true}
+                                useRange={true}
+                                value={dateRange.startDate && dateRange.endDate ? {
+                                    startDate: typeof dateRange.startDate === 'string' 
+                                        ? new Date(dateRange.startDate) 
+                                        : dateRange.startDate,
+                                    endDate: typeof dateRange.endDate === 'string' 
+                                        ? new Date(dateRange.endDate) 
+                                        : dateRange.endDate
+                                } : null}
+                                handleDateChange={handleDateChange}
+                                noMaxDate={false}
+                                noMinLimit={false}
+                                className="text-sm"
+                                popoverDirection="down"
+                            />
+                        </div>
+                        <button
+                            onClick={() => {
+                                setEditingProduct(null);
+                                setShowModal(true);
+                            }}
+                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                        >
+                            <PlusIcon className="h-5 w-5 mr-2" />
+                            Add Product
+                        </button>
+                    </div>
                 </div>
 
                 {loading ? (
@@ -117,7 +156,7 @@ export default function ProductIndex() {
                                         <tr key={product.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
-                                                    <div className="flex-shrink-0 h-10 w-10">
+                                                    <Link href={`/admin/products/${product.id}`} className="flex-shrink-0 h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity">
                                                         {product.media?.[0]?.url ? (
                                                             <img
                                                                 className="h-10 w-10 rounded-md object-cover"
@@ -129,11 +168,14 @@ export default function ProductIndex() {
                                                                 <span className="text-gray-400 text-xs">No Image</span>
                                                             </div>
                                                         )}
-                                                    </div>
+                                                    </Link>
                                                     <div className="ml-4">
-                                                        <div className="text-sm font-medium text-gray-900">
+                                                        <Link 
+                                                            href={`/admin/products/${product.id}`}
+                                                            className="text-sm font-medium text-gray-900 hover:text-indigo-600 cursor-pointer"
+                                                        >
                                                             {product.product_name}
-                                                        </div>
+                                                        </Link>
                                                         <div className="text-sm text-gray-500">
                                                             SKU: {product.sku || 'N/A'}
                                                         </div>

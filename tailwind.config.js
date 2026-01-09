@@ -9,6 +9,7 @@ export default {
         './resources/**/*.js',
         './resources/**/*.jsx',
         './resources/**/*.tsx',
+        './node_modules/react-tailwindcss-datepicker/dist/index.esm.js',
     ],
     theme: {
         extend: {

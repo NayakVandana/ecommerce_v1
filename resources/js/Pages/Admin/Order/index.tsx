@@ -1,20 +1,32 @@
 import { useEffect, useState } from 'react';
 import { useOrderStore } from './useOrderStore';
 import AdminLayout from '../Layout';
+import FormDatePicker from '../../../Components/FormInput/FormDatePicker';
 import { EyeIcon } from '@heroicons/react/24/outline';
 
 export default function OrderIndex() {
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [dateRange, setDateRange] = useState<any>({
+        startDate: null,
+        endDate: null,
+    });
 
     useEffect(() => {
         loadOrders();
-    }, []);
+    }, [dateRange]);
 
     const loadOrders = async () => {
         try {
             setLoading(true);
-            const response = await useOrderStore.list();
+            const requestData: any = {};
+            
+            if (dateRange.startDate && dateRange.endDate) {
+                requestData.start_date = dateRange.startDate;
+                requestData.end_date = dateRange.endDate;
+            }
+            
+            const response = await useOrderStore.list(requestData);
             if (response.data?.status) {
                 setOrders(response.data.data?.data || []);
             }
@@ -23,6 +35,10 @@ export default function OrderIndex() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDateChange = (dates: any) => {
+        setDateRange(dates);
     };
 
     const getStatusBadge = (status: string) => {
@@ -46,9 +62,31 @@ export default function OrderIndex() {
     return (
         <AdminLayout currentPath="/admin/orders">
             <div className="space-y-6">
-                <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
-                    <p className="mt-2 text-sm text-gray-600">Manage customer orders</p>
+                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
+                        <p className="mt-2 text-sm text-gray-600">Manage customer orders</p>
+                    </div>
+                    <div className="w-full sm:w-auto min-w-[280px]">
+                        <FormDatePicker
+                            title="Filter by Date"
+                            isRange={true}
+                            useRange={true}
+                            value={dateRange.startDate && dateRange.endDate ? {
+                                startDate: typeof dateRange.startDate === 'string' 
+                                    ? new Date(dateRange.startDate) 
+                                    : dateRange.startDate,
+                                endDate: typeof dateRange.endDate === 'string' 
+                                    ? new Date(dateRange.endDate) 
+                                    : dateRange.endDate
+                            } : null}
+                            handleDateChange={handleDateChange}
+                            noMaxDate={false}
+                            noMinLimit={false}
+                            className="text-sm"
+                            popoverDirection="down"
+                        />
+                    </div>
                 </div>
 
                 {loading ? (

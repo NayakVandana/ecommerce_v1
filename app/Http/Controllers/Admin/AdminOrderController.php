@@ -24,6 +24,14 @@ class AdminOrderController extends Controller
             });
         }
 
+        // Date range filter
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $query->whereBetween('created_at', [
+                \Carbon\Carbon::parse($request->start_date)->startOfDay(),
+                \Carbon\Carbon::parse($request->end_date)->endOfDay()
+            ]);
+        }
+
         $orders = $query->latest()->paginate(15);
 
         return $this->sendJsonResponse(true, 'Orders fetched successfully', $orders, 200);
