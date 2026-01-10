@@ -3,6 +3,9 @@ import { usePage, Link } from '@inertiajs/react';
 import { useRecentlyViewedStore } from './useRecentlyViewedStore';
 import AdminLayout from '../Layout';
 import FormDatePicker from '../../../Components/FormInput/FormDatePicker';
+import ConfirmationModal from '../../../Components/ConfirmationModal';
+import AlertModal from '../../../Components/AlertModal';
+import toast from '../../../utils/toast';
 import { TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import Pagination from '../../../Components/Pagination';
 
@@ -25,6 +28,11 @@ export default function RecentlyViewedIndex() {
         startDate: null,
         endDate: null,
     });
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteRecentlyViewedId, setDeleteRecentlyViewedId] = useState<number | null>(null);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
 
     useEffect(() => {
         loadRecentlyViewed();
@@ -92,23 +100,42 @@ export default function RecentlyViewedIndex() {
             }
         } catch (error) {
             console.error('Error loading recently viewed product details:', error);
-            alert('Failed to load recently viewed product details');
+            setAlertMessage('Failed to load recently viewed product details');
+            setAlertType('error');
+            setShowAlert(true);
         } finally {
             setLoadingDetails(false);
         }
     };
 
-    const handleDelete = async (id: number) => {
-        if (!confirm('Are you sure you want to delete this recently viewed product?')) return;
+    const handleDeleteClick = (id: number) => {
+        setDeleteRecentlyViewedId(id);
+        setShowDeleteModal(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!deleteRecentlyViewedId) return;
         
         try {
-            const response = await useRecentlyViewedStore.delete({ id });
+            const response = await useRecentlyViewedStore.delete({ id: deleteRecentlyViewedId });
             if (response.data?.status) {
                 loadRecentlyViewed();
+                setShowDeleteModal(false);
+                setDeleteRecentlyViewedId(null);
+                toast({ message: 'Recently viewed product deleted successfully', type: 'success' });
+            } else {
+                setShowDeleteModal(false);
+                setAlertMessage(response.data?.message || 'Failed to delete recently viewed product');
+                setAlertType('error');
+                setShowAlert(true);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error deleting recently viewed product:', error);
-            alert('Failed to delete recently viewed product');
+            const errorMessage = error.response?.data?.message || 'Failed to delete recently viewed product';
+            setShowDeleteModal(false);
+            setAlertMessage(errorMessage);
+            setAlertType('error');
+            setShowAlert(true);
         }
     };
 
@@ -120,11 +147,11 @@ export default function RecentlyViewedIndex() {
                     <p className="mt-2 text-sm text-gray-600">View and manage customer recently viewed products</p>
                 </div>
 
-                {/* Filters */}
+                {/* Inline Filters */}
                 <div className="bg-white shadow rounded-lg p-4">
-                    <form onSubmit={handleSearch} className="space-y-4">
-                        <div className="flex flex-col lg:flex-row gap-4 items-end">
-                            <div className="flex-1">
+                    <form onSubmit={handleSearch}>
+                        <div className="flex flex-wrap items-end gap-3">
+                            <div className="flex-1 min-w-[200px]">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Search by Product Name
                                 </label>
@@ -133,7 +160,7 @@ export default function RecentlyViewedIndex() {
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Search products..."
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                                 />
                             </div>
                             <div className="w-48">
@@ -143,54 +170,55 @@ export default function RecentlyViewedIndex() {
                                 <select
                                     value={userType}
                                     onChange={(e) => handleFilterChange(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                                 >
                                     <option value="">All Users</option>
                                     <option value="authenticated">Authenticated</option>
                                     <option value="guest">Guest</option>
                                 </select>
                             </div>
+                            <div className="flex-shrink-0 min-w-[280px]">
+                                <FormDatePicker
+                                    title="Filter by Date"
+                                    isRange={true}
+                                    useRange={true}
+                                    value={dateRange.startDate && dateRange.endDate ? {
+                                        startDate: typeof dateRange.startDate === 'string' 
+                                            ? new Date(dateRange.startDate) 
+                                            : dateRange.startDate,
+                                        endDate: typeof dateRange.endDate === 'string' 
+                                            ? new Date(dateRange.endDate) 
+                                            : dateRange.endDate
+                                    } : null}
+                                    handleDateChange={(dates: any) => setDateRange(dates)}
+                                    noMaxDate={false}
+                                    noMinLimit={false}
+                                    className="text-sm"
+                                    popoverDirection="down"
+                                />
+                            </div>
                             <div className="flex gap-2">
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm font-medium whitespace-nowrap"
                                 >
                                     Search
                                 </button>
-                                {(search || userType) && (
+                                {(search || userType || (dateRange.startDate && dateRange.endDate)) && (
                                     <button
                                         type="button"
                                         onClick={() => {
                                             setSearch('');
                                             setUserType('');
+                                            setDateRange({ startDate: null, endDate: null });
                                             window.location.href = '/admin/recently-viewed';
                                         }}
-                                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm font-medium whitespace-nowrap"
                                     >
                                         Clear
                                     </button>
                                 )}
                             </div>
-                        </div>
-                        <div className="w-full sm:w-auto min-w-[280px]">
-                            <FormDatePicker
-                                title="Filter by Date"
-                                isRange={true}
-                                useRange={true}
-                                value={dateRange.startDate && dateRange.endDate ? {
-                                    startDate: typeof dateRange.startDate === 'string' 
-                                        ? new Date(dateRange.startDate) 
-                                        : dateRange.startDate,
-                                    endDate: typeof dateRange.endDate === 'string' 
-                                        ? new Date(dateRange.endDate) 
-                                        : dateRange.endDate
-                                } : null}
-                                handleDateChange={(dates: any) => setDateRange(dates)}
-                                noMaxDate={false}
-                                noMinLimit={false}
-                                className="text-sm"
-                                popoverDirection="down"
-                            />
                         </div>
                     </form>
                 </div>
@@ -295,7 +323,7 @@ export default function RecentlyViewedIndex() {
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                         <div className="flex justify-end space-x-2">
                                                             <button
-                                                                onClick={() => handleDelete(item.id)}
+                                                                onClick={() => handleDeleteClick(item.id)}
                                                                 className="text-red-600 hover:text-red-900"
                                                                 title="Delete"
                                                             >
@@ -452,6 +480,29 @@ export default function RecentlyViewedIndex() {
                         </div>
                     </div>
                 )}
+
+                {/* Delete Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={showDeleteModal}
+                    onClose={() => {
+                        setShowDeleteModal(false);
+                        setDeleteRecentlyViewedId(null);
+                    }}
+                    onConfirm={handleDeleteConfirm}
+                    title="Delete Recently Viewed Product"
+                    message="Are you sure you want to delete this recently viewed product? This action cannot be undone."
+                    confirmText="Delete"
+                    cancelText="Cancel"
+                    confirmButtonColor="red"
+                />
+
+                {/* Alert Modal */}
+                <AlertModal
+                    isOpen={showAlert}
+                    onClose={() => setShowAlert(false)}
+                    message={alertMessage}
+                    type={alertType}
+                />
             </div>
         </AdminLayout>
     );

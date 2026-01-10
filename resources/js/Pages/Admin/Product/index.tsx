@@ -4,6 +4,9 @@ import { useProductStore } from './useProductStore';
 import AdminLayout from '../Layout';
 import Pagination from '../../../Components/Pagination';
 import FormDatePicker from '../../../Components/FormInput/FormDatePicker';
+import ConfirmationModal from '../../../Components/ConfirmationModal';
+import AlertModal from '../../../Components/AlertModal';
+import toast from '../../../utils/toast';
 import {
     PlusIcon,
     PencilIcon,
@@ -27,6 +30,11 @@ export default function ProductIndex() {
         startDate: null,
         endDate: null,
     });
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteProductId, setDeleteProductId] = useState<number | null>(null);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
 
     useEffect(() => {
         loadProducts();
@@ -69,47 +77,45 @@ export default function ProductIndex() {
         }
     };
 
-    const handleDelete = async (productId: number) => {
-        if (!confirm('Are you sure you want to delete this product?')) return;
+    const handleDeleteClick = (productId: number) => {
+        setDeleteProductId(productId);
+        setShowDeleteModal(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!deleteProductId) return;
         
         try {
-            const response = await useProductStore.delete({ id: productId });
+            const response = await useProductStore.delete({ id: deleteProductId });
             if (response.data?.status) {
                 loadProducts();
+                setShowDeleteModal(false);
+                setDeleteProductId(null);
+                toast({ message: 'Product deleted successfully', type: 'success' });
+            } else {
+                setShowDeleteModal(false);
+                setAlertMessage(response.data?.message || 'Failed to delete product');
+                setAlertType('error');
+                setShowAlert(true);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error deleting product:', error);
+            const errorMessage = error.response?.data?.message || 'Failed to delete product';
+            setShowDeleteModal(false);
+            setAlertMessage(errorMessage);
+            setAlertType('error');
+            setShowAlert(true);
         }
     };
 
     return (
         <AdminLayout currentPath="/admin/products">
             <div className="space-y-6">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900">Products</h1>
-                        <p className="mt-2 text-sm text-gray-600">Manage your product catalog</p>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-                        <div className="w-full sm:w-auto min-w-[280px]">
-                            <FormDatePicker
-                                title="Filter by Date"
-                                isRange={true}
-                                useRange={true}
-                                value={dateRange.startDate && dateRange.endDate ? {
-                                    startDate: typeof dateRange.startDate === 'string' 
-                                        ? new Date(dateRange.startDate) 
-                                        : dateRange.startDate,
-                                    endDate: typeof dateRange.endDate === 'string' 
-                                        ? new Date(dateRange.endDate) 
-                                        : dateRange.endDate
-                                } : null}
-                                handleDateChange={handleDateChange}
-                                noMaxDate={false}
-                                noMinLimit={false}
-                                className="text-sm"
-                                popoverDirection="down"
-                            />
+                <div>
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-4">
+                        <div>
+                            <h1 className="text-3xl font-bold text-gray-900">Products</h1>
+                            <p className="mt-2 text-sm text-gray-600">Manage your product catalog</p>
                         </div>
                         <button
                             onClick={() => {
@@ -121,6 +127,32 @@ export default function ProductIndex() {
                             <PlusIcon className="h-5 w-5 mr-2" />
                             Add Product
                         </button>
+                    </div>
+                    
+                    {/* Inline Filters */}
+                    <div className="bg-white shadow rounded-lg p-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex-shrink-0 min-w-[280px]">
+                                <FormDatePicker
+                                    title="Filter by Date"
+                                    isRange={true}
+                                    useRange={true}
+                                    value={dateRange.startDate && dateRange.endDate ? {
+                                        startDate: typeof dateRange.startDate === 'string' 
+                                            ? new Date(dateRange.startDate) 
+                                            : dateRange.startDate,
+                                        endDate: typeof dateRange.endDate === 'string' 
+                                            ? new Date(dateRange.endDate) 
+                                            : dateRange.endDate
+                                    } : null}
+                                    handleDateChange={handleDateChange}
+                                    noMaxDate={false}
+                                    noMinLimit={false}
+                                    className="text-sm"
+                                    popoverDirection="down"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -223,7 +255,7 @@ export default function ProductIndex() {
                                                         <PencilIcon className="h-5 w-5" />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(product.id)}
+                                                        onClick={() => handleDeleteClick(product.id)}
                                                         className="text-red-600 hover:text-red-900"
                                                         title="Delete"
                                                     >
@@ -252,6 +284,29 @@ export default function ProductIndex() {
                         )}
                     </div>
                 )}
+
+                {/* Delete Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={showDeleteModal}
+                    onClose={() => {
+                        setShowDeleteModal(false);
+                        setDeleteProductId(null);
+                    }}
+                    onConfirm={handleDeleteConfirm}
+                    title="Delete Product"
+                    message="Are you sure you want to delete this product? This action cannot be undone."
+                    confirmText="Delete"
+                    cancelText="Cancel"
+                    confirmButtonColor="red"
+                />
+
+                {/* Alert Modal */}
+                <AlertModal
+                    isOpen={showAlert}
+                    onClose={() => setShowAlert(false)}
+                    message={alertMessage}
+                    type={alertType}
+                />
             </div>
         </AdminLayout>
     );

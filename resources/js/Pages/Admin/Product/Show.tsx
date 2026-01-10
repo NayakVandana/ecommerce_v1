@@ -90,15 +90,21 @@ export default function ProductShow() {
     if (!product) {
         return (
             <AdminLayout currentPath="/admin/products">
-                <div className="bg-white shadow rounded-lg p-6">
-                    <p className="text-center text-gray-500">Product not found</p>
-                    <Link
-                        href="/admin/products"
-                        className="mt-4 inline-flex items-center text-indigo-600 hover:text-indigo-800"
-                    >
-                        <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                        Back to Products
-                    </Link>
+                <div className="space-y-6">
+                    {/* Back Button */}
+                    <div>
+                        <Link
+                            href="/admin/products"
+                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                        >
+                            <ArrowLeftIcon className="h-5 w-5 mr-2" />
+                            Back to Products
+                        </Link>
+                    </div>
+                    
+                    <div className="bg-white shadow rounded-lg p-6">
+                        <p className="text-center text-gray-500">Product not found</p>
+                    </div>
                 </div>
             </AdminLayout>
         );
@@ -107,20 +113,22 @@ export default function ProductShow() {
     return (
         <AdminLayout currentPath="/admin/products">
             <div className="space-y-6">
+                {/* Back Button */}
+                <div>
+                    <Link
+                        href="/admin/products"
+                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                    >
+                        <ArrowLeftIcon className="h-5 w-5 mr-2" />
+                        Back to Products
+                    </Link>
+                </div>
+
                 {/* Header */}
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                        <Link
-                            href="/admin/products"
-                            className="inline-flex items-center text-gray-600 hover:text-gray-900"
-                        >
-                            <ArrowLeftIcon className="h-5 w-5 mr-2" />
-                            Back to Products
-                        </Link>
-                        <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Product Details</h1>
-                            <p className="mt-1 text-sm text-gray-600">View full product information</p>
-                        </div>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900">Product Details</h1>
+                        <p className="mt-1 text-sm text-gray-600">View full product information</p>
                     </div>
                     <div className="flex items-center space-x-2">
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${

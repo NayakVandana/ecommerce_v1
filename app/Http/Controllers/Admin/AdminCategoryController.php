@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class AdminCategoryController extends Controller
 {
@@ -24,7 +25,10 @@ class AdminCategoryController extends Controller
             'is_featured' => 'boolean',
         ]);
 
-        $category = Category::create($request->all());
+        $data = $request->all();
+        $data['uuid'] = Str::uuid()->toString();
+        
+        $category = Category::create($data);
 
         return $this->sendJsonResponse(true, 'Category created successfully', $category, 201);
     }

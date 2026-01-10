@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { useUserStore } from './useUserStore';
 import AdminLayout from '../Layout';
 import FormDatePicker from '../../../Components/FormInput/FormDatePicker';
+import ConfirmationModal from '../../../Components/ConfirmationModal';
+import AlertModal from '../../../Components/AlertModal';
+import toast from '../../../utils/toast';
 import {
     PencilIcon,
     TrashIcon,
@@ -16,6 +19,11 @@ export default function UserIndex() {
         startDate: null,
         endDate: null,
     });
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteUserId, setDeleteUserId] = useState<number | null>(null);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
 
     useEffect(() => {
         loadUsers();
@@ -57,46 +65,70 @@ export default function UserIndex() {
         }
     };
 
-    const handleDelete = async (userId: number) => {
-        if (!confirm('Are you sure you want to delete this user?')) return;
+    const handleDeleteClick = (userId: number) => {
+        setDeleteUserId(userId);
+        setShowDeleteModal(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!deleteUserId) return;
         
         try {
-            const response = await useUserStore.delete({ id: userId });
+            const response = await useUserStore.delete({ id: deleteUserId });
             if (response.data?.status) {
                 loadUsers();
+                setShowDeleteModal(false);
+                setDeleteUserId(null);
+                toast({ message: 'User deleted successfully', type: 'success' });
+            } else {
+                setShowDeleteModal(false);
+                setAlertMessage(response.data?.message || 'Failed to delete user');
+                setAlertType('error');
+                setShowAlert(true);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error deleting user:', error);
+            const errorMessage = error.response?.data?.message || 'Failed to delete user';
+            setShowDeleteModal(false);
+            setAlertMessage(errorMessage);
+            setAlertType('error');
+            setShowAlert(true);
         }
     };
 
     return (
         <AdminLayout currentPath="/admin/users">
             <div className="space-y-6">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div>
+                <div>
+                    <div className="mb-4">
                         <h1 className="text-3xl font-bold text-gray-900">Users</h1>
                         <p className="mt-2 text-sm text-gray-600">Manage user accounts</p>
                     </div>
-                    <div className="w-full sm:w-auto min-w-[280px]">
-                        <FormDatePicker
-                            title="Filter by Date"
-                            isRange={true}
-                            useRange={true}
-                            value={dateRange.startDate && dateRange.endDate ? {
-                                startDate: typeof dateRange.startDate === 'string' 
-                                    ? new Date(dateRange.startDate) 
-                                    : dateRange.startDate,
-                                endDate: typeof dateRange.endDate === 'string' 
-                                    ? new Date(dateRange.endDate) 
-                                    : dateRange.endDate
-                            } : null}
-                            handleDateChange={handleDateChange}
-                            noMaxDate={false}
-                            noMinLimit={false}
-                            className="text-sm"
-                            popoverDirection="down"
-                        />
+                    
+                    {/* Inline Filters */}
+                    <div className="bg-white shadow rounded-lg p-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex-shrink-0 min-w-[280px]">
+                                <FormDatePicker
+                                    title="Filter by Date"
+                                    isRange={true}
+                                    useRange={true}
+                                    value={dateRange.startDate && dateRange.endDate ? {
+                                        startDate: typeof dateRange.startDate === 'string' 
+                                            ? new Date(dateRange.startDate) 
+                                            : dateRange.startDate,
+                                        endDate: typeof dateRange.endDate === 'string' 
+                                            ? new Date(dateRange.endDate) 
+                                            : dateRange.endDate
+                                    } : null}
+                                    handleDateChange={handleDateChange}
+                                    noMaxDate={false}
+                                    noMinLimit={false}
+                                    className="text-sm"
+                                    popoverDirection="down"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -177,7 +209,7 @@ export default function UserIndex() {
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <div className="flex justify-end space-x-2">
                                                     <button
-                                                        onClick={() => handleDelete(user.id)}
+                                                        onClick={() => handleDeleteClick(user.id)}
                                                         className="text-red-600 hover:text-red-900"
                                                         title="Delete"
                                                     >
@@ -198,6 +230,29 @@ export default function UserIndex() {
                         </table>
                     </div>
                 )}
+
+                {/* Delete Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={showDeleteModal}
+                    onClose={() => {
+                        setShowDeleteModal(false);
+                        setDeleteUserId(null);
+                    }}
+                    onConfirm={handleDeleteConfirm}
+                    title="Delete User"
+                    message="Are you sure you want to delete this user? This action cannot be undone."
+                    confirmText="Delete"
+                    cancelText="Cancel"
+                    confirmButtonColor="red"
+                />
+
+                {/* Alert Modal */}
+                <AlertModal
+                    isOpen={showAlert}
+                    onClose={() => setShowAlert(false)}
+                    message={alertMessage}
+                    type={alertType}
+                />
             </div>
         </AdminLayout>
     );

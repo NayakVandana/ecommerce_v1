@@ -96,58 +96,80 @@ export default function RevenueIndex() {
     const monthGrowth = calculateGrowth(revenueData.month_revenue || 0, revenueData.week_revenue || 0);
     const yearGrowth = calculateGrowth(revenueData.year_revenue || 0, revenueData.month_revenue || 0);
 
+    const handleClearFilters = () => {
+        setSelectedPeriod('all');
+        setDateRange({ startDate: null, endDate: null });
+    };
+
     return (
         <AdminLayout currentPath="/admin/revenue">
             <div className="space-y-6">
-                {/* Header */}
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div>
+                <div>
+                    <div className="mb-4">
                         <h1 className="text-3xl font-bold text-gray-900">Revenue Analytics</h1>
                         <p className="mt-2 text-sm text-gray-600">Track and analyze your sales revenue</p>
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        {/* Date Range Picker */}
-                        <div className="w-full sm:w-auto min-w-[280px]">
-                            <FormDatePicker
-                                title="Date Range"
-                                isRange={true}
-                                useRange={true}
-                                value={dateRange.startDate && dateRange.endDate ? {
-                                    startDate: typeof dateRange.startDate === 'string' 
-                                        ? new Date(dateRange.startDate) 
-                                        : dateRange.startDate,
-                                    endDate: typeof dateRange.endDate === 'string' 
-                                        ? new Date(dateRange.endDate) 
-                                        : dateRange.endDate
-                                } : null}
-                                handleDateChange={handleDateChange}
-                                noMaxDate={false}
-                                noMinLimit={false}
-                                className="text-sm"
-                                popoverDirection="down"
-                            />
-                        </div>
-                        {/* Period Selector */}
-                        <div className="flex items-center space-x-2">
-                            <CalendarIcon className="h-5 w-5 text-gray-400" />
-                            <select
-                                value={selectedPeriod}
-                                onChange={(e) => {
-                                    setSelectedPeriod(e.target.value);
-                                    // Clear date range when selecting predefined period
-                                    if (e.target.value !== 'custom') {
-                                        setDateRange({ startDate: null, endDate: null });
-                                    }
-                                }}
-                                className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-                            >
-                                <option value="all">All Time</option>
-                                <option value="today">Today</option>
-                                <option value="week">This Week</option>
-                                <option value="month">This Month</option>
-                                <option value="year">This Year</option>
-                                <option value="custom">Custom Range</option>
-                            </select>
+                    
+                    {/* Inline Filters */}
+                    <div className="bg-white shadow rounded-lg p-4">
+                        <div className="flex flex-wrap items-end gap-3">
+                            <div className="w-48">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Period
+                                </label>
+                                <div className="relative">
+                                    <CalendarIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                                    <select
+                                        value={selectedPeriod}
+                                        onChange={(e) => {
+                                            setSelectedPeriod(e.target.value);
+                                            // Clear date range when selecting predefined period
+                                            if (e.target.value !== 'custom') {
+                                                setDateRange({ startDate: null, endDate: null });
+                                            }
+                                        }}
+                                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
+                                    >
+                                        <option value="all">All Time</option>
+                                        <option value="today">Today</option>
+                                        <option value="week">This Week</option>
+                                        <option value="month">This Month</option>
+                                        <option value="year">This Year</option>
+                                        <option value="custom">Custom Range</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="flex-shrink-0 min-w-[280px]">
+                                <FormDatePicker
+                                    title="Date Range"
+                                    isRange={true}
+                                    useRange={true}
+                                    value={dateRange.startDate && dateRange.endDate ? {
+                                        startDate: typeof dateRange.startDate === 'string' 
+                                            ? new Date(dateRange.startDate) 
+                                            : dateRange.startDate,
+                                        endDate: typeof dateRange.endDate === 'string' 
+                                            ? new Date(dateRange.endDate) 
+                                            : dateRange.endDate
+                                    } : null}
+                                    handleDateChange={handleDateChange}
+                                    noMaxDate={false}
+                                    noMinLimit={false}
+                                    className="text-sm"
+                                    popoverDirection="down"
+                                />
+                            </div>
+                            {(selectedPeriod !== 'all' || (dateRange.startDate && dateRange.endDate)) && (
+                                <div className="flex gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={handleClearFilters}
+                                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm font-medium whitespace-nowrap"
+                                    >
+                                        Clear
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

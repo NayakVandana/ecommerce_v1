@@ -62,30 +62,36 @@ export default function OrderIndex() {
     return (
         <AdminLayout currentPath="/admin/orders">
             <div className="space-y-6">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                    <div>
+                <div>
+                    <div className="mb-4">
                         <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
                         <p className="mt-2 text-sm text-gray-600">Manage customer orders</p>
                     </div>
-                    <div className="w-full sm:w-auto min-w-[280px]">
-                        <FormDatePicker
-                            title="Filter by Date"
-                            isRange={true}
-                            useRange={true}
-                            value={dateRange.startDate && dateRange.endDate ? {
-                                startDate: typeof dateRange.startDate === 'string' 
-                                    ? new Date(dateRange.startDate) 
-                                    : dateRange.startDate,
-                                endDate: typeof dateRange.endDate === 'string' 
-                                    ? new Date(dateRange.endDate) 
-                                    : dateRange.endDate
-                            } : null}
-                            handleDateChange={handleDateChange}
-                            noMaxDate={false}
-                            noMinLimit={false}
-                            className="text-sm"
-                            popoverDirection="down"
-                        />
+                    
+                    {/* Inline Filters */}
+                    <div className="bg-white shadow rounded-lg p-4">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex-shrink-0 min-w-[280px]">
+                                <FormDatePicker
+                                    title="Filter by Date"
+                                    isRange={true}
+                                    useRange={true}
+                                    value={dateRange.startDate && dateRange.endDate ? {
+                                        startDate: typeof dateRange.startDate === 'string' 
+                                            ? new Date(dateRange.startDate) 
+                                            : dateRange.startDate,
+                                        endDate: typeof dateRange.endDate === 'string' 
+                                            ? new Date(dateRange.endDate) 
+                                            : dateRange.endDate
+                                    } : null}
+                                    handleDateChange={handleDateChange}
+                                    noMaxDate={false}
+                                    noMinLimit={false}
+                                    className="text-sm"
+                                    popoverDirection="down"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
 

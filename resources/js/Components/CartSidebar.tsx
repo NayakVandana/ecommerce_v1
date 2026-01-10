@@ -3,12 +3,7 @@ import { useState, useEffect } from 'react';
 import { XMarkIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { useCartStore } from '@/Pages/Cart/useCartStore';
 
-interface CartSidebarProps {
-    isOpen: boolean;
-    onClose: () => void;
-}
-
-export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
+export default function CartSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
     const [cart, setCart] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState<number | null>(null);

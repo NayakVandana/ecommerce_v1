@@ -6,19 +6,12 @@ import { getSessionId } from '@/utils/sessionStorage';
 import Card from './Card';
 import { EyeIcon } from '@heroicons/react/24/outline';
 
-interface RecentlyViewedProductsProps {
-    limit?: number;
-    title?: string;
-    showQuantity?: boolean;
-    showMoreLink?: boolean;
-}
-
 export default function RecentlyViewedProducts({ 
     limit = 4, 
     title = "Recently Viewed Products",
     showQuantity = true,
     showMoreLink = false
-}: RecentlyViewedProductsProps) {
+}: any) {
     const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
     const [totalCount, setTotalCount] = useState<number>(0);
     const [loading, setLoading] = useState(true);

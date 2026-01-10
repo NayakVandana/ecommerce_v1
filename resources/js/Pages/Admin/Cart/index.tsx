@@ -3,6 +3,9 @@ import { usePage, Link } from '@inertiajs/react';
 import { useCartStore } from './useCartStore';
 import AdminLayout from '../Layout';
 import FormDatePicker from '../../../Components/FormInput/FormDatePicker';
+import ConfirmationModal from '../../../Components/ConfirmationModal';
+import AlertModal from '../../../Components/AlertModal';
+import toast from '../../../utils/toast';
 import { TrashIcon } from '@heroicons/react/24/outline';
 import Pagination from '../../../Components/Pagination';
 
@@ -22,6 +25,11 @@ export default function CartIndex() {
         startDate: null,
         endDate: null,
     });
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deleteCartId, setDeleteCartId] = useState<number | null>(null);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
 
     useEffect(() => {
         loadCarts();
@@ -79,17 +87,34 @@ export default function CartIndex() {
         window.location.href = `/admin/carts?${params.toString()}`;
     };
 
-    const handleDelete = async (cartId: number) => {
-        if (!confirm('Are you sure you want to delete this cart item?')) return;
+    const handleDeleteClick = (cartId: number) => {
+        setDeleteCartId(cartId);
+        setShowDeleteModal(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!deleteCartId) return;
         
         try {
-            const response = await useCartStore.delete({ id: cartId });
+            const response = await useCartStore.delete({ id: deleteCartId });
             if (response.data?.status) {
                 loadCarts();
+                setShowDeleteModal(false);
+                setDeleteCartId(null);
+                toast({ message: 'Cart item deleted successfully', type: 'success' });
+            } else {
+                setShowDeleteModal(false);
+                setAlertMessage(response.data?.message || 'Failed to delete cart item');
+                setAlertType('error');
+                setShowAlert(true);
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error deleting cart:', error);
-            alert('Failed to delete cart item');
+            const errorMessage = error.response?.data?.message || 'Failed to delete cart item';
+            setShowDeleteModal(false);
+            setAlertMessage(errorMessage);
+            setAlertType('error');
+            setShowAlert(true);
         }
     };
 
@@ -101,11 +126,11 @@ export default function CartIndex() {
                     <p className="mt-2 text-sm text-gray-600">View and manage customer shopping carts</p>
                 </div>
 
-                {/* Filters */}
+                {/* Inline Filters */}
                 <div className="bg-white shadow rounded-lg p-4">
-                    <form onSubmit={handleSearch} className="space-y-4">
-                        <div className="flex flex-col lg:flex-row gap-4 items-end">
-                            <div className="flex-1">
+                    <form onSubmit={handleSearch}>
+                        <div className="flex flex-wrap items-end gap-3">
+                            <div className="flex-1 min-w-[200px]">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Search by Product Name
                                 </label>
@@ -114,7 +139,7 @@ export default function CartIndex() {
                                     value={search}
                                     onChange={(e) => setSearch(e.target.value)}
                                     placeholder="Search products..."
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                                 />
                             </div>
                             <div className="w-48">
@@ -124,54 +149,55 @@ export default function CartIndex() {
                                 <select
                                     value={userType}
                                     onChange={(e) => handleFilterChange(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
                                 >
                                     <option value="">All Users</option>
                                     <option value="authenticated">Authenticated</option>
                                     <option value="guest">Guest</option>
                                 </select>
                             </div>
+                            <div className="flex-shrink-0 min-w-[280px]">
+                                <FormDatePicker
+                                    title="Filter by Date"
+                                    isRange={true}
+                                    useRange={true}
+                                    value={dateRange.startDate && dateRange.endDate ? {
+                                        startDate: typeof dateRange.startDate === 'string' 
+                                            ? new Date(dateRange.startDate) 
+                                            : dateRange.startDate,
+                                        endDate: typeof dateRange.endDate === 'string' 
+                                            ? new Date(dateRange.endDate) 
+                                            : dateRange.endDate
+                                    } : null}
+                                    handleDateChange={(dates: any) => setDateRange(dates)}
+                                    noMaxDate={false}
+                                    noMinLimit={false}
+                                    className="text-sm"
+                                    popoverDirection="down"
+                                />
+                            </div>
                             <div className="flex gap-2">
                                 <button
                                     type="submit"
-                                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                                    className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors text-sm font-medium whitespace-nowrap"
                                 >
                                     Search
                                 </button>
-                                {(search || userType) && (
+                                {(search || userType || (dateRange.startDate && dateRange.endDate)) && (
                                     <button
                                         type="button"
                                         onClick={() => {
                                             setSearch('');
                                             setUserType('');
+                                            setDateRange({ startDate: null, endDate: null });
                                             window.location.href = '/admin/carts';
                                         }}
-                                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
+                                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors text-sm font-medium whitespace-nowrap"
                                     >
                                         Clear
                                     </button>
                                 )}
                             </div>
-                        </div>
-                        <div className="w-full sm:w-auto min-w-[280px]">
-                            <FormDatePicker
-                                title="Filter by Date"
-                                isRange={true}
-                                useRange={true}
-                                value={dateRange.startDate && dateRange.endDate ? {
-                                    startDate: typeof dateRange.startDate === 'string' 
-                                        ? new Date(dateRange.startDate) 
-                                        : dateRange.startDate,
-                                    endDate: typeof dateRange.endDate === 'string' 
-                                        ? new Date(dateRange.endDate) 
-                                        : dateRange.endDate
-                                } : null}
-                                handleDateChange={(dates: any) => setDateRange(dates)}
-                                noMaxDate={false}
-                                noMinLimit={false}
-                                className="text-sm"
-                                popoverDirection="down"
-                            />
                         </div>
                     </form>
                 </div>
@@ -291,7 +317,7 @@ export default function CartIndex() {
                                                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                         <div className="flex justify-end space-x-2">
                                                             <button
-                                                                onClick={() => handleDelete(cart.id)}
+                                                                onClick={() => handleDeleteClick(cart.id)}
                                                                 className="text-red-600 hover:text-red-900"
                                                                 title="Delete"
                                                             >
@@ -328,6 +354,29 @@ export default function CartIndex() {
                         )}
                     </>
                 )}
+
+                {/* Delete Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={showDeleteModal}
+                    onClose={() => {
+                        setShowDeleteModal(false);
+                        setDeleteCartId(null);
+                    }}
+                    onConfirm={handleDeleteConfirm}
+                    title="Delete Cart Item"
+                    message="Are you sure you want to delete this cart item? This action cannot be undone."
+                    confirmText="Delete"
+                    cancelText="Cancel"
+                    confirmButtonColor="red"
+                />
+
+                {/* Alert Modal */}
+                <AlertModal
+                    isOpen={showAlert}
+                    onClose={() => setShowAlert(false)}
+                    message={alertMessage}
+                    type={alertType}
+                />
             </div>
         </AdminLayout>
     );

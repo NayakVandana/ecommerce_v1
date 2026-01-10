@@ -28,7 +28,7 @@ const adminNavigation = [
     { name: 'Users', href: '/admin/users', icon: UsersIcon },
 ];
 
-export default function AdminLayout({ children, currentPath }: { children: React.ReactNode; currentPath?: string }) {
+export default function AdminLayout({ children, currentPath }: any) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [user, setUser] = useState<any>(null);
 

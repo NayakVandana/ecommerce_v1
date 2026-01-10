@@ -1,26 +1,12 @@
 import { Link } from '@inertiajs/react';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
-interface PaginationProps {
-    data: {
-        current_page: number;
-        last_page: number;
-        per_page: number;
-        total: number;
-        from?: number;
-        to?: number;
-        links?: Array<{
-            url: string | null;
-            label: string;
-            active: boolean;
-        }>;
-    };
-    onPageChange?: (page: number) => void;
-    baseUrl?: string;
-    queryParams?: Record<string, string>;
-}
-
-export default function Pagination({ data, onPageChange, baseUrl, queryParams }: PaginationProps) {
+export default function Pagination({ 
+    data, 
+    onPageChange, 
+    baseUrl, 
+    queryParams 
+}: any) {
     if (!data || data.last_page <= 1) {
         return null;
     }
