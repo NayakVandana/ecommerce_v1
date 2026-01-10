@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { usePage } from '@inertiajs/react';
+import { usePage, Link } from '@inertiajs/react';
 import { useProductStore } from './useProductStore';
 import AdminLayout from '../Layout';
 import Pagination from '../../../Components/Pagination';
@@ -14,7 +14,6 @@ import {
     CheckCircleIcon,
     XCircleIcon
 } from '@heroicons/react/24/outline';
-import { Link } from '@inertiajs/react';
 
 export default function ProductIndex() {
     const { url } = usePage();
@@ -24,8 +23,6 @@ export default function ProductIndex() {
     const [products, setProducts] = useState<any[]>([]);
     const [pagination, setPagination] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [showModal, setShowModal] = useState(false);
-    const [editingProduct, setEditingProduct] = useState<any>(null);
     const [dateRange, setDateRange] = useState<any>({
         startDate: null,
         endDate: null,
@@ -117,16 +114,13 @@ export default function ProductIndex() {
                             <h1 className="text-3xl font-bold text-gray-900">Products</h1>
                             <p className="mt-2 text-sm text-gray-600">Manage your product catalog</p>
                         </div>
-                        <button
-                            onClick={() => {
-                                setEditingProduct(null);
-                                setShowModal(true);
-                            }}
+                        <Link
+                            href="/admin/products/create"
                             className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
                         >
                             <PlusIcon className="h-5 w-5 mr-2" />
                             Add Product
-                        </button>
+                        </Link>
                     </div>
                     
                     {/* Inline Filters */}
@@ -189,17 +183,33 @@ export default function ProductIndex() {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
                                                     <Link href={`/admin/products/${product.id}`} className="flex-shrink-0 h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity">
-                                                        {product.media?.[0]?.url ? (
-                                                            <img
-                                                                className="h-10 w-10 rounded-md object-cover"
-                                                                src={product.media[0].url}
-                                                                alt={product.product_name}
-                                                            />
-                                                        ) : (
-                                                            <div className="h-10 w-10 rounded-md bg-gray-200 flex items-center justify-center">
-                                                                <span className="text-gray-400 text-xs">No Image</span>
-                                                            </div>
-                                                        )}
+                                                        {(() => {
+                                                            // Get primary image first, or first image, or first media
+                                                            const primaryMedia = product.media?.find((m: any) => m.is_primary && m.type === 'image');
+                                                            const firstImage = product.media?.find((m: any) => m.type === 'image');
+                                                            const displayMedia = primaryMedia || firstImage || product.media?.[0];
+                                                            
+                                                            if (displayMedia?.url || displayMedia?.file_path) {
+                                                                const imageUrl = displayMedia.url || displayMedia.file_path;
+                                                                return (
+                                                                    <img
+                                                                        className="h-10 w-10 rounded-md object-cover border border-gray-200"
+                                                                        src={imageUrl}
+                                                                        alt={product.product_name}
+                                                                        onError={(e) => {
+                                                                            // Fallback if image fails to load
+                                                                            (e.target as HTMLImageElement).style.display = 'none';
+                                                                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                                                        }}
+                                                                    />
+                                                                );
+                                                            }
+                                                            return (
+                                                                <div className="h-10 w-10 rounded-md bg-gray-200 flex items-center justify-center border border-gray-300">
+                                                                    <span className="text-gray-400 text-xs">No Image</span>
+                                                                </div>
+                                                            );
+                                                        })()}
                                                     </Link>
                                                     <div className="ml-4">
                                                         <Link 
@@ -244,16 +254,13 @@ export default function ProductIndex() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <div className="flex justify-end space-x-2">
-                                                    <button
-                                                        onClick={() => {
-                                                            setEditingProduct(product);
-                                                            setShowModal(true);
-                                                        }}
+                                                    <Link
+                                                        href={`/admin/products/${product.id}/edit`}
                                                         className="text-indigo-600 hover:text-indigo-900"
                                                         title="Edit"
                                                     >
                                                         <PencilIcon className="h-5 w-5" />
-                                                    </button>
+                                                    </Link>
                                                     <button
                                                         onClick={() => handleDeleteClick(product.id)}
                                                         className="text-red-600 hover:text-red-900"
@@ -307,6 +314,7 @@ export default function ProductIndex() {
                     message={alertMessage}
                     type={alertType}
                 />
+
             </div>
         </AdminLayout>
     );

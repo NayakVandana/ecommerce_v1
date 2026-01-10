@@ -33,6 +33,10 @@ Route::prefix('admin')->middleware(['auth.token', 'admin'])->group(function () {
         Route::post('/update', [AdminProductController::class, 'update']);
         Route::post('/delete', [AdminProductController::class, 'destroy']);
         Route::post('/toggle-status', [AdminProductController::class, 'toggleStatus']);
+        Route::post('/upload-media', [AdminProductController::class, 'uploadMedia']);
+        Route::post('/update-media', [AdminProductController::class, 'updateMedia']);
+        Route::post('/delete-media', [AdminProductController::class, 'deleteMedia']);
+        Route::post('/update-media-order', [AdminProductController::class, 'updateMediaOrder']);
     });
     
     // Category Management

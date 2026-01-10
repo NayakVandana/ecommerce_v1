@@ -118,6 +118,16 @@ Route::prefix('admin')->group(function () {
         return Inertia::render('Admin/Product/index');
     })->name('admin.products');
     
+    Route::get('/products/create', function () {
+        return Inertia::render('Admin/Product/Create');
+    })->name('admin.products.create');
+    
+    Route::get('/products/{id}/edit', function ($id) {
+        return Inertia::render('Admin/Product/Create', [
+            'id' => $id
+        ]);
+    })->name('admin.products.edit');
+    
     Route::get('/products/{id}', function ($id) {
         return Inertia::render('Admin/Product/Show', [
             'id' => $id

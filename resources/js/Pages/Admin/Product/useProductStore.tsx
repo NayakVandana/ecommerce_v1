@@ -36,5 +36,17 @@ export const useProductStore = {
     update: (data: any) => adminApi.post('/products/update', data),
     delete: (data: any) => adminApi.post('/products/delete', data),
     toggleStatus: (data: any) => adminApi.post('/products/toggle-status', data),
+    uploadMedia: (formData: FormData) => {
+        const token = localStorage.getItem('auth_token');
+        return axios.post('/api/admin/products/upload-media', formData, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    },
+    deleteMedia: (data: any) => adminApi.post('/products/delete-media', data),
+    updateMedia: (data: any) => adminApi.post('/products/update-media', data),
+    updateMediaOrder: (data: any) => adminApi.post('/products/update-media-order', data),
 };
 
