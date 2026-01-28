@@ -78,6 +78,7 @@ class AdminProductController extends Controller
                     'product_id' => $product->id,
                     'size' => $variation['size'] ?? null,
                     'color' => $variation['color'] ?? null,
+                    'gender' => $variation['gender'] ?? null,
                     'stock_quantity' => $variation['stock_quantity'] ?? 0,
                     'in_stock' => $variation['in_stock'] ?? true,
                 ]);
@@ -124,6 +125,7 @@ class AdminProductController extends Controller
                     'product_id' => $product->id,
                     'size' => $variation['size'] ?? null,
                     'color' => $variation['color'] ?? null,
+                    'gender' => $variation['gender'] ?? null,
                     'stock_quantity' => $variation['stock_quantity'] ?? 0,
                     'in_stock' => $variation['in_stock'] ?? true,
                 ]);
@@ -165,11 +167,21 @@ class AdminProductController extends Controller
             'files' => 'required|array',
             'files.*' => 'required|file|mimes:jpeg,jpg,png,gif,webp,mp4,mov,avi|max:10240', // 10MB max
             'color' => 'sometimes|string|max:50',
+            'variation_id' => 'sometimes|exists:product_variations,id',
         ]);
 
         $product = Product::findOrFail($request->product_id);
         $uploadedMedia = [];
         $color = $request->input('color');
+        $variationId = $request->input('variation_id');
+
+        // If variation_id is provided, get color from variation if not explicitly provided
+        if ($variationId && !$color) {
+            $variation = ProductVariation::find($variationId);
+            if ($variation && $variation->color) {
+                $color = $variation->color;
+            }
+        }
 
         foreach ($request->file('files') as $index => $file) {
             $path = $file->store("products/{$product->id}", 'public');
@@ -178,6 +190,7 @@ class AdminProductController extends Controller
 
             $media = ProductMedia::create([
                 'product_id' => $product->id,
+                'variation_id' => $variationId,
                 'type' => strpos($file->getMimeType(), 'image/') === 0 ? 'image' : 'video',
                 'file_path' => $path,
                 'file_name' => $file->getClientOriginalName(),
@@ -186,7 +199,7 @@ class AdminProductController extends Controller
                 'disk' => 'public',
                 'url' => $url,
                 'sort_order' => $index,
-                'is_primary' => $index === 0,
+                'is_primary' => $index === 0 && !$variationId, // Only set primary if not variation-specific
                 'color' => $color,
             ]);
 

@@ -38,6 +38,8 @@ export default function ProductCreate() {
     const [activeMediaTab, setActiveMediaTab] = useState<'images' | 'video'>('images');
     const [pendingImages, setPendingImages] = useState<File[]>([]);
     const [pendingVideos, setPendingVideos] = useState<File[]>([]);
+    const [selectedVariationForMedia, setSelectedVariationForMedia] = useState<number | null>(null);
+    const [activeMainTab, setActiveMainTab] = useState<'media' | 'variations'>('media');
 
     useEffect(() => {
         loadCategories();
@@ -105,6 +107,64 @@ export default function ProductCreate() {
                 return newErrors;
             });
         }
+
+        // If category changed to Fashion, auto-generate size variants
+        if (name === 'category') {
+            const selectedCategory = categories.find((cat: any) => cat.id === parseInt(value));
+            if (selectedCategory && selectedCategory.name.toLowerCase() === 'fashion' && variations.length === 0) {
+                generateFashionVariants();
+            } else if (selectedCategory && selectedCategory.name.toLowerCase() !== 'fashion') {
+                // Clear variations if switching away from fashion
+                setVariations([]);
+            }
+        }
+    };
+
+    // Check if current category is Fashion
+    const isFashionCategory = () => {
+        const selectedCategory = categories.find((cat: any) => cat.id === parseInt(formData.category));
+        return selectedCategory && selectedCategory.name.toLowerCase() === 'fashion';
+    };
+
+    // Generate all size variants for fashion products - All sizes displayed by default (no duplicates)
+    const generateFashionVariants = () => {
+        const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+        const genders = ['male', 'female'];
+        const newVariations: any[] = [];
+
+        // Generate all combinations: 7 sizes × 2 genders = 14 variations
+        genders.forEach(gender => {
+            sizes.forEach(size => {
+                // Check if this combination already exists to avoid duplicates
+                const exists = variations.some((v: any) => 
+                    v.size === size && v.gender === gender
+                );
+                
+                if (!exists) {
+                    newVariations.push({
+                        id: null,
+                        size: size, // All sizes are set by default
+                        color: '',
+                        gender: gender, // All genders are set by default
+                        stock_quantity: 0,
+                        in_stock: true,
+                    });
+                }
+            });
+        });
+
+        // Only add new variations if there are any (avoid duplicates)
+        if (newVariations.length > 0) {
+            setVariations([...variations, ...newVariations]);
+        } else {
+            // If all variations already exist, show message
+            toast({ message: 'All size variations already exist for this product', type: 'info' });
+        }
+        
+        setFormData(prev => ({
+            ...prev,
+            total_quantity: '0'
+        }));
     };
 
     const onDrop = (acceptedFiles: File[]) => {
@@ -118,12 +178,13 @@ export default function ProductCreate() {
         
         // If product exists, upload immediately
         if (currentProductId) {
-            uploadMediaFiles(acceptedFiles, currentProductId);
+            uploadMediaFiles(acceptedFiles, currentProductId, selectedVariationForMedia);
         } else {
             // Store files for later upload after product creation
-            setPendingMediaFiles([...pendingMediaFiles, ...acceptedFiles]);
-            setPendingImages([...pendingImages, ...images]);
-            setPendingVideos([...pendingVideos, ...videos]);
+            // Use functional updates to avoid race conditions
+            setPendingMediaFiles(prev => [...prev, ...acceptedFiles]);
+            setPendingImages(prev => [...prev, ...images]);
+            setPendingVideos(prev => [...prev, ...videos]);
             toast({ message: `${acceptedFiles.length} file(s) selected. They will be uploaded after product is created.`, type: 'info' });
         }
     };
@@ -137,13 +198,55 @@ export default function ProductCreate() {
         multiple: true
     });
 
-    const uploadMediaFiles = async (files: File[], productIdToUse: number) => {
+    const uploadMediaFiles = async (files: File[], productIdToUse: number, variationId?: number | string | null, variationColor?: string | null) => {
         try {
             setUploadingMedia(true);
             const formData = new FormData();
             formData.append('product_id', productIdToUse.toString());
-            if (mediaColor) {
-                formData.append('color', mediaColor);
+            
+            // Handle variation_id - send null for general media, or variation ID for variation-specific media
+            if (variationId !== null && variationId !== undefined && variationId !== '') {
+                // For existing variations, use the ID; for new variations (temp-*), backend will handle after variation is saved
+                if (typeof variationId === 'number' || (typeof variationId === 'string' && !variationId.toString().startsWith('temp-'))) {
+                    formData.append('variation_id', variationId.toString());
+                }
+                // For temp variations, we'll link after variation is created (backend handles this)
+            } else {
+                // Explicitly set to null for general media (no variation)
+                formData.append('variation_id', '');
+            }
+            
+            // Determine color to use: from variation parameter, from variation object, or from mediaColor state
+            let colorToUse = null;
+            
+            // Priority 1: Use color from variation parameter (passed directly)
+            if (variationColor) {
+                colorToUse = variationColor;
+            } else if (variationId && variationId !== null && variationId !== '') {
+                // Priority 2: Get color from variation object
+                const selectedVariation = variations.find((v: any, idx: number) => {
+                    if (v.id && v.id.toString() === variationId.toString()) return true;
+                    if (typeof variationId === 'string' && variationId.startsWith('temp-')) {
+                        const tempIndex = parseInt(variationId.split('-')[1]);
+                        return idx === tempIndex;
+                    }
+                    return false;
+                });
+                if (selectedVariation && selectedVariation.color) {
+                    colorToUse = selectedVariation.color;
+                }
+            }
+            
+            // Priority 3: Use manual mediaColor state (only if no variation is selected)
+            if (!colorToUse && !variationId) {
+                colorToUse = mediaColor || null;
+            }
+            
+            // Send color if we have one (from variation or manual), or empty string for general media without color
+            if (colorToUse) {
+                formData.append('color', colorToUse);
+            } else {
+                formData.append('color', ''); // Empty string for general media without color
             }
             
             files.forEach((file) => {
@@ -153,14 +256,20 @@ export default function ProductCreate() {
             const response = await useProductStore.uploadMedia(formData);
             if (response.data?.status) {
                 const uploadedMedia = response.data.data;
-                // If no media exists yet, set first one as primary
-                if (media.length === 0 && uploadedMedia.length > 0) {
+                // Format URLs to ensure they're properly displayed
+                const formattedMedia = uploadedMedia.map((item: any) => ({
+                    ...item,
+                    url: item.url || (item.file_path ? `/storage/${item.file_path}` : null)
+                }));
+                // If no media exists yet, set first one as primary (only if not variation-specific)
+                if (media.length === 0 && formattedMedia.length > 0 && !variationId) {
                     // First uploaded media is automatically set as primary by backend
                     // But we can ensure it's marked in our state
-                    uploadedMedia[0].is_primary = true;
+                    formattedMedia[0].is_primary = true;
                 }
-                setMedia([...media, ...uploadedMedia]);
+                setMedia((prevMedia) => [...prevMedia, ...formattedMedia]);
                 setMediaColor('');
+                setSelectedVariationForMedia(null);
                 toast({ message: 'Media uploaded successfully', type: 'success' });
             }
         } catch (error: any) {
@@ -178,6 +287,8 @@ export default function ProductCreate() {
             if (mediaColor) {
                 formData.append('color', mediaColor);
             }
+            // Note: variation_id will be set after variations are created
+            // For now, upload as general media
             
             pendingMediaFiles.forEach((file) => {
                 formData.append('files[]', file);
@@ -185,11 +296,21 @@ export default function ProductCreate() {
 
             const response = await useProductStore.uploadMedia(formData);
             if (response.data?.status) {
+                const uploadedMedia = response.data.data;
+                // Update media state with uploaded media - ensure URLs are properly formatted
+                if (uploadedMedia && uploadedMedia.length > 0) {
+                    const formattedMedia = uploadedMedia.map((item: any) => ({
+                        ...item,
+                        url: item.url || (item.file_path ? `/storage/${item.file_path}` : null)
+                    }));
+                    setMedia((prevMedia) => [...prevMedia, ...formattedMedia]);
+                }
                 // Clear pending files after successful upload
                 setPendingMediaFiles([]);
                 setPendingImages([]);
                 setPendingVideos([]);
                 setMediaColor('');
+                setSelectedVariationForMedia(null);
                 return true;
             }
             throw new Error('Failed to upload media');
@@ -251,25 +372,133 @@ export default function ProductCreate() {
         }
     };
 
+    // Render media item component
+    const renderMediaItem = (item: any, showColorPicker: boolean = true) => {
+        return (
+            <>
+                <div className="relative group mb-2">
+                    {item.type === 'image' ? (
+                        <div className="relative">
+                            <img
+                                src={item.url || (item.file_path ? `/storage/${item.file_path}` : '/placeholder-image.png')}
+                                alt={item.file_name || 'Product image'}
+                                className="w-full h-32 object-cover rounded-md border border-gray-200"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).src = '/placeholder-image.png';
+                                }}
+                            />
+                            <div className="absolute top-2 left-2 px-2 py-1 bg-white bg-opacity-80 rounded flex items-center space-x-1">
+                                <PhotoIcon className="h-3 w-3 text-gray-700" />
+                                <span className="text-xs text-gray-700">Image</span>
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="relative">
+                            <video
+                                src={item.url || (item.file_path ? `/storage/${item.file_path}` : '')}
+                                className="w-full h-32 object-cover rounded-md border border-gray-200"
+                                controls
+                            />
+                            <div className="absolute top-2 left-2 px-2 py-1 bg-white bg-opacity-80 rounded flex items-center space-x-1">
+                                <VideoCameraIcon className="h-3 w-3 text-gray-700" />
+                                <span className="text-xs text-gray-700">Video</span>
+                            </div>
+                        </div>
+                    )}
+                    {item.is_primary && (
+                        <span className="absolute top-2 left-2 px-2 py-1 text-xs font-medium bg-indigo-600 text-white rounded z-10">
+                            Primary
+                        </span>
+                    )}
+                    <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <button
+                            type="button"
+                            onClick={() => handleSetPrimaryMedia(item.id)}
+                            className={`px-2 py-1 text-xs font-medium rounded ${
+                                item.is_primary
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-white text-gray-700 hover:bg-gray-100 shadow'
+                            }`}
+                            title="Set as Primary"
+                        >
+                            {item.is_primary ? 'Primary' : 'Set Primary'}
+                        </button>
+                    </div>
+                    <button
+                        type="button"
+                        onClick={() => handleDeleteMedia(item.id)}
+                        className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    >
+                        <TrashIcon className="h-4 w-4" />
+                    </button>
+                </div>
+                {showColorPicker && (
+                    <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Color: {item.color || 'Not set'}
+                        </label>
+                        {item.color && (
+                            <div
+                                className="w-full h-6 rounded border border-gray-300"
+                                style={{ backgroundColor: item.color }}
+                            />
+                        )}
+                    </div>
+                )}
+            </>
+        );
+    };
+
     const handleAddVariation = () => {
-        const newVariation = {
-            id: null,
-            size: '',
-            color: '',
-            stock_quantity: 0,
-            in_stock: true,
-        };
-        const updated = [...variations, newVariation];
-        setVariations(updated);
-        
-        // Auto-calculate total stock from variations
-        const totalStock = updated.reduce((sum, v) => {
-            return sum + (parseInt(v.stock_quantity) || 0);
-        }, 0);
-        setFormData(prev => ({
-            ...prev,
-            total_quantity: totalStock.toString()
-        }));
+        if (isFashionCategory()) {
+            // For fashion products, generate all size variants (XS-XXXL) for all genders (male, female) by default
+            // Only creates variations that don't already exist (prevents duplicates)
+            if (variations.length === 0) {
+                // First time: generate all variations
+                const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+                const genders = ['male', 'female'];
+                const newVariations: any[] = [];
+
+                genders.forEach(gender => {
+                    sizes.forEach(size => {
+                        newVariations.push({
+                            id: null,
+                            size: size,
+                            color: '',
+                            gender: gender,
+                            stock_quantity: 0,
+                            in_stock: true,
+                        });
+                    });
+                });
+
+                setVariations(newVariations);
+            } else {
+                // If variations already exist, only add missing ones (no duplicates)
+                generateFashionVariants();
+            }
+        } else {
+            // For non-fashion products, add a single empty variation
+            const newVariation = {
+                id: null,
+                size: '',
+                color: '',
+                gender: null,
+                stock_quantity: 0,
+                in_stock: true,
+            };
+            const updated = [...variations, newVariation];
+            setVariations(updated);
+            
+            // Auto-calculate total stock from variations
+            const totalStock = updated.reduce((sum, v) => {
+                return sum + (parseInt(v.stock_quantity) || 0);
+            }, 0);
+            setFormData(prev => ({
+                ...prev,
+                total_quantity: totalStock.toString()
+            }));
+        }
     };
 
     const handleRemoveVariation = (index: number) => {
@@ -327,7 +556,7 @@ export default function ProductCreate() {
         setErrors({});
 
         try {
-            const submitData: any = {
+                const submitData: any = {
                 ...formData,
                 price: parseFloat(formData.price),
                 category: parseInt(formData.category),
@@ -336,6 +565,7 @@ export default function ProductCreate() {
                 variations: variations.map((v: any) => ({
                     size: v.size || null,
                     color: v.color || null,
+                    gender: v.gender || null,
                     stock_quantity: parseInt(v.stock_quantity) || 0,
                     in_stock: v.in_stock !== false,
                 })),
@@ -355,21 +585,24 @@ export default function ProductCreate() {
                 // Upload pending media files if any (for new products)
                 if (!isEditMode && savedProductId && pendingMediaFiles.length > 0) {
                     try {
+                        setUploadingMedia(true);
                         await uploadPendingMedia(savedProductId);
                         toast({ message: 'Product created and media uploaded successfully.', type: 'success' });
-                    } catch (error) {
+                    } catch (error: any) {
                         console.error('Error uploading pending media:', error);
-                        toast({ message: 'Product created but some media failed to upload.', type: 'warning' });
+                        toast({ message: error.response?.data?.message || 'Product created but some media failed to upload.', type: 'warning' });
+                    } finally {
+                        setUploadingMedia(false);
                     }
                 } else {
                     toast({ message: isEditMode ? 'Product updated successfully' : 'Product created successfully.', type: 'success' });
                 }
                 
-                // Small delay to ensure media upload completes
+                // Wait a bit longer to ensure media upload completes before redirect
                 setTimeout(() => {
                     // Redirect to product listing page after successful save
                     router.visit('/admin/products');
-                }, 500);
+                }, 1000);
             } else {
                 if (response.data?.errors) {
                     setErrors(response.data.errors);
@@ -546,10 +779,69 @@ export default function ProductCreate() {
                                 </div>
                             </div>
 
-                            {/* Product Media Section */}
+                            {/* Product Media & Variations Tabs */}
                             <div className="border-t pt-6">
-                                <h3 className="text-lg font-medium text-gray-900 mb-4">Product Media</h3>
-                                    {/* Media Upload Tabs */}
+                                {/* Tab Navigation */}
+                                <div className="border-b border-gray-200 mb-6">
+                                    <nav className="flex space-x-8">
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveMainTab('media')}
+                                            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                                                activeMainTab === 'media'
+                                                    ? 'border-indigo-500 text-indigo-600'
+                                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                            }`}
+                                        >
+                                            Product Media
+                                            <span className="ml-2 text-xs bg-gray-100 px-2 py-0.5 rounded">
+                                                {media.filter((m: any) => !m.variation_id).length}
+                                            </span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setActiveMainTab('variations')}
+                                            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                                                activeMainTab === 'variations'
+                                                    ? 'border-indigo-500 text-indigo-600'
+                                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                            }`}
+                                        >
+                                            Product Variations
+                                            <span className="ml-2 text-xs bg-gray-100 px-2 py-0.5 rounded">
+                                                {variations.length}
+                                            </span>
+                                        </button>
+                                    </nav>
+                                </div>
+
+                                {/* Tab Content: Product Media */}
+                                {activeMainTab === 'media' && (
+                                    <div>
+                                        <div className="mb-4">
+                                            <h3 className="text-lg font-medium text-gray-900">Product Media</h3>
+                                            <p className="text-sm text-gray-500 mt-1">
+                                                General product media (not linked to any variation). Optional color can be assigned.
+                                            </p>
+                                        </div>
+                                        
+                                        {/* Ensure no variation is selected for general media */}
+                                        {selectedVariationForMedia !== null && (
+                                            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                                                <p className="text-sm text-yellow-800">
+                                                    <strong>Warning:</strong> A variation is selected. This will upload variation-specific media.
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setSelectedVariationForMedia(null)}
+                                                        className="ml-2 text-yellow-900 underline"
+                                                    >
+                                                        Clear selection to upload general media
+                                                    </button>
+                                                </p>
+                                            </div>
+                                        )}
+                                        
+                                        {/* Media Upload Tabs */}
                                     <div className="mb-4">
                                         <div className="border-b border-gray-200">
                                             <nav className="flex space-x-8">
@@ -634,12 +926,17 @@ export default function ProductCreate() {
                                                         </div>
                                                     ))}
                                                     {/* Uploaded Images */}
-                                                    {media.filter((m: any) => m.type === 'image').map((item: any) => (
+                                                    {media.filter((m: any) => m.type === 'image').map((item: any) => {
+                                                        const imageUrl = item.url || (item.file_path ? `/storage/${item.file_path}` : null);
+                                                        return (
                                                         <div key={item.id} className="relative group">
                                                             <img
-                                                                src={item.url || item.file_path}
-                                                                alt={item.file_name}
+                                                                src={imageUrl || '/placeholder-image.png'}
+                                                                alt={item.file_name || 'Product image'}
                                                                 className="w-full h-32 object-cover rounded-md border border-gray-200"
+                                                                onError={(e) => {
+                                                                    (e.target as HTMLImageElement).src = '/placeholder-image.png';
+                                                                }}
                                                             />
                                                             {item.is_primary && (
                                                                 <span className="absolute top-1 left-1 px-2 py-1 text-xs font-medium bg-indigo-600 text-white rounded">
@@ -668,7 +965,8 @@ export default function ProductCreate() {
                                                                 <XMarkIcon className="h-4 w-4" />
                                                             </button>
                                                         </div>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
 
@@ -693,10 +991,12 @@ export default function ProductCreate() {
                                                         </div>
                                                     ))}
                                                     {/* Uploaded Videos */}
-                                                    {media.filter((m: any) => m.type === 'video').map((item: any) => (
+                                                    {media.filter((m: any) => m.type === 'video').map((item: any) => {
+                                                        const videoUrl = item.url || (item.file_path ? `/storage/${item.file_path}` : '');
+                                                        return (
                                                         <div key={item.id} className="relative group">
                                                             <video
-                                                                src={item.url || item.file_path}
+                                                                src={videoUrl}
                                                                 className="w-full h-32 object-cover rounded-md border border-gray-200"
                                                                 controls
                                                             />
@@ -727,12 +1027,14 @@ export default function ProductCreate() {
                                                                 <XMarkIcon className="h-4 w-4" />
                                                             </button>
                                                         </div>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
                                         </div>
                                         
-                                        {/* Color Picker */}
+                                        {/* Color Picker - Only show if no variation is selected */}
+                                        {selectedVariationForMedia === null && (
                                         <div className="mt-4">
                                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                                 Available Colors
@@ -823,188 +1125,100 @@ export default function ProductCreate() {
                                                 )}
                                             </div>
                                         </div>
+                                        )}
                                         {uploadingMedia && (
                                             <p className="text-sm text-gray-500">Uploading...</p>
                                         )}
                                     </div>
 
-                                    {/* Media Gallery with Color Selection */}
-                                    {media.length > 0 && (
+                                    {/* Media Gallery - General Product Media Only */}
+                                    {media.filter((m: any) => !m.variation_id).length > 0 && (
                                         <div className="mt-6 border-t pt-6">
-                                            <h4 className="text-sm font-medium text-gray-900 mb-4">Media Gallery</h4>
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                {media.map((item: any) => (
+                                            <h4 className="text-sm font-medium text-gray-900 mb-4">General Product Media Gallery</h4>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                                {media.filter((m: any) => !m.variation_id).map((item: any) => (
                                                     <div key={item.id} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                                                        <div className="relative group mb-2">
-                                                            {item.type === 'image' ? (
-                                                                <div className="relative">
-                                                                    <img
-                                                                        src={item.url || item.file_path}
-                                                                        alt={item.file_name}
-                                                                        className="w-full h-32 object-cover rounded-md border border-gray-200"
-                                                                    />
-                                                                    <div className="absolute top-2 left-2 px-2 py-1 bg-white bg-opacity-80 rounded flex items-center space-x-1">
-                                                                        <PhotoIcon className="h-3 w-3 text-gray-700" />
-                                                                        <span className="text-xs text-gray-700">Image</span>
-                                                                    </div>
-                                                                </div>
-                                                            ) : (
-                                                                <div className="relative">
-                                                                    <video
-                                                                        src={item.url || item.file_path}
-                                                                        className="w-full h-32 object-cover rounded-md border border-gray-200"
-                                                                        controls
-                                                                    />
-                                                                    <div className="absolute top-2 left-2 px-2 py-1 bg-white bg-opacity-80 rounded flex items-center space-x-1">
-                                                                        <VideoCameraIcon className="h-3 w-3 text-gray-700" />
-                                                                        <span className="text-xs text-gray-700">Video</span>
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                            {item.is_primary && (
-                                                                <span className="absolute top-2 left-2 px-2 py-1 text-xs font-medium bg-indigo-600 text-white rounded z-10">
-                                                                    Primary
-                                                                </span>
-                                                            )}
-                                                            <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => handleSetPrimaryMedia(item.id)}
-                                                                    className={`px-2 py-1 text-xs font-medium rounded ${
-                                                                        item.is_primary
-                                                                            ? 'bg-indigo-600 text-white'
-                                                                            : 'bg-white text-gray-700 hover:bg-gray-100 shadow'
-                                                                    }`}
-                                                                    title="Set as Primary"
-                                                                >
-                                                                    {item.is_primary ? 'Primary' : 'Set Primary'}
-                                                                </button>
-                                                            </div>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => handleDeleteMedia(item.id)}
-                                                                className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity z-10"
-                                                            >
-                                                                <TrashIcon className="h-4 w-4" />
-                                                            </button>
-                                                        </div>
-                                                        <div>
-                                                            <label className="block text-xs font-medium text-gray-700 mb-1">
-                                                                Color
-                                                            </label>
-                                                            <div className="flex items-center space-x-1 flex-wrap gap-1 mb-2">
-                                                                {[
-                                                                    { name: 'Red', value: '#D0021B' },
-                                                                    { name: 'Orange', value: '#ff9900' },
-                                                                    { name: 'Blue', value: '#0000ff' },
-                                                                    { name: 'Purple', value: '#800080' },
-                                                                    { name: 'Pink', value: '#ff1493' },
-                                                                    { name: 'Yellow', value: '#ffff00' },
-                                                                    { name: 'Green', value: '#00ff00' },
-                                                                    { name: 'Skyblue', value: '#87CEEB' },
-                                                                    { name: 'Brown', value: '#8b4513' },
-                                                                    { name: 'Black', value: '#000000' },
-                                                                    { name: 'Gray', value: '#808080' },
-                                                                    { name: 'White', value: '#ffffff' },
-                                                                ].map((color) => (
-                                                                    <button
-                                                                        key={color.value}
-                                                                        type="button"
-                                                                        onClick={() => handleUpdateMediaColor(item.id, color.value)}
-                                                                        className={`w-6 h-6 rounded-full border transition-all ${
-                                                                            item.color === color.value
-                                                                                ? 'border-blue-500 ring-1 ring-blue-300'
-                                                                                : 'border-gray-300 hover:border-gray-400'
-                                                                        }`}
-                                                                        style={{ backgroundColor: color.value }}
-                                                                        title={color.name}
-                                                                    />
-                                                                ))}
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => {
-                                                                        const newState = { ...mediaColorPickers };
-                                                                        newState[item.id] = !newState[item.id];
-                                                                        setMediaColorPickers(newState);
-                                                                    }}
-                                                                    className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center hover:border-gray-400 transition-colors"
-                                                                    title="Custom Color"
-                                                                >
-                                                                    <PlusIcon className="h-3 w-3 text-gray-400" />
-                                                                </button>
-                                                            </div>
-                                                            {mediaColorPickers[item.id] && (
-                                                                <div className="absolute z-10 mt-1">
-                                                                    <div className="fixed inset-0" onClick={() => {
-                                                                        const newState = { ...mediaColorPickers };
-                                                                        newState[item.id] = false;
-                                                                        setMediaColorPickers(newState);
-                                                                    }}></div>
-                                                                    <div className="relative">
-                                                                        <SketchPicker
-                                                                            color={item.color || '#ffffff'}
-                                                                            onChange={(color) => handleUpdateMediaColor(item.id, color.hex)}
-                                                                            width="220px"
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                            )}
-                                                            <div className="flex items-center space-x-1 text-xs">
-                                                                <span className="text-gray-600">Selected:</span>
-                                                                {item.color ? (
-                                                                    <>
-                                                                        <div
-                                                                            className="w-3 h-3 rounded-full border border-gray-300"
-                                                                            style={{ backgroundColor: item.color }}
-                                                                        />
-                                                                        <span className="text-gray-700">
-                                                                            {[
-                                                                                { name: 'Red', value: '#D0021B' },
-                                                                                { name: 'Orange', value: '#ff9900' },
-                                                                                { name: 'Blue', value: '#0000ff' },
-                                                                                { name: 'Purple', value: '#800080' },
-                                                                                { name: 'Pink', value: '#ff1493' },
-                                                                                { name: 'Yellow', value: '#ffff00' },
-                                                                                { name: 'Green', value: '#00ff00' },
-                                                                                { name: 'Skyblue', value: '#87CEEB' },
-                                                                                { name: 'Brown', value: '#8b4513' },
-                                                                                { name: 'Black', value: '#000000' },
-                                                                                { name: 'Gray', value: '#808080' },
-                                                                                { name: 'White', value: '#ffffff' },
-                                                                            ].find(c => c.value === item.color)?.name || item.color}
-                                                                        </span>
-                                                                    </>
-                                                                ) : (
-                                                                    <span className="text-gray-400">No color</span>
-                                                                )}
-                                                            </div>
-                                                        </div>
+                                                        {renderMediaItem(item)}
                                                     </div>
                                                 ))}
                                             </div>
                                         </div>
                                     )}
-                            </div>
+                                    
+                                    {media.filter((m: any) => !m.variation_id).length === 0 && (
+                                        <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                            <p className="text-sm text-gray-500 text-center">
+                                                No general media uploaded yet. Use the upload area above to add general product media.
+                                            </p>
+                                        </div>
+                                    )}
+                                    </div>
+                                )}
 
-                            {/* Product Variations Section */}
-                            <div className="border-t pt-6">
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="text-lg font-medium text-gray-900">Product Variations</h3>
-                                    <button
-                                        type="button"
-                                        onClick={handleAddVariation}
-                                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-                                    >
-                                        <PlusIcon className="h-4 w-4 mr-1" />
-                                        Add Variation
-                                    </button>
-                                </div>
+                                {/* Tab Content: Product Variations */}
+                                {activeMainTab === 'variations' && (
+                                    <div>
+                                        <div className="mb-4">
+                                            <div className="flex justify-between items-center mb-2">
+                                                <h3 className="text-lg font-medium text-gray-900">Product Variations</h3>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleAddVariation}
+                                                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                                                >
+                                                    <PlusIcon className="h-4 w-4 mr-1" />
+                                                    Add Variation
+                                                </button>
+                                            </div>
+                                            <p className="text-sm text-gray-500">
+                                                Manage product variations (size, color, gender). Each variation can have its own media.
+                                                Media color is automatically set from the variation's color.
+                                                {isFashionCategory() && (
+                                                    <span className="block mt-1 font-medium text-indigo-600">
+                                                        {variations.length > 0 ? (
+                                                            <>All sizes (XS, S, M, L, XL, XXL, XXXL) displayed by default for Male and Female ({variations.length} variations)</>
+                                                        ) : (
+                                                            <>Click "Add Variation" to generate all sizes (XS-XXXL) for Male and Female by default</>
+                                                        )}
+                                                    </span>
+                                                )}
+                                            </p>
+                                        </div>
 
                                 {variations.length > 0 ? (
                                     <div className="space-y-4">
-                                        {variations.map((variation: any, index: number) => (
+                                        {/* Sort variations: by gender, then by size for better display */}
+                                        {[...variations].sort((a: any, b: any) => {
+                                            // Sort by gender first (male, female)
+                                            const genderOrder = { 'male': 1, 'female': 2 };
+                                            const genderA = genderOrder[a.gender as keyof typeof genderOrder] || 4;
+                                            const genderB = genderOrder[b.gender as keyof typeof genderOrder] || 4;
+                                            if (genderA !== genderB) return genderA - genderB;
+                                            
+                                            // Then sort by size
+                                            const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+                                            const sizeA = sizeOrder.indexOf(a.size || '');
+                                            const sizeB = sizeOrder.indexOf(b.size || '');
+                                            return sizeA - sizeB;
+                                        }).map((variation: any, index: number) => (
                                             <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                                <div className={`grid grid-cols-1 gap-4 ${isFashionCategory() ? 'md:grid-cols-5' : 'md:grid-cols-4'}`}>
+                                                    {isFashionCategory() && (
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                                Gender
+                                                            </label>
+                                                            <select
+                                                                value={variation.gender || ''}
+                                                                onChange={(e) => handleVariationChange(index, 'gender', e.target.value)}
+                                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                            >
+                                                                <option value="">Select Gender</option>
+                                                                <option value="male">Male</option>
+                                                                <option value="female">Female</option>
+                                                            </select>
+                                                        </div>
+                                                    )}
                                                     <div>
                                                         <label className="block text-sm font-medium text-gray-700 mb-1">
                                                             Size
@@ -1013,6 +1227,7 @@ export default function ProductCreate() {
                                                             value={variation.size || ''}
                                                             onChange={(e) => handleVariationChange(index, 'size', e.target.value)}
                                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                            disabled={isFashionCategory()}
                                                         >
                                                             <option value="">Select Size</option>
                                                             <option value="XS">XS - Extra Small</option>
@@ -1150,11 +1365,114 @@ export default function ProductCreate() {
                                                         </div>
                                                     </div>
                                                 </div>
+                                                
+                                                {/* Variation-Specific Media Management */}
+                                                <div className="mt-4 border-t pt-4">
+                                                    <div className="flex items-center justify-between mb-3">
+                                                        <h5 className="text-sm font-semibold text-gray-800">
+                                                            Variation Media
+                                                            {variation.color && (
+                                                                <span className="ml-2 text-xs font-normal text-gray-500">
+                                                                    (Color: {variation.color})
+                                                                </span>
+                                                            )}
+                                                        </h5>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => {
+                                                                const currentProductId = productId || (product?.id);
+                                                                if (!currentProductId) {
+                                                                    toast({ message: 'Please save the product first before uploading media', type: 'warning' });
+                                                                    return;
+                                                                }
+                                                                setSelectedVariationForMedia(variation.id || `temp-${index}`);
+                                                                document.getElementById(`variation-media-input-${index}`)?.click();
+                                                            }}
+                                                            className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200"
+                                                        >
+                                                            <PlusIcon className="h-3 w-3 inline mr-1" />
+                                                            Add Media
+                                                        </button>
+                                                    </div>
+                                                    
+                                                    {/* Hidden file input for this variation */}
+                                                    <input
+                                                        id={`variation-media-input-${index}`}
+                                                        type="file"
+                                                        multiple
+                                                        accept="image/*,video/*"
+                                                        className="hidden"
+                                                        onChange={(e) => {
+                                                            if (e.target.files && e.target.files.length > 0) {
+                                                                const files = Array.from(e.target.files);
+                                                                const currentProductId = productId || (product?.id);
+                                                                if (currentProductId) {
+                                                                    uploadMediaFiles(files, currentProductId, variation.id || `temp-${index}`, variation.color);
+                                                                }
+                                                            }
+                                                        }}
+                                                    />
+                                                    
+                                                    {/* Display media for this variation */}
+                                                    {(() => {
+                                                        const variationMedia = media.filter((m: any) => 
+                                                            (variation.id && m.variation_id === variation.id) ||
+                                                            (!variation.id && m.variation_id === `temp-${index}`)
+                                                        );
+                                                        
+                                                        if (variationMedia.length === 0) {
+                                                            return (
+                                                                <p className="text-xs text-gray-400 italic">
+                                                                    No media uploaded for this variation. Click "Add Media" to upload.
+                                                                </p>
+                                                            );
+                                                        }
+                                                        
+                                                        return (
+                                                            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                                {variationMedia.map((item: any) => (
+                                                                    <div key={item.id} className="relative group">
+                                                                        {item.type === 'image' ? (
+                                                                            <img
+                                                                                src={item.url || (item.file_path ? `/storage/${item.file_path}` : '/placeholder-image.png')}
+                                                                                alt={item.file_name || 'Variation image'}
+                                                                                className="w-full h-20 object-cover rounded border border-gray-200"
+                                                                                onError={(e) => {
+                                                                                    (e.target as HTMLImageElement).src = '/placeholder-image.png';
+                                                                                }}
+                                                                            />
+                                                                        ) : (
+                                                                            <video
+                                                                                src={item.url || (item.file_path ? `/storage/${item.file_path}` : '')}
+                                                                                className="w-full h-20 object-cover rounded border border-gray-200"
+                                                                                controls
+                                                                            />
+                                                                        )}
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => handleDeleteMedia(item.id)}
+                                                                            className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                        >
+                                                                            <TrashIcon className="h-3 w-3" />
+                                                                        </button>
+                                                                        {item.color && (
+                                                                            <div className="absolute bottom-1 left-1 px-1 py-0.5 bg-black bg-opacity-50 rounded text-xs text-white">
+                                                                                {item.color}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        );
+                                                    })()}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
                                 ) : (
                                     <p className="text-sm text-gray-500">No variations added. Click "Add Variation" to create one.</p>
+                                )}
+                                    </div>
                                 )}
                             </div>
 

@@ -12,6 +12,9 @@ export default function Show() {
     const [product, setProduct] = useState<any>(null);
     const [quantity, setQuantity] = useState(1);
     const [selectedVariation, setSelectedVariation] = useState<any>(null);
+    const [selectedColor, setSelectedColor] = useState<string | null>(null);
+    const [selectedSize, setSelectedSize] = useState<string | null>(null);
+    const [selectedGender, setSelectedGender] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [addingToCart, setAddingToCart] = useState(false);
 
@@ -31,7 +34,11 @@ export default function Show() {
                 
                 // Set default variation if available
                 if (productData.variations && productData.variations.length > 0) {
-                    setSelectedVariation(productData.variations[0]);
+                    const firstVariation = productData.variations[0];
+                    setSelectedVariation(firstVariation);
+                    setSelectedColor(firstVariation.color || null);
+                    setSelectedSize(firstVariation.size || null);
+                    setSelectedGender(firstVariation.gender || null);
                 }
             }
         } catch (error) {
@@ -78,7 +85,159 @@ export default function Show() {
         }
     };
 
-    // Prepare images for react-image-gallery (must be before conditional returns)
+    // Helper function to get color hex value
+    const getColorHex = (colorName: string): string => {
+        const colorMap: { [key: string]: string } = {
+            'red': '#D0021B',
+            'blue': '#0000ff',
+            'green': '#00ff00',
+            'black': '#000000',
+            'white': '#ffffff',
+            'gray': '#808080',
+            'grey': '#808080',
+            'yellow': '#ffff00',
+            'pink': '#ff1493',
+            'purple': '#800080',
+            'orange': '#ff9900',
+            'brown': '#8b4513',
+            'skyblue': '#87CEEB',
+        };
+        
+        if (colorName.startsWith('#')) return colorName;
+        return colorMap[colorName.toLowerCase()] || colorName;
+    };
+
+    // Get available colors with media information
+    const availableColors = useMemo(() => {
+        if (!product?.variations || !product?.media) return [];
+        const colorMap = new Map<string, { color: string; hasMedia: boolean; mediaCount: number }>();
+        
+        product.variations.forEach((v: any) => {
+            // Filter colors based on selected gender
+            const genderMatch = !selectedGender || v.gender === selectedGender;
+            if (v.color && genderMatch) {
+                // Check if this color has media
+                const colorMedia = product.media.filter((m: any) => {
+                    if (m.variation_id) {
+                        const variation = product.variations?.find((variation: any) => variation.id === m.variation_id);
+                        return variation && variation.color === v.color;
+                    }
+                    return m.color === v.color;
+                });
+                
+                if (!colorMap.has(v.color)) {
+                    colorMap.set(v.color, {
+                        color: v.color,
+                        hasMedia: colorMedia.length > 0,
+                        mediaCount: colorMedia.length
+                    });
+                }
+            }
+        });
+        
+        return Array.from(colorMap.values());
+    }, [product, selectedGender]);
+
+    // Get all possible sizes from all variations (for display - shows all sizes)
+    const allPossibleSizes = useMemo(() => {
+        if (!product?.variations) return [];
+        const sizes = new Set<string>();
+        product.variations.forEach((v: any) => {
+            if (v.size) sizes.add(v.size);
+        });
+        // Sort sizes in a logical order
+        const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '3XL', '4XL'];
+        return Array.from(sizes).sort((a, b) => {
+            const indexA = sizeOrder.indexOf(a);
+            const indexB = sizeOrder.indexOf(b);
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
+            return a.localeCompare(b);
+        });
+    }, [product]);
+
+    // Check if a size is available for current selection (color + gender + in_stock)
+    const isSizeAvailable = useMemo(() => {
+        if (!product?.variations) return () => false;
+        
+        return (size: string): boolean => {
+            return product.variations.some((v: any) => {
+                const sizeMatch = v.size === size;
+                const colorMatch = !selectedColor || v.color === selectedColor;
+                const genderMatch = !selectedGender || v.gender === selectedGender;
+                return sizeMatch && colorMatch && genderMatch && v.in_stock;
+            });
+        };
+    }, [product, selectedColor, selectedGender]);
+
+    const availableGenders = useMemo(() => {
+        if (!product?.variations) return [];
+        const genders = new Set<string>();
+        product.variations.forEach((v: any) => {
+            if (v.gender) genders.add(v.gender);
+        });
+        return Array.from(genders);
+    }, [product]);
+
+    // Find variation based on selected color, size, and gender
+    useEffect(() => {
+        if (!product?.variations) {
+            return;
+        }
+
+        // If no selections made, set first available variation
+        if (!selectedColor && !selectedSize && !selectedGender) {
+            const firstAvailable = product.variations.find((v: any) => v.in_stock);
+            if (firstAvailable) {
+                setSelectedVariation(firstAvailable);
+                setSelectedColor(firstAvailable.color || null);
+                setSelectedSize(firstAvailable.size || null);
+                setSelectedGender(firstAvailable.gender || null);
+            }
+            return;
+        }
+
+        // Try to find exact match first
+        const matchingVariation = product.variations.find((v: any) => {
+            const colorMatch = !selectedColor || v.color === selectedColor;
+            const sizeMatch = !selectedSize || v.size === selectedSize;
+            const genderMatch = !selectedGender || v.gender === selectedGender;
+            return colorMatch && sizeMatch && genderMatch && v.in_stock;
+        });
+
+        if (matchingVariation) {
+            setSelectedVariation(matchingVariation);
+        } else {
+            // If exact match not found, try to find closest match (color + gender, prefer in-stock)
+            const partialMatch = product.variations.find((v: any) => {
+                const colorMatch = !selectedColor || v.color === selectedColor;
+                const genderMatch = !selectedGender || v.gender === selectedGender;
+                return colorMatch && genderMatch && v.in_stock;
+            }) || product.variations.find((v: any) => {
+                // Fallback: just color match
+                return (!selectedColor || v.color === selectedColor) && v.in_stock;
+            });
+            
+            if (partialMatch) {
+                setSelectedVariation(partialMatch);
+                // Update size if not set or if current size is not available
+                if (!selectedSize || !isSizeAvailable(selectedSize)) {
+                    setSelectedSize(partialMatch.size || null);
+                }
+            } else if (selectedColor) {
+                // If only color is selected, find any variation with that color for media display
+                const colorVariation = product.variations.find((v: any) => v.color === selectedColor);
+                if (colorVariation) {
+                    setSelectedVariation(colorVariation);
+                    setSelectedSize(colorVariation.size || null);
+                    setSelectedGender(colorVariation.gender || null);
+                }
+            }
+        }
+    }, [selectedColor, selectedSize, selectedGender, product, isSizeAvailable]);
+
+    // Prepare images for react-image-gallery - filter by selected variation
     const galleryImages = useMemo(() => {
         if (!product?.media || product.media.length === 0) {
             return [{
@@ -89,8 +248,58 @@ export default function Show() {
             }];
         }
 
+        let filteredMedia: any[] = [];
+        
+        if (selectedVariation?.id) {
+            // Priority 1: Media linked to the exact selected variation
+            const exactVariationMedia = product.media.filter((m: any) => m.variation_id === selectedVariation.id);
+            
+            // Priority 2: Media linked to variations with the same color (if exact variation has no media)
+            let sameColorMedia: any[] = [];
+            if (exactVariationMedia.length === 0 && selectedVariation.color) {
+                sameColorMedia = product.media.filter((m: any) => {
+                    if (!m.variation_id) return false;
+                    const variation = product.variations?.find((v: any) => v.id === m.variation_id);
+                    return variation && variation.color === selectedVariation.color;
+                });
+            }
+            
+            // Priority 3: General media (not linked to any variation)
+            const generalMedia = product.media.filter((m: any) => !m.variation_id);
+            
+            // Combine: exact variation media > same color media > general media
+            filteredMedia = [...exactVariationMedia, ...sameColorMedia, ...generalMedia];
+        } else if (selectedColor) {
+            // If only color is selected (no exact variation), show media for that color
+            // Priority: Media linked to variations with this color > Media with matching color field > General media
+            const colorVariationMedia = product.media.filter((m: any) => {
+                if (!m.variation_id) return false;
+                const variation = product.variations?.find((v: any) => v.id === m.variation_id);
+                return variation && variation.color === selectedColor;
+            });
+            
+            // Also include media that has matching color field (for backward compatibility)
+            const colorFieldMedia = product.media.filter((m: any) => {
+                return !m.variation_id && m.color === selectedColor;
+            });
+            
+            const generalMedia = product.media.filter((m: any) => {
+                return !m.variation_id && m.color !== selectedColor;
+            });
+            
+            filteredMedia = [...colorVariationMedia, ...colorFieldMedia, ...generalMedia];
+        } else {
+            // Show only general media (not linked to any variation)
+            filteredMedia = product.media.filter((m: any) => !m.variation_id);
+        }
+
+        // If no media found, show all media as fallback
+        if (filteredMedia.length === 0) {
+            filteredMedia = product.media;
+        }
+
         // Sort media by is_primary first, then by sort_order
-        const sortedMedia = [...product.media].sort((a: any, b: any) => {
+        const sortedMedia = [...filteredMedia].sort((a: any, b: any) => {
             if (a.is_primary && !b.is_primary) return -1;
             if (!a.is_primary && b.is_primary) return 1;
             return (a.sort_order || 0) - (b.sort_order || 0);
@@ -104,9 +313,9 @@ export default function Show() {
 
         return sortedMedia.map((media: any) => {
             const isVideo = media.type === 'video';
-            const mediaUrl = media.url || media.file_path || (isVideo ? '' : '/placeholder-image.png');
+            const mediaUrl = media.url || (media.file_path ? `/storage/${media.file_path}` : '') || (isVideo ? '' : '/placeholder-image.png');
             const thumbnailUrl = isVideo
-                ? fallbackImageUrl // use an image thumbnail for videos
+                ? fallbackImageUrl
                 : mediaUrl || fallbackImageUrl;
             
             return {
@@ -115,11 +324,10 @@ export default function Show() {
                 originalAlt: product.product_name,
                 thumbnailAlt: product.product_name,
                 description: media.color ? `Color: ${media.color}` : undefined,
-                // Store media type for renderItem to use
                 mediaType: media.type,
             };
         });
-    }, [product]);
+    }, [product, selectedVariation, selectedColor]);
 
     if (loading) {
         return (
@@ -253,28 +461,181 @@ export default function Show() {
                                 </div>
                             )}
                             
-                            {/* Variations */}
-                            {product.variations && product.variations.length > 0 && (
+                            {/* Gender Selection (for fashion products) */}
+                            {availableGenders.length > 0 && (
                                 <div className="mb-6">
-                                    <h3 className="font-semibold text-gray-900 mb-3">Available Variations:</h3>
+                                    <h3 className="font-semibold text-gray-900 mb-3">Gender</h3>
                                     <div className="flex flex-wrap gap-2">
-                                        {product.variations.map((variation: any) => (
+                                        {availableGenders.map((gender: string) => (
                                             <button
-                                                key={variation.id}
-                                                onClick={() => setSelectedVariation(variation)}
-                                                className={`px-4 py-2.5 border-2 rounded-lg transition-all ${
-                                                    selectedVariation?.id === variation.id
+                                                key={gender}
+                                                onClick={() => setSelectedGender(gender)}
+                                                className={`px-4 py-2 border-2 rounded-lg transition-all capitalize ${
+                                                    selectedGender === gender
                                                         ? 'border-indigo-600 bg-indigo-50 text-indigo-900 font-medium'
                                                         : 'border-gray-300 hover:border-indigo-400 bg-white text-gray-700'
                                                 }`}
                                             >
-                                                {variation.size && <span className="mr-1">Size: {variation.size}</span>}
-                                                {variation.color && <span className="mr-1">Color: {variation.color}</span>}
-                                                <span className="text-xs text-gray-500 ml-1">
-                                                    ({variation.stock_quantity} in stock)
-                                                </span>
+                                                {gender}
                                             </button>
                                         ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Color Selection with Media Preview */}
+                            {availableColors.length > 0 && (
+                                <div className="mb-6">
+                                    <h3 className="font-semibold text-gray-900 mb-3">Color</h3>
+                                    <div className="flex flex-wrap gap-3">
+                                        {availableColors.map((colorInfo: any) => {
+                                            const colorValue = getColorHex(colorInfo.color);
+                                            const isSelected = selectedColor === colorInfo.color;
+                                            
+                                            // Get preview image for this color
+                                            const colorPreviewMedia = product.media?.find((m: any) => {
+                                                if (m.variation_id) {
+                                                    const variation = product.variations?.find((v: any) => v.id === m.variation_id);
+                                                    return variation && variation.color === colorInfo.color && m.type === 'image';
+                                                }
+                                                return m.color === colorInfo.color && m.type === 'image';
+                                            });
+                                            
+                                            return (
+                                                <div key={colorInfo.color} className="relative group">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedColor(colorInfo.color);
+                                                            // Auto-select first available size for this color
+                                                            if (!selectedSize || !isSizeAvailable(selectedSize)) {
+                                                                const availableSize = allPossibleSizes.find(size => {
+                                                                    return product.variations?.some((v: any) => {
+                                                                        const colorMatch = v.color === colorInfo.color;
+                                                                        const genderMatch = !selectedGender || v.gender === selectedGender;
+                                                                        return v.size === size && colorMatch && genderMatch && v.in_stock;
+                                                                    });
+                                                                });
+                                                                if (availableSize) {
+                                                                    setSelectedSize(availableSize);
+                                                                }
+                                                            }
+                                                        }}
+                                                        className={`relative w-14 h-14 rounded-full border-2 transition-all ${
+                                                            isSelected
+                                                                ? 'border-indigo-600 ring-2 ring-indigo-300 scale-110 shadow-lg'
+                                                                : 'border-gray-300 hover:border-indigo-400 hover:scale-105'
+                                                        }`}
+                                                        style={{ backgroundColor: colorValue }}
+                                                        title={`${colorInfo.color}${colorInfo.hasMedia ? ` (${colorInfo.mediaCount} images)` : ''}`}
+                                                    >
+                                                        {colorInfo.hasMedia && (
+                                                            <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                                                                <span className="text-white text-xs">✓</span>
+                                                            </span>
+                                                        )}
+                                                    </button>
+                                                    {/* Preview tooltip on hover */}
+                                                    {colorPreviewMedia && (
+                                                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+                                                            <div className="bg-white rounded-lg shadow-xl p-2 border border-gray-200">
+                                                                <img
+                                                                    src={colorPreviewMedia.url || (colorPreviewMedia.file_path ? `/storage/${colorPreviewMedia.file_path}` : '/placeholder-image.png')}
+                                                                    alt={colorInfo.color}
+                                                                    className="w-24 h-24 object-cover rounded"
+                                                                    onError={(e) => {
+                                                                        (e.target as HTMLImageElement).src = '/placeholder-image.png';
+                                                                    }}
+                                                                />
+                                                                <p className="text-xs text-center mt-1 font-medium capitalize">{colorInfo.color}</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    {selectedColor && (
+                                        <div className="mt-3 p-3 bg-indigo-50 rounded-lg border border-indigo-200">
+                                            <p className="text-sm text-indigo-900">
+                                                <span className="font-semibold">Selected Color:</span>{' '}
+                                                <span className="font-medium capitalize">{selectedColor}</span>
+                                                {availableColors.find((c: any) => c.color === selectedColor)?.hasMedia && (
+                                                    <span className="ml-2 text-xs text-indigo-600">
+                                                        ({availableColors.find((c: any) => c.color === selectedColor)?.mediaCount} images available)
+                                                    </span>
+                                                )}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Size Selection */}
+                            {allPossibleSizes.length > 0 && (
+                                <div className="mb-6">
+                                    <h3 className="font-semibold text-gray-900 mb-3">Size</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {allPossibleSizes.map((size: string) => {
+                                            const isSelected = selectedSize === size;
+                                            const isAvailable = isSizeAvailable(size);
+                                            
+                                            return (
+                                                <button
+                                                    key={size}
+                                                    onClick={() => {
+                                                        if (isAvailable) {
+                                                            setSelectedSize(size);
+                                                        }
+                                                    }}
+                                                    disabled={!isAvailable}
+                                                    className={`px-4 py-2 border-2 rounded-lg transition-all ${
+                                                        isSelected
+                                                            ? 'border-indigo-600 bg-indigo-50 text-indigo-900 font-medium'
+                                                            : isAvailable
+                                                            ? 'border-gray-300 hover:border-indigo-400 bg-white text-gray-700 cursor-pointer'
+                                                            : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed opacity-60'
+                                                    }`}
+                                                    title={!isAvailable ? 'Size not available for selected color/gender combination' : `Select size ${size}`}
+                                                >
+                                                    {size}
+                                                    {!isAvailable && (
+                                                        <span className="ml-1 text-xs opacity-75">(Unavailable)</span>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                    {selectedSize && (
+                                        <p className="text-sm text-gray-600 mt-2">
+                                            Selected: <span className="font-medium">{selectedSize}</span>
+                                            {!isSizeAvailable(selectedSize) && (
+                                                <span className="ml-2 text-red-600 text-xs">(Currently unavailable)</span>
+                                            )}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                            
+                            {/* Selected Variation Summary */}
+                            {selectedVariation && (
+                                <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                                    <h4 className="font-semibold text-gray-900 mb-2">Selected Options:</h4>
+                                    <div className="flex flex-wrap gap-2 text-sm">
+                                        {selectedVariation.gender && (
+                                            <span className="px-3 py-1 bg-white rounded border border-gray-300 capitalize">
+                                                Gender: {selectedVariation.gender}
+                                            </span>
+                                        )}
+                                        {selectedVariation.size && (
+                                            <span className="px-3 py-1 bg-white rounded border border-gray-300">
+                                                Size: {selectedVariation.size}
+                                            </span>
+                                        )}
+                                        {selectedVariation.color && (
+                                            <span className="px-3 py-1 bg-white rounded border border-gray-300 capitalize">
+                                                Color: {selectedVariation.color}
+                                            </span>
+                                        )}
                                     </div>
                                 </div>
                             )}

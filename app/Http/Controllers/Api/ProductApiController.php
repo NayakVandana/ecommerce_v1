@@ -59,8 +59,11 @@ class ProductApiController extends Controller
             'media' => function($q) {
                 $q->orderBy('sort_order')->orderBy('is_primary', 'desc');
             },
+            'media.variation' => function($q) {
+                $q->select('id', 'size', 'color', 'gender');
+            },
             'variations' => function($q) {
-                $q->where('in_stock', true)->orderBy('size')->orderBy('color');
+                $q->orderBy('gender')->orderBy('size')->orderBy('color');
             },
             'discounts' => function($q) {
                 $q->where('is_active', true)

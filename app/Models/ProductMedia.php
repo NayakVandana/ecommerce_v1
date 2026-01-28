@@ -11,6 +11,7 @@ class ProductMedia extends Model
 
     protected $fillable = [
         'product_id',
+        'variation_id',
         'type',
         'file_path',
         'file_name',
@@ -32,6 +33,11 @@ class ProductMedia extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    public function variation()
+    {
+        return $this->belongsTo(ProductVariation::class);
     }
 
     /**

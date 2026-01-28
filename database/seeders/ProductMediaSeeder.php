@@ -4,10 +4,44 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use App\Models\Product;
+use App\Models\ProductVariation;
 use Illuminate\Support\Facades\DB;
 
 class ProductMediaSeeder extends Seeder
 {
+    /**
+     * Seed product media with variant-wise management.
+     * 
+     * Flow for Fashion Products:
+     * 1. Creates 2-4 general product media items (variation_id = null)
+     * 2. For each unique color in variations:
+     *    - Finds a representative variation (prefers Medium size, in-stock)
+     *    - Creates 1-2 images linked to that specific variation via variation_id
+     *    - Media color automatically matches variation color
+     *    - All colors get media coverage
+     *    - Each media item is properly linked to its variation
+     * 
+     * Flow for Non-Fashion Products:
+     * 1. Creates 2-4 general product media items (variation_id = null)
+     * 2. If variations exist, links media to color variations (max 2 colors)
+     *    - Links via variation_id to specific variation
+     *    - Media color matches variation color
+     * 
+     * Key Points:
+     * - variation_id properly links media to specific variations (enables variant-wise display)
+     * - Media color is automatically set from variation color when linked
+     * - General media (variation_id = null) serves as fallback
+     * - Fashion products get comprehensive color-wise media coverage
+     * - Each variation can have multiple media items
+     * 
+     * Database Structure:
+     * - product_media.variation_id references product_variations.id (FK with cascade delete)
+     * - When variation is deleted, its media is automatically deleted
+     * - Media can exist without variation (general product media)
+     * 
+     * MUST run after ProductVariationSeeder as it requires variations to exist.
+     */
+    
     // Free image URLs from Unsplash (different categories)
     private $imageUrls = [
         // Electronics/Smartphones
@@ -68,10 +102,14 @@ class ProductMediaSeeder extends Seeder
 
     public function run(): void
     {
-        $products = Product::all();
+        $products = Product::with(['variations', 'categoryRelation'])->get();
 
         foreach ($products as $index => $product) {
-            // Create 2-4 media items per product (mix of images and videos)
+            // Get variations for this product
+            $variations = $product->variations;
+            $hasVariations = $variations && $variations->count() > 0;
+            
+            // Create 2-4 general media items per product (mix of images and videos)
             $mediaCount = rand(2, 4);
             
             // Get base image index for this product
@@ -82,6 +120,7 @@ class ProductMediaSeeder extends Seeder
             $hasVideo = rand(1, 100) <= 30;
             $videoIndex = $hasVideo ? rand(0, $mediaCount - 1) : -1;
             
+            // Create general product media (not linked to any variation)
             for ($i = 0; $i < $mediaCount; $i++) {
                 $isVideo = $hasVideo && $i === $videoIndex;
                 
@@ -97,6 +136,7 @@ class ProductMediaSeeder extends Seeder
                             'file_path' => $filePath,
                         ],
                         [
+                            'variation_id' => null, // General product media
                             'type' => 'video',
                             'file_name' => "product-{$product->id}-video-{$i}.mp4",
                             'mime_type' => 'video/mp4',
@@ -125,6 +165,7 @@ class ProductMediaSeeder extends Seeder
                             'file_path' => $filePath,
                         ],
                         [
+                            'variation_id' => null, // General product media
                             'type' => 'image',
                             'file_name' => "product-{$product->id}-image-{$i}.jpg",
                             'mime_type' => 'image/jpeg',
@@ -138,6 +179,107 @@ class ProductMediaSeeder extends Seeder
                             'created_at' => DB::raw('COALESCE(created_at, NOW())'),
                         ]
                     );
+                }
+            }
+            
+            // If product has variations, create variation-specific media
+            if ($hasVariations) {
+                // Get category to check if it's fashion
+                $category = $product->categoryRelation;
+                $isFashion = $category && strtolower($category->name) === 'fashion';
+                
+                // For fashion products, create variation-wise media for all color combinations
+                if ($isFashion && $variations->count() > 0) {
+                    // Get unique colors from variations
+                    $uniqueColors = $variations->pluck('color')->unique()->filter();
+                    
+                    // Create media for each unique color
+                    // For each color, create media linked to one variation of that color
+                    // This ensures all colors have associated media
+                    $sortOrderOffset = $mediaCount;
+                    
+                    foreach ($uniqueColors as $colorIndex => $color) {
+                        // Get variations with this color, prefer in-stock, then prefer medium size
+                        $variationsForColor = $variations->where('color', $color);
+                        
+                        // Try to get a medium size variation first (most common)
+                        $variationForColor = $variationsForColor->where('size', 'M')
+                            ->where('in_stock', true)
+                            ->first()
+                            ?? $variationsForColor->where('size', 'M')->first()
+                            ?? $variationsForColor->where('in_stock', true)->first()
+                            ?? $variationsForColor->first();
+                        
+                        if ($variationForColor) {
+                            // Create 1-2 images for this color variation
+                            $imagesPerColor = rand(1, 2);
+                            
+                            for ($imgIndex = 0; $imgIndex < $imagesPerColor; $imgIndex++) {
+                                $imageIndex = ($baseImageIndex + $colorIndex + $imgIndex) % count($this->imageUrls);
+                                $imageUrl = $this->imageUrls[$imageIndex] . '&sig=' . rand(1000, 9999);
+                                
+                                $filePath = "products/{$product->id}/variation-{$variationForColor->id}-color-{$colorIndex}-img-{$imgIndex}.jpg";
+                                DB::table('product_media')->updateOrInsert(
+                                    [
+                                        'product_id' => $product->id,
+                                        'file_path' => $filePath,
+                                    ],
+                                    [
+                                        'variation_id' => $variationForColor->id, // Link to specific variation
+                                        'type' => 'image',
+                                        'file_name' => "product-{$product->id}-variation-{$variationForColor->id}-color-{$colorIndex}-img-{$imgIndex}.jpg",
+                                        'mime_type' => 'image/jpeg',
+                                        'file_size' => rand(100000, 5000000),
+                                        'disk' => 'public',
+                                        'url' => $imageUrl,
+                                        'sort_order' => $sortOrderOffset + ($colorIndex * 10) + $imgIndex,
+                                        'is_primary' => false,
+                                        'color' => $variationForColor->color, // Automatically set from variation color
+                                        'updated_at' => now(),
+                                        'created_at' => DB::raw('COALESCE(created_at, NOW())'),
+                                    ]
+                                );
+                            }
+                        }
+                    }
+                } else if ($hasVariations) {
+                    // For non-fashion products with variations, link media to color variations
+                    $uniqueColors = $variations->pluck('color')->unique()->filter()->take(2); // Max 2 colors
+                    
+                    foreach ($uniqueColors as $color) {
+                        $variationForColor = $variations->where('color', $color)
+                            ->where('in_stock', true)
+                            ->first() 
+                            ?? $variations->where('color', $color)->first();
+                        
+                        if ($variationForColor) {
+                            // Create 1 image for this color variation
+                            $imageIndex = ($baseImageIndex + rand(0, count($this->imageUrls) - 1)) % count($this->imageUrls);
+                            $imageUrl = $this->imageUrls[$imageIndex] . '&sig=' . rand(1000, 9999);
+                            
+                            $filePath = "products/{$product->id}/variation-{$variationForColor->id}-image.jpg";
+                            DB::table('product_media')->updateOrInsert(
+                                [
+                                    'product_id' => $product->id,
+                                    'file_path' => $filePath,
+                                ],
+                                [
+                                    'variation_id' => $variationForColor->id, // Link to specific variation
+                                    'type' => 'image',
+                                    'file_name' => "product-{$product->id}-variation-{$variationForColor->id}-image.jpg",
+                                    'mime_type' => 'image/jpeg',
+                                    'file_size' => rand(100000, 5000000),
+                                    'disk' => 'public',
+                                    'url' => $imageUrl,
+                                    'sort_order' => $mediaCount + 1,
+                                    'is_primary' => false,
+                                    'color' => $variationForColor->color, // Automatically set from variation color
+                                    'updated_at' => now(),
+                                    'created_at' => DB::raw('COALESCE(created_at, NOW())'),
+                                ]
+                            );
+                        }
+                    }
                 }
             }
         }

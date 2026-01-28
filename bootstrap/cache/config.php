@@ -148,7 +148,7 @@
       'file' => 
       array (
         'driver' => 'file',
-        'path' => 'D:\\ecommerce_v1\\storage\\framework/cache/data',
+        'path' => '/Applications/XAMPP/xamppfiles/htdocs/ecommerce_v1/storage/framework/cache/data',
       ),
       'memcached' => 
       array (
@@ -243,7 +243,7 @@
         'port' => '3306',
         'database' => 'ecommerce_app',
         'username' => 'root',
-        'password' => 'pass123',
+        'password' => '',
         'unix_socket' => '',
         'charset' => 'utf8mb4',
         'collation' => 'utf8mb4_unicode_ci',
@@ -263,7 +263,7 @@
         'port' => '3306',
         'database' => 'ecommerce_app',
         'username' => 'root',
-        'password' => 'pass123',
+        'password' => '',
         'charset' => 'utf8',
         'prefix' => '',
         'prefix_indexes' => true,
@@ -278,7 +278,7 @@
         'port' => '3306',
         'database' => 'ecommerce_app',
         'username' => 'root',
-        'password' => 'pass123',
+        'password' => '',
         'charset' => 'utf8',
         'prefix' => '',
         'prefix_indexes' => true,
@@ -321,13 +321,13 @@
       'local' => 
       array (
         'driver' => 'local',
-        'root' => 'D:\\ecommerce_v1\\storage\\app',
+        'root' => '/Applications/XAMPP/xamppfiles/htdocs/ecommerce_v1/storage/app',
         'throw' => false,
       ),
       'public' => 
       array (
         'driver' => 'local',
-        'root' => 'D:\\ecommerce_v1\\storage\\app/public',
+        'root' => '/Applications/XAMPP/xamppfiles/htdocs/ecommerce_v1/storage/app/public',
         'url' => 'http://localhost:8001/storage',
         'visibility' => 'public',
         'throw' => false,
@@ -347,7 +347,7 @@
     ),
     'links' => 
     array (
-      'D:\\ecommerce_v1\\public\\storage' => 'D:\\ecommerce_v1\\storage\\app/public',
+      '/Applications/XAMPP/xamppfiles/htdocs/ecommerce_v1/public/storage' => '/Applications/XAMPP/xamppfiles/htdocs/ecommerce_v1/storage/app/public',
     ),
   ),
   'logging' => 
@@ -372,14 +372,14 @@
       'single' => 
       array (
         'driver' => 'single',
-        'path' => 'D:\\ecommerce_v1\\storage\\logs/laravel.log',
+        'path' => '/Applications/XAMPP/xamppfiles/htdocs/ecommerce_v1/storage/logs/laravel.log',
         'level' => 'debug',
         'replace_placeholders' => true,
       ),
       'daily' => 
       array (
         'driver' => 'daily',
-        'path' => 'D:\\ecommerce_v1\\storage\\logs/laravel.log',
+        'path' => '/Applications/XAMPP/xamppfiles/htdocs/ecommerce_v1/storage/logs/laravel.log',
         'level' => 'debug',
         'days' => 14,
         'replace_placeholders' => true,
@@ -444,7 +444,7 @@
       ),
       'emergency' => 
       array (
-        'path' => 'D:\\ecommerce_v1\\storage\\logs/laravel.log',
+        'path' => '/Applications/XAMPP/xamppfiles/htdocs/ecommerce_v1/storage/logs/laravel.log',
       ),
     ),
   ),
@@ -506,7 +506,7 @@
       'theme' => 'default',
       'paths' => 
       array (
-        0 => 'D:\\ecommerce_v1\\resources\\views/vendor/mail',
+        0 => '/Applications/XAMPP/xamppfiles/htdocs/ecommerce_v1/resources/views/vendor/mail',
       ),
     ),
   ),
@@ -575,7 +575,7 @@
     'lifetime' => '120',
     'expire_on_close' => false,
     'encrypt' => false,
-    'files' => 'D:\\ecommerce_v1\\storage\\framework/sessions',
+    'files' => '/Applications/XAMPP/xamppfiles/htdocs/ecommerce_v1/storage/framework/sessions',
     'connection' => NULL,
     'table' => 'sessions',
     'store' => NULL,
@@ -595,9 +595,9 @@
   array (
     'paths' => 
     array (
-      0 => 'D:\\ecommerce_v1\\resources\\views',
+      0 => '/Applications/XAMPP/xamppfiles/htdocs/ecommerce_v1/resources/views',
     ),
-    'compiled' => 'D:\\ecommerce_v1\\storage\\framework\\views',
+    'compiled' => '/Applications/XAMPP/xamppfiles/htdocs/ecommerce_v1/storage/framework/views',
   ),
   'inertia' => 
   array (
@@ -611,7 +611,7 @@
       'ensure_pages_exist' => true,
       'page_paths' => 
       array (
-        0 => 'D:\\ecommerce_v1\\resources\\js/Pages',
+        0 => '/Applications/XAMPP/xamppfiles/htdocs/ecommerce_v1/resources/js/Pages',
       ),
       'page_extensions' => 
       array (
@@ -732,7 +732,7 @@
     array (
     ),
     'enable_runnable_solutions' => NULL,
-    'remote_sites_path' => 'D:\\ecommerce_v1',
+    'remote_sites_path' => '/Applications/XAMPP/xamppfiles/htdocs/ecommerce_v1',
     'local_sites_path' => '',
     'housekeeping_endpoint_prefix' => '_ignition',
     'settings_file_path' => '',
