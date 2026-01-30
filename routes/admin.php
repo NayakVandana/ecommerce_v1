@@ -46,6 +46,7 @@ Route::prefix('admin')->middleware(['auth.token', 'admin'])->group(function () {
         Route::post('/show', [AdminCategoryController::class, 'show']);
         Route::post('/update', [AdminCategoryController::class, 'update']);
         Route::post('/delete', [AdminCategoryController::class, 'destroy']);
+        Route::post('/subcategories', [AdminCategoryController::class, 'getSubcategories']);
     });
     
     // Order Management

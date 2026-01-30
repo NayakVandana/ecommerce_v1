@@ -10,9 +10,11 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('parent_id')->nullable();
             $table->uuid('uuid')->unique();
             $table->string('name');
             $table->string('slug')->unique();
+            $table->string('icon')->nullable();
             $table->text('description')->nullable();
             $table->string('image')->nullable();
             $table->string('video')->nullable();
@@ -21,6 +23,13 @@ return new class extends Migration
             $table->integer('sort_order')->default(0);
             $table->timestamps();
             $table->softDeletes();
+            
+            // Add foreign key constraint for parent_id
+            $table->foreign('parent_id')
+                ->references('id')
+                ->on('categories')
+                ->onDelete('cascade')
+                ->onUpdate('cascade');
         });
     }
 

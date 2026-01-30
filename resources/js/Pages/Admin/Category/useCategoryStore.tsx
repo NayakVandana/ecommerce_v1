@@ -35,5 +35,6 @@ export const useCategoryStore = {
     show: (data: any) => adminApi.post('/categories/show', data),
     update: (data: any) => adminApi.post('/categories/update', data),
     delete: (data: any) => adminApi.post('/categories/delete', data),
+    getSubcategories: (data: any) => adminApi.post('/categories/subcategories', data),
 };
 

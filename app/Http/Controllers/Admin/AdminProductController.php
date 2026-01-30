@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductMedia;
 use App\Models\ProductVariation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -111,28 +112,121 @@ class AdminProductController extends Controller
             'is_approve' => 'sometimes|integer|in:0,1',
         ]);
 
-        $product = Product::findOrFail($request->id);
-        $product->update($request->except(['id', 'variations']));
-
-        // Handle variations if provided
-        if ($request->has('variations') && is_array($request->variations)) {
-            // Delete existing variations
-            ProductVariation::where('product_id', $product->id)->delete();
+        try {
+            $product = Product::findOrFail($request->id);
             
-            // Create new variations
-            foreach ($request->variations as $variation) {
-                ProductVariation::create([
-                    'product_id' => $product->id,
-                    'size' => $variation['size'] ?? null,
-                    'color' => $variation['color'] ?? null,
-                    'gender' => $variation['gender'] ?? null,
-                    'stock_quantity' => $variation['stock_quantity'] ?? 0,
-                    'in_stock' => $variation['in_stock'] ?? true,
-                ]);
-            }
-        }
+            // IMPORTANT: Media is managed separately and should NEVER be deleted during product update
+            // Only update product fields, exclude media and variations from update
+            $updateData = $request->except(['id', 'variations', 'media']);
+            $product->update($updateData);
 
-        return $this->sendJsonResponse(true, 'Product updated successfully', $product->fresh(['media', 'variations']), 200);
+            // Handle variations if provided
+            if ($request->has('variations') && is_array($request->variations)) {
+                // Get existing variations before deletion
+                $existingVariations = ProductVariation::where('product_id', $product->id)->get();
+                
+                // Create a map of existing variation media by size, color, gender
+                // This allows us to preserve media when variations are recreated
+                $variationMediaMap = [];
+                foreach ($existingVariations as $existingVariation) {
+                    $key = $this->getVariationKey(
+                        $existingVariation->size,
+                        $existingVariation->color,
+                        $existingVariation->gender
+                    );
+                    
+                    // Get media linked to this variation
+                    $variationMedia = ProductMedia::where('product_id', $product->id)
+                        ->where('variation_id', $existingVariation->id)
+                        ->get();
+                    
+                    if ($variationMedia->count() > 0) {
+                        $variationMediaMap[$key] = $variationMedia->pluck('id')->toArray();
+                    }
+                }
+                
+                // IMPORTANT: Unlink media from variations BEFORE deleting variations
+                // This prevents cascade delete from removing the media files
+                ProductMedia::where('product_id', $product->id)
+                    ->whereNotNull('variation_id')
+                    ->update(['variation_id' => null]);
+                
+                // Now delete variations (media is already unlinked, so it won't be deleted)
+                ProductVariation::where('product_id', $product->id)->delete();
+                
+                // Create new variations and re-link media
+                foreach ($request->variations as $variation) {
+                    // Handle in_stock - convert 1/0 to boolean if needed
+                    $inStock = $variation['in_stock'] ?? true;
+                    if (is_numeric($inStock)) {
+                        $inStock = (bool) $inStock;
+                    } elseif (is_string($inStock)) {
+                        $inStock = filter_var($inStock, FILTER_VALIDATE_BOOLEAN);
+                    } elseif ($inStock === null) {
+                        $inStock = true; // Default to true if null
+                    }
+                    
+                    // Normalize empty strings to null
+                    $size = isset($variation['size']) && trim($variation['size']) !== '' ? trim($variation['size']) : null;
+                    $color = isset($variation['color']) && trim($variation['color']) !== '' ? trim($variation['color']) : null;
+                    $gender = isset($variation['gender']) && trim($variation['gender']) !== '' ? trim($variation['gender']) : null;
+                    
+                    $newVariation = ProductVariation::create([
+                        'product_id' => $product->id,
+                        'size' => $size,
+                        'color' => $color,
+                        'gender' => $gender,
+                        'stock_quantity' => isset($variation['stock_quantity']) ? (int) $variation['stock_quantity'] : 0,
+                        'in_stock' => $inStock,
+                    ]);
+                    
+                    // Re-link media to new variation if it matches by size, color, gender
+                    $key = $this->getVariationKey(
+                        $newVariation->size,
+                        $newVariation->color,
+                        $newVariation->gender
+                    );
+                    
+                    if (isset($variationMediaMap[$key]) && !empty($variationMediaMap[$key])) {
+                        // Re-link media to the new variation
+                        ProductMedia::whereIn('id', $variationMediaMap[$key])
+                            ->where('product_id', $product->id)
+                            ->whereNull('variation_id') // Only link media that was unlinked
+                            ->update(['variation_id' => $newVariation->id]);
+                    }
+                }
+            } elseif ($request->has('variations') && empty($request->variations)) {
+                // If variations array is explicitly empty, delete all variations but preserve media
+                ProductMedia::where('product_id', $product->id)
+                    ->whereNotNull('variation_id')
+                    ->update(['variation_id' => null]);
+                ProductVariation::where('product_id', $product->id)->delete();
+            }
+            // If variations key is not present, don't touch existing variations
+
+            // Always return fresh product with all media and variations
+            $product = $product->fresh(['media', 'variations', 'categoryRelation']);
+            return $this->sendJsonResponse(true, 'Product updated successfully', $product, 200);
+            
+        } catch (\Exception $e) {
+            \Log::error('Product update error: ' . $e->getMessage(), [
+                'product_id' => $request->id,
+                'error' => $e->getTraceAsString()
+            ]);
+            return $this->sendJsonResponse(false, 'Failed to update product: ' . $e->getMessage(), null, 500);
+        }
+    }
+    
+    /**
+     * Generate a unique key for variation matching (size, color, gender)
+     * Used to preserve media when variations are updated
+     */
+    private function getVariationKey($size, $color, $gender)
+    {
+        $size = $size ? trim(strtolower($size)) : '';
+        $color = $color ? trim(strtolower($color)) : '';
+        $gender = $gender ? trim(strtolower($gender)) : '';
+        return md5("{$size}|{$color}|{$gender}");
     }
 
     public function destroy(Request $request)
@@ -167,15 +261,45 @@ class AdminProductController extends Controller
             'files' => 'required|array',
             'files.*' => 'required|file|mimes:jpeg,jpg,png,gif,webp,mp4,mov,avi|max:10240', // 10MB max
             'color' => 'sometimes|string|max:50',
-            'variation_id' => 'sometimes|exists:product_variations,id',
+            'variation_id' => 'sometimes|nullable|string', // Allow string for temp IDs or numeric strings
         ]);
 
         $product = Product::findOrFail($request->product_id);
         $uploadedMedia = [];
         $color = $request->input('color');
-        $variationId = $request->input('variation_id');
+        $variationIdInput = $request->input('variation_id');
+        
+        // Handle variation_id - can be null, empty string, numeric string, or number
+        $variationId = null;
+        if (!empty($variationIdInput) && $variationIdInput !== 'null' && $variationIdInput !== '') {
+            // Convert to integer if it's numeric
+            if (is_numeric($variationIdInput)) {
+                $variationId = (int) $variationIdInput;
+                
+                // Verify that the variation exists and belongs to this product
+                $variation = ProductVariation::where('id', $variationId)
+                    ->where('product_id', $product->id)
+                    ->first();
+                
+                if (!$variation) {
+                    // Variation doesn't exist or doesn't belong to this product
+                    // This can happen after product update when variations are recreated
+                    // In this case, set variation_id to null and upload as general media
+                    $variationId = null;
+                    \Log::warning("Variation ID {$variationIdInput} not found for product {$product->id}, uploading as general media");
+                } else {
+                    // Variation exists - use it and get color if not provided
+                    if (!$color && $variation->color) {
+                        $color = $variation->color;
+                    }
+                }
+            } else {
+                // Non-numeric variation_id (like temp-* from frontend) - treat as null
+                $variationId = null;
+            }
+        }
 
-        // If variation_id is provided, get color from variation if not explicitly provided
+        // If variation_id is still valid, get color from variation if not explicitly provided
         if ($variationId && !$color) {
             $variation = ProductVariation::find($variationId);
             if ($variation && $variation->color) {
@@ -183,30 +307,39 @@ class AdminProductController extends Controller
             }
         }
 
-        foreach ($request->file('files') as $index => $file) {
-            $path = $file->store("products/{$product->id}", 'public');
-            // Generate URL using asset helper for better compatibility
-            $url = asset('storage/' . $path);
+        try {
+            foreach ($request->file('files') as $index => $file) {
+                $path = $file->store("products/{$product->id}", 'public');
+                // Generate URL using asset helper for better compatibility
+                $url = asset('storage/' . $path);
 
-            $media = ProductMedia::create([
+                $media = ProductMedia::create([
+                    'product_id' => $product->id,
+                    'variation_id' => $variationId, // Can be null for general media
+                    'type' => strpos($file->getMimeType(), 'image/') === 0 ? 'image' : 'video',
+                    'file_path' => $path,
+                    'file_name' => $file->getClientOriginalName(),
+                    'mime_type' => $file->getMimeType(),
+                    'file_size' => $file->getSize(),
+                    'disk' => 'public',
+                    'url' => $url,
+                    'sort_order' => $index,
+                    'is_primary' => $index === 0 && !$variationId, // Only set primary if not variation-specific
+                    'color' => $color,
+                ]);
+
+                $uploadedMedia[] = $media;
+            }
+
+            return $this->sendJsonResponse(true, 'Media uploaded successfully', $uploadedMedia, 201);
+        } catch (\Exception $e) {
+            \Log::error('Media upload error: ' . $e->getMessage(), [
                 'product_id' => $product->id,
                 'variation_id' => $variationId,
-                'type' => strpos($file->getMimeType(), 'image/') === 0 ? 'image' : 'video',
-                'file_path' => $path,
-                'file_name' => $file->getClientOriginalName(),
-                'mime_type' => $file->getMimeType(),
-                'file_size' => $file->getSize(),
-                'disk' => 'public',
-                'url' => $url,
-                'sort_order' => $index,
-                'is_primary' => $index === 0 && !$variationId, // Only set primary if not variation-specific
-                'color' => $color,
+                'error' => $e->getTraceAsString()
             ]);
-
-            $uploadedMedia[] = $media;
+            return $this->sendJsonResponse(false, 'Failed to upload media: ' . $e->getMessage(), null, 500);
         }
-
-        return $this->sendJsonResponse(true, 'Media uploaded successfully', $uploadedMedia, 201);
     }
 
     public function updateMedia(Request $request)

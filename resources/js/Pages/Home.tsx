@@ -81,8 +81,18 @@ export default function Home() {
             }
 
             if (categoriesRes.data?.status && categoriesRes.data?.data) {
-                const featured = categoriesRes.data.data.filter((cat: any) => cat.is_featured);
-                setFeaturedCategories(featured.slice(0, 6));
+                // Handle new API response structure: { flat: [...], hierarchical: [...] }
+                let categoriesArray = [];
+                if (categoriesRes.data.data.flat && Array.isArray(categoriesRes.data.data.flat)) {
+                    categoriesArray = categoriesRes.data.data.flat;
+                } else if (Array.isArray(categoriesRes.data.data)) {
+                    categoriesArray = categoriesRes.data.data;
+                }
+                
+                if (categoriesArray.length > 0) {
+                    const featured = categoriesArray.filter((cat: any) => cat.is_featured);
+                    setFeaturedCategories(featured.slice(0, 6));
+                }
             }
         } catch (error) {
             console.error('Error loading home data:', error);

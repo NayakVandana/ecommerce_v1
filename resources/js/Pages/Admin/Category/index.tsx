@@ -31,7 +31,26 @@ export default function CategoryIndex() {
             setLoading(true);
             const response = await useCategoryStore.list();
             if (response.data?.status) {
-                setCategories(response.data.data || []);
+                // Use flat list for display and modal
+                const flatCategories = response.data.data?.flat || response.data.data || [];
+                
+                // Sort categories: parent categories first, then subcategories grouped under their parents
+                const sortedCategories = [...flatCategories].sort((a: any, b: any) => {
+                    // If both have parent_id, sort by parent_id first, then by name
+                    if (a.parent_id && b.parent_id) {
+                        if (a.parent_id !== b.parent_id) {
+                            return a.parent_id - b.parent_id;
+                        }
+                        return (a.name || '').localeCompare(b.name || '');
+                    }
+                    // If only one has parent_id, the one without comes first
+                    if (a.parent_id && !b.parent_id) return 1;
+                    if (!a.parent_id && b.parent_id) return -1;
+                    // If neither has parent_id, sort by name
+                    return (a.name || '').localeCompare(b.name || '');
+                });
+                
+                setCategories(sortedCategories);
             }
         } catch (error) {
             console.error('Error loading categories:', error);
@@ -115,6 +134,9 @@ export default function CategoryIndex() {
                                         Name
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Parent Category
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Slug
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -133,11 +155,37 @@ export default function CategoryIndex() {
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {categories.length > 0 ? (
-                                    categories.map((category: any) => (
+                                    categories.map((category: any) => {
+                                        // Calculate indentation level based on parent hierarchy
+                                        const getIndentLevel = (cat: any, allCats: any[], level = 0): number => {
+                                            if (!cat.parent_id) return level;
+                                            const parent = allCats.find((c: any) => c.id === cat.parent_id);
+                                            return parent ? getIndentLevel(parent, allCats, level + 1) : level;
+                                        };
+                                        const indentLevel = getIndentLevel(category, categories);
+                                        
+                                        return (
                                         <tr key={category.id} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900">
+                                                <div className="text-sm font-medium text-gray-900 flex items-center" style={{ paddingLeft: `${indentLevel * 24}px` }}>
+                                                    {indentLevel > 0 && (
+                                                        <span className="mr-2 text-gray-400">└─</span>
+                                                    )}
                                                     {category.name}
+                                                    {category.parent_id && (
+                                                        <span className="ml-2 text-xs text-gray-500">
+                                                            (Subcategory)
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-gray-500">
+                                                    {category.parent_id ? (
+                                                        categories.find((c: any) => c.id === category.parent_id)?.name || 'Unknown'
+                                                    ) : (
+                                                        <span className="text-gray-400 italic">Main Category</span>
+                                                    )}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
@@ -188,10 +236,11 @@ export default function CategoryIndex() {
                                                 </div>
                                             </td>
                                         </tr>
-                                    ))
+                                        );
+                                    })
                                 ) : (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
+                                        <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
                                             No categories found
                                         </td>
                                     </tr>
@@ -207,6 +256,7 @@ export default function CategoryIndex() {
                     onClose={handleModalClose}
                     editingCategory={editingCategory}
                     onSuccess={handleModalSuccess}
+                    categories={categories}
                 />
 
                 {/* Delete Confirmation Modal */}

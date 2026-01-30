@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Models\Category;
 use App\Models\RecentlyViewedProduct;
 use App\Models\UserToken;
 use App\Services\SessionTrackingService;
@@ -22,7 +23,25 @@ class ProductApiController extends Controller
             ->with('categoryRelation');
 
         if ($request->has('category') && $request->category) {
-            $query->where('category', $request->category);
+            $categoryId = $request->input('category');
+            
+            // Log for debugging
+            \Log::info('Product API - Category filter', [
+                'category_id' => $categoryId,
+                'request_data' => $request->all()
+            ]);
+            
+            if ($categoryId) {
+                // Get all category IDs including the selected category and all its subcategories
+                $categoryIds = $this->getCategoryIdsWithChildren($categoryId);
+                
+                \Log::info('Product API - Category IDs to filter', [
+                    'category_ids' => $categoryIds
+                ]);
+                
+                // Filter products by category IDs
+                $query->whereIn('category', $categoryIds);
+            }
         }
 
         if ($request->has('search') && $request->search) {
@@ -44,6 +63,15 @@ class ProductApiController extends Controller
         $request->query->set('page', $page);
         
         $products = $query->orderBy('created_at', 'desc')->paginate($perPage);
+        
+        // Log for debugging
+        \Log::info('Product API - Query result', [
+            'total_products' => $products->total(),
+            'current_page' => $products->currentPage(),
+            'per_page' => $perPage,
+            'has_category_filter' => $request->has('category'),
+            'category_id' => $request->input('category')
+        ]);
 
         return $this->sendJsonResponse(true, 'Products fetched successfully', $products, 200);
     }
@@ -221,6 +249,47 @@ class ProductApiController extends Controller
         }
         
         return null;
+    }
+
+    /**
+     * Get category ID and all its children category IDs recursively
+     * This allows filtering products by a category and all its subcategories
+     */
+    private function getCategoryIdsWithChildren($categoryId): array
+    {
+        $categoryIds = [(int) $categoryId];
+        
+        try {
+            $category = Category::find($categoryId);
+            if ($category) {
+                // Get all children recursively
+                $this->getChildrenIds($category, $categoryIds);
+            }
+        } catch (\Exception $e) {
+            \Log::warning('Error getting category children: ' . $e->getMessage());
+            // If there's an error, just return the original category ID
+        }
+        
+        return array_unique($categoryIds);
+    }
+
+    /**
+     * Recursively get all children category IDs
+     */
+    private function getChildrenIds(Category $category, array &$categoryIds, int $depth = 0)
+    {
+        // Prevent infinite recursion (max depth of 10 levels)
+        if ($depth > 10) {
+            \Log::warning('Category tree depth exceeded limit for category: ' . $category->id);
+            return;
+        }
+        
+        $children = $category->children;
+        foreach ($children as $child) {
+            $categoryIds[] = $child->id;
+            // Recursively get grandchildren
+            $this->getChildrenIds($child, $categoryIds, $depth + 1);
+        }
     }
 
 }

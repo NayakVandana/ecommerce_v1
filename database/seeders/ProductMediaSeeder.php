@@ -185,8 +185,26 @@ class ProductMediaSeeder extends Seeder
             // If product has variations, create variation-specific media
             if ($hasVariations) {
                 // Get category to check if it's fashion
+                // Check if category is Fashion or has Fashion as parent
                 $category = $product->categoryRelation;
-                $isFashion = $category && strtolower($category->name) === 'fashion';
+                $isFashion = false;
+                
+                if ($category) {
+                    // Check if category name is Fashion (case-insensitive)
+                    $isFashion = strtolower($category->name) === 'fashion';
+                    
+                    // Also check if parent category is Fashion (for subcategories)
+                    if (!$isFashion && $category->parent_id) {
+                        // Load parent if not already loaded
+                        if (!$category->relationLoaded('parent')) {
+                            $category->load('parent');
+                        }
+                        $parent = $category->parent;
+                        if ($parent && strtolower($parent->name) === 'fashion') {
+                            $isFashion = true;
+                        }
+                    }
+                }
                 
                 // For fashion products, create variation-wise media for all color combinations
                 if ($isFashion && $variations->count() > 0) {

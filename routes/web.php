@@ -33,10 +33,6 @@ Route::get('/products/{id}', function ($id) {
 })->name('products.show');
 
 // Category Routes
-Route::get('/categories', function () {
-    return Inertia::render('Categories/Index');
-})->name('categories.index');
-
 Route::get('/categories/{slug}', function ($slug) {
     return Inertia::render('Categories/Show', [
         'slug' => $slug

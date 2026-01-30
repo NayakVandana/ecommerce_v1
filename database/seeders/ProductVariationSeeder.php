@@ -29,14 +29,32 @@ class ProductVariationSeeder extends Seeder
      */
     public function run(): void
     {
-        $products = Product::with('categoryRelation')->get();
+        $products = Product::with('categoryRelation.parent')->get();
         $fashionSizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
         $colors = ['#D0021B', '#0000ff', '#00ff00', '#000000', '#ffffff', '#808080', '#ffff00', '#ff1493', '#800080', '#ff9900', '#8b4513', '#87CEEB'];
 
         foreach ($products as $product) {
             // Get category name to check if it's Fashion
+            // Check if category is Fashion or has Fashion as parent
             $category = $product->categoryRelation;
-            $isFashion = $category && strtolower($category->name) === 'fashion';
+            $isFashion = false;
+            
+            if ($category) {
+                // Check if category name is Fashion (case-insensitive)
+                $isFashion = strtolower($category->name) === 'fashion';
+                
+                // Also check if parent category is Fashion (for subcategories)
+                if (!$isFashion && $category->parent_id) {
+                    // Load parent if not already loaded
+                    if (!$category->relationLoaded('parent')) {
+                        $category->load('parent');
+                    }
+                    $parent = $category->parent;
+                    if ($parent && strtolower($parent->name) === 'fashion') {
+                        $isFashion = true;
+                    }
+                }
+            }
             
             if ($isFashion) {
                 // For fashion products, create all size variants for each gender and color combination

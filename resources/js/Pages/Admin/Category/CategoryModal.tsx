@@ -7,16 +7,50 @@ export default function CategoryModal({
     isOpen,
     onClose,
     editingCategory,
-    onSuccess
+    onSuccess,
+    categories = []
 }: any) {
     const [formData, setFormData] = useState({
         name: '',
         slug: '',
         description: '',
         is_featured: false,
+        parent_id: '',
+        icon: '',
+        sort_order: 0,
     });
     const [errors, setErrors] = useState<any>({});
     const [submitting, setSubmitting] = useState(false);
+    
+    // Get parent categories (categories without parent_id)
+    // Exclude the category being edited and prevent circular references
+    const getAvailableParents = () => {
+        if (!editingCategory) {
+            // For new categories, all categories without parent_id are available
+            return categories.filter((cat: any) => !cat.parent_id);
+        }
+        
+        // For editing, exclude:
+        // 1. The category being edited
+        // 2. Categories that have this category as a parent (to prevent circular references)
+        const excludeIds = [editingCategory.id];
+        const getDescendantIds = (parentId: number): number[] => {
+            const children = categories.filter((cat: any) => cat.parent_id === parentId);
+            const ids = children.map((c: any) => c.id);
+            children.forEach((child: any) => {
+                ids.push(...getDescendantIds(child.id));
+            });
+            return ids;
+        };
+        excludeIds.push(...getDescendantIds(editingCategory.id));
+        
+        return categories.filter((cat: any) => 
+            !cat.parent_id && 
+            !excludeIds.includes(cat.id)
+        );
+    };
+    
+    const parentCategories = getAvailableParents();
 
     useEffect(() => {
         if (editingCategory) {
@@ -25,6 +59,9 @@ export default function CategoryModal({
                 slug: editingCategory.slug || '',
                 description: editingCategory.description || '',
                 is_featured: editingCategory.is_featured || false,
+                parent_id: editingCategory.parent_id || '',
+                icon: editingCategory.icon || '',
+                sort_order: editingCategory.sort_order || 0,
             });
         } else {
             setFormData({
@@ -32,6 +69,9 @@ export default function CategoryModal({
                 slug: '',
                 description: '',
                 is_featured: false,
+                parent_id: '',
+                icon: '',
+                sort_order: 0,
             });
         }
         setErrors({});
@@ -46,7 +86,7 @@ export default function CategoryModal({
             .replace(/^-+|-+$/g, '');
     };
 
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         const checked = (e.target as HTMLInputElement).checked;
         
@@ -96,6 +136,9 @@ export default function CategoryModal({
                     slug: '',
                     description: '',
                     is_featured: false,
+                    parent_id: '',
+                    icon: '',
+                    sort_order: 0,
                 });
                 setErrors({});
                 onSuccess();
@@ -196,6 +239,36 @@ export default function CategoryModal({
                                     </p>
                                 </div>
 
+                                {/* Parent Category */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Parent Category <span className="text-gray-500">(Optional)</span>
+                                    </label>
+                                    <select
+                                        name="parent_id"
+                                        value={formData.parent_id}
+                                        onChange={handleInputChange}
+                                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                            errors.parent_id ? 'border-red-300' : 'border-gray-300'
+                                        }`}
+                                    >
+                                        <option value="">None (Main Category)</option>
+                                        {parentCategories
+                                            .sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''))
+                                            .map((category: any) => (
+                                            <option key={category.id} value={category.id}>
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.parent_id && (
+                                        <p className="mt-1 text-sm text-red-600">{errors.parent_id}</p>
+                                    )}
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        Select a parent category to create a subcategory. Leave empty for main category.
+                                    </p>
+                                </div>
+
                                 {/* Description */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -214,6 +287,50 @@ export default function CategoryModal({
                                     {errors.description && (
                                         <p className="mt-1 text-sm text-red-600">{errors.description}</p>
                                     )}
+                                </div>
+
+                                {/* Icon and Sort Order Row */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    {/* Icon */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Icon (Class Name)
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="icon"
+                                            value={formData.icon}
+                                            onChange={handleInputChange}
+                                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                                errors.icon ? 'border-red-300' : 'border-gray-300'
+                                            }`}
+                                            placeholder="e.g., fa-shirt, fa-shoe"
+                                        />
+                                        {errors.icon && (
+                                            <p className="mt-1 text-sm text-red-600">{errors.icon}</p>
+                                        )}
+                                    </div>
+
+                                    {/* Sort Order */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Sort Order
+                                        </label>
+                                        <input
+                                            type="number"
+                                            name="sort_order"
+                                            value={formData.sort_order}
+                                            onChange={handleInputChange}
+                                            min="0"
+                                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                                errors.sort_order ? 'border-red-300' : 'border-gray-300'
+                                            }`}
+                                            placeholder="0"
+                                        />
+                                        {errors.sort_order && (
+                                            <p className="mt-1 text-sm text-red-600">{errors.sort_order}</p>
+                                        )}
+                                    </div>
                                 </div>
 
                                 {/* Is Featured */}

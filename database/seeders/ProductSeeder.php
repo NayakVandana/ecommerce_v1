@@ -12,8 +12,11 @@ class ProductSeeder extends Seeder
 {
     public function run(): void
     {
+        $this->command->info('Starting product seeding...');
+        
         $users = User::where('role', 'user')->get();
         if ($users->isEmpty()) {
+            $this->command->warn('No users found. Please run UserSeeder first.');
             return;
         }
 
@@ -50,9 +53,17 @@ class ProductSeeder extends Seeder
             ['name' => 'Cookbook', 'category' => 'Books', 'price' => 24.00, 'mrp' => 29.00, 'brand' => 'BookHouse'],
         ];
 
+        $createdCount = 0;
+        $updatedCount = 0;
+        $skippedCount = 0;
+
         foreach ($products as $index => $productData) {
-            $category = Category::where('slug', Str::slug($productData['category']))->first();
+            // Try multiple methods to find category
+            $category = $this->findCategory($productData['category']);
+            
             if (!$category) {
+                $this->command->warn("Category '{$productData['category']}' not found for product '{$productData['name']}'. Skipping.");
+                $skippedCount++;
                 continue;
             }
 
@@ -100,11 +111,65 @@ class ProductSeeder extends Seeder
             
             if ($existing) {
                 $existing->update($productDataArray);
+                $updatedCount++;
             } else {
                 $productDataArray['uuid'] = Str::uuid()->toString();
                 Product::create($productDataArray);
+                $createdCount++;
             }
         }
+        
+        $this->command->info("Product seeding completed!");
+        $this->command->info("Created: {$createdCount} products");
+        $this->command->info("Updated: {$updatedCount} products");
+        if ($skippedCount > 0) {
+            $this->command->warn("Skipped: {$skippedCount} products (category not found)");
+        }
+    }
+    
+    /**
+     * Find category by name or slug, handling hierarchical structure
+     * Tries multiple methods to find the category
+     */
+    private function findCategory(string $categoryName): ?Category
+    {
+        // Method 1: Try exact name match (case-insensitive)
+        $category = Category::whereRaw('LOWER(name) = ?', [strtolower($categoryName)])->first();
+        if ($category) {
+            return $category;
+        }
+        
+        // Method 2: Try slug match
+        $slug = Str::slug($categoryName);
+        $category = Category::where('slug', $slug)->first();
+        if ($category) {
+            return $category;
+        }
+        
+        // Method 3: Try to find in subcategories (search children of main categories)
+        $category = Category::whereHas('parent', function($query) use ($categoryName) {
+            $query->whereRaw('LOWER(name) = ?', [strtolower($categoryName)]);
+        })->first();
+        if ($category) {
+            return $category;
+        }
+        
+        // Method 4: Try partial name match (for cases like "Home & Kitchen")
+        $category = Category::where('name', 'like', "%{$categoryName}%")->first();
+        if ($category) {
+            return $category;
+        }
+        
+        // Method 5: Try to find by parent category name (e.g., if looking for "Fashion" but it's a parent)
+        // This handles cases where we want the main category even if there are subcategories
+        $category = Category::whereRaw('LOWER(name) = ?', [strtolower($categoryName)])
+            ->whereNull('parent_id')
+            ->first();
+        if ($category) {
+            return $category;
+        }
+        
+        return null;
     }
 }
 
