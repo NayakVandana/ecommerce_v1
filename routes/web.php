@@ -135,12 +135,100 @@ Route::prefix('admin')->group(function () {
     })->name('admin.categories');
     
     Route::get('/orders', function () {
-        return Inertia::render('Admin/Order/index');
+        return Inertia::render('Admin/Order/index', [
+            'section' => 'all'
+        ]);
     })->name('admin.orders');
+    
+    Route::get('/orders/all', function () {
+        return Inertia::render('Admin/Order/index', [
+            'section' => 'all'
+        ]);
+    })->name('admin.orders.all');
+    
+    Route::get('/orders/pending', function () {
+        return Inertia::render('Admin/Order/index', [
+            'section' => 'pending'
+        ]);
+    })->name('admin.orders.pending');
+    
+    Route::get('/orders/ready-for-shipping', function () {
+        return Inertia::render('Admin/Order/index', [
+            'section' => 'ready-for-shipping'
+        ]);
+    })->name('admin.orders.ready-for-shipping');
+    
+    Route::get('/orders/shipped', function () {
+        return Inertia::render('Admin/Order/index', [
+            'section' => 'shipped'
+        ]);
+    })->name('admin.orders.shipped');
+    
+    Route::get('/orders/out-for-delivery', function () {
+        return Inertia::render('Admin/Order/index', [
+            'section' => 'out-for-delivery'
+        ]);
+    })->name('admin.orders.out-for-delivery');
+    
+    Route::get('/orders/delivered', function () {
+        return Inertia::render('Admin/Order/index', [
+            'section' => 'delivered'
+        ]);
+    })->name('admin.orders.delivered');
+    
+    Route::get('/orders/failed-delivery', function () {
+        return Inertia::render('Admin/Order/index', [
+            'section' => 'failed-delivery'
+        ]);
+    })->name('admin.orders.failed-delivery');
+    
+    Route::get('/orders/picked-up', function () {
+        return Inertia::render('Admin/Order/index', [
+            'section' => 'picked-up'
+        ]);
+    })->name('admin.orders.picked-up');
+    
+    Route::get('/orders/completed', function () {
+        return Inertia::render('Admin/Order/index', [
+            'section' => 'completed'
+        ]);
+    })->name('admin.orders.completed');
+    
+    Route::get('/orders/cancelled', function () {
+        return Inertia::render('Admin/Order/index', [
+            'section' => 'cancelled'
+        ]);
+    })->name('admin.orders.cancelled');
+    
+    Route::get('/orders/return-refund', function () {
+        return Inertia::render('Admin/Order/index', [
+            'section' => 'return-refund'
+        ]);
+    })->name('admin.orders.return-refund');
+    
+    Route::get('/orders/processed', function () {
+        return Inertia::render('Admin/Order/index', [
+            'section' => 'processed'
+        ]);
+    })->name('admin.orders.processed');
+    
+    Route::get('/orders/{id}', function ($id) {
+        $section = request()->query('section', 'all');
+        return Inertia::render('Admin/Order/Show', [
+            'id' => $id,
+            'section' => $section
+        ]);
+    })->name('admin.orders.show');
     
     Route::get('/users', function () {
         return Inertia::render('Admin/User/index');
     })->name('admin.users');
+    
+    Route::get('/users/{id}', function ($id) {
+        return Inertia::render('Admin/User/Show', [
+            'id' => $id
+        ]);
+    })->name('admin.users.show');
     
     Route::get('/carts', function () {
         return Inertia::render('Admin/Cart/index');
@@ -153,6 +241,20 @@ Route::prefix('admin')->group(function () {
     Route::get('/revenue', function () {
         return Inertia::render('Admin/Revenue/index');
     })->name('admin.revenue');
+    
+    Route::get('/coupons', function () {
+        return Inertia::render('Admin/Coupon/index');
+    })->name('admin.coupons');
+    
+    Route::get('/coupons/usage', function () {
+        return Inertia::render('Admin/Coupon/Usage');
+    })->name('admin.coupons.usage');
+    
+    Route::get('/coupons/{id}', function ($id) {
+        return Inertia::render('Admin/Coupon/Show', [
+            'id' => $id
+        ]);
+    })->name('admin.coupons.show');
 });
 
 // Guest Routes (only accessible when not authenticated)

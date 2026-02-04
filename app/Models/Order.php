@@ -11,6 +11,7 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'order_number',
         'name',
         'email',
         'phone',
@@ -19,7 +20,13 @@ class Order extends Model
         'postal_code',
         'country',
         'total',
+        'subtotal',
+        'tax',
+        'shipping',
+        'discount',
+        'coupon_code_id',
         'status',
+        'notes',
     ];
 
     protected $casts = [
@@ -34,6 +41,11 @@ class Order extends Model
     public function items()
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function couponCode()
+    {
+        return $this->belongsTo(CouponCode::class);
     }
 }
 

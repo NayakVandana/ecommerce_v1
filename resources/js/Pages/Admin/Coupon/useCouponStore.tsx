@@ -29,11 +29,14 @@ adminApi.interceptors.response.use(
     }
 );
 
-export const useOrderStore = {
-    list: (data?: any) => adminApi.post('/orders', data || {}),
-    show: (data: any) => adminApi.post('/orders/show', data),
-    updateStatus: (data: any) => adminApi.post('/orders/update-status', data),
-    cancel: (data: any) => adminApi.post('/orders/cancel', data),
-    getCounts: (data?: any) => adminApi.post('/orders/counts', data || {}),
+export const useCouponStore = {
+    list: (data?: any) => adminApi.post('/coupons', data || {}),
+    store: (data: any) => adminApi.post('/coupons/store', data),
+    show: (data: any) => adminApi.post('/coupons/show', data),
+    update: (data: any) => adminApi.post('/coupons/update', data),
+    delete: (data: any) => adminApi.post('/coupons/delete', data),
+    toggleStatus: (data: any) => adminApi.post('/coupons/toggle-status', data),
+    getUsages: (data: any) => adminApi.post('/coupons/usages', data),
+    getAllUsages: (data?: any) => adminApi.post('/coupons/all-usages', data || {}),
 };
 

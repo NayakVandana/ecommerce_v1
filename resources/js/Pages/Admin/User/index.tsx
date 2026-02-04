@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from '@inertiajs/react';
 import { useUserStore } from './useUserStore';
 import AdminLayout from '../Layout';
 import FormDatePicker from '../../../Components/FormInput/FormDatePicker';
@@ -172,9 +173,12 @@ export default function UserIndex() {
                                                         </div>
                                                     </div>
                                                     <div className="ml-4">
-                                                        <div className="text-sm font-medium text-gray-900">
+                                                        <Link
+                                                            href={`/admin/users/${user.id}`}
+                                                            className="text-sm font-medium text-indigo-600 hover:text-indigo-900 hover:underline"
+                                                        >
                                                             {user.name}
-                                                        </div>
+                                                        </Link>
                                                     </div>
                                                 </div>
                                             </td>

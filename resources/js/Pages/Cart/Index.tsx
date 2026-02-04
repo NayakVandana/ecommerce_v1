@@ -1,8 +1,9 @@
 import AppLayout from '../Layouts/AppLayout';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { useCartStore } from './useCartStore';
 import { EyeIcon } from '@heroicons/react/24/outline';
+import { isAuthenticated } from '../../utils/sessionStorage';
 
 export default function Index() {
     const [cart, setCart] = useState<any>(null);
@@ -249,12 +250,20 @@ export default function Index() {
                                     </div>
                                 </div>
                                 
-                                <Link
-                                    href="/checkout"
+                                <button
+                                    onClick={() => {
+                                        if (!isAuthenticated()) {
+                                            if (confirm('You need to login to proceed to checkout. Would you like to login now?')) {
+                                                router.visit('/login');
+                                            }
+                                        } else {
+                                            router.visit('/checkout');
+                                        }
+                                    }}
                                     className="block w-full bg-indigo-600 text-white text-center px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
                                 >
                                     Proceed to Checkout
-                                </Link>
+                                </button>
                             </div>
                         </div>
                     </div>

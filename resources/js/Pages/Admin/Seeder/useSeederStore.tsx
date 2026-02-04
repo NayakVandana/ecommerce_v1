@@ -29,11 +29,10 @@ adminApi.interceptors.response.use(
     }
 );
 
-export const useOrderStore = {
-    list: (data?: any) => adminApi.post('/orders', data || {}),
-    show: (data: any) => adminApi.post('/orders/show', data),
-    updateStatus: (data: any) => adminApi.post('/orders/update-status', data),
-    cancel: (data: any) => adminApi.post('/orders/cancel', data),
-    getCounts: (data?: any) => adminApi.post('/orders/counts', data || {}),
+export const useSeederStore = {
+    list: (data?: any) => adminApi.post('/seeders', data || {}),
+    run: (data: any) => adminApi.post('/seeders/run', data),
+    runAll: (data?: any) => adminApi.post('/seeders/run-all', data || {}),
+    refresh: (data: any) => adminApi.post('/seeders/refresh', data),
 };
 

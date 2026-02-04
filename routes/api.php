@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CartApiController;
 use App\Http\Controllers\Api\OrderApiController;
 use App\Http\Controllers\Api\AuthApiController;
 use App\Http\Controllers\Api\RecentlyViewedProductApiController;
+use App\Http\Controllers\Api\CouponApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -70,6 +71,14 @@ Route::middleware('auth.token')->prefix('auth')->group(function () {
         Route::post('/show', [OrderApiController::class, 'show']);
         Route::post('/cancel', [OrderApiController::class, 'cancel']);
     });
+    
+    // Coupon Routes (require authentication)
+    Route::prefix('coupons')->group(function () {
+        Route::post('/validate', [CouponApiController::class, 'validate']);
+    });
+    
+    // Public Coupon Routes (for validation before checkout)
+    Route::post('/coupons/validate', [CouponApiController::class, 'validate']);
     
     // Cart Routes for authenticated users (optional - can also use /cart)
     Route::prefix('cart')->group(function () {

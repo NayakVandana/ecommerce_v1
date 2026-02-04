@@ -37,5 +37,10 @@ class CouponCode extends Model
         'start_date' => 'datetime',
         'end_date' => 'datetime',
     ];
+
+    public function usages()
+    {
+        return $this->hasMany(CouponCodeUsage::class);
+    }
 }
 

@@ -11,7 +11,10 @@ import {
     Bars3Icon,
     XMarkIcon,
     EyeIcon,
-    CurrencyDollarIcon
+    CurrencyDollarIcon,
+    ChevronUpIcon,
+    ChevronDownIcon,
+    TicketIcon
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/Pages/Auth/useAuthStore';
@@ -22,15 +25,36 @@ const adminNavigation = [
     { name: 'Revenue', href: '/admin/revenue', icon: CurrencyDollarIcon },
     { name: 'Products', href: '/admin/products', icon: Squares2X2Icon },
     { name: 'Categories', href: '/admin/categories', icon: TagIcon },
-    { name: 'Orders', href: '/admin/orders', icon: ShoppingBagIcon },
     { name: 'Carts', href: '/admin/carts', icon: ShoppingCartIcon },
     { name: 'Recently Viewed', href: '/admin/recently-viewed', icon: EyeIcon },
     { name: 'Users', href: '/admin/users', icon: UsersIcon },
 ];
 
+const couponManagementItems = [
+    { name: 'All Coupons', href: '/admin/coupons' },
+    { name: 'Usage History', href: '/admin/coupons/usage' },
+];
+
+const orderManagementItems = [
+    { name: 'All Orders', href: '/admin/orders/all' },
+    { name: 'Pending Orders', href: '/admin/orders/pending' },
+    { name: 'Ready For Shipping', href: '/admin/orders/ready-for-shipping' },
+    { name: 'Shipped Orders', href: '/admin/orders/shipped' },
+    { name: 'Out for Delivery', href: '/admin/orders/out-for-delivery' },
+    { name: 'Return & Refund', href: '/admin/orders/return-refund' },
+    { name: 'Delivered Orders', href: '/admin/orders/delivered' },
+    { name: 'Failed Delivery', href: '/admin/orders/failed-delivery' },
+    { name: 'Picked Up', href: '/admin/orders/picked-up' },
+    { name: 'Completed', href: '/admin/orders/completed' },
+    { name: 'Cancelled Orders', href: '/admin/orders/cancelled' },
+    { name: 'Processed Orders', href: '/admin/orders/processed' },
+];
+
 export default function AdminLayout({ children, currentPath }: any) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [user, setUser] = useState<any>(null);
+    const [orderManagementOpen, setOrderManagementOpen] = useState(true);
+    const [couponManagementOpen, setCouponManagementOpen] = useState(false);
 
     useEffect(() => {
         checkAuth();
@@ -69,6 +93,26 @@ export default function AdminLayout({ children, currentPath }: any) {
         }
         return currentPath.startsWith(path);
     };
+
+    const isOrderManagementActive = () => {
+        if (!currentPath) return false;
+        return currentPath.startsWith('/admin/orders');
+    };
+
+    const isCouponManagementActive = () => {
+        if (!currentPath) return false;
+        return currentPath.startsWith('/admin/coupons');
+    };
+
+    // Auto-expand order management if on an order page
+    useEffect(() => {
+        if (isOrderManagementActive()) {
+            setOrderManagementOpen(true);
+        }
+        if (isCouponManagementActive()) {
+            setCouponManagementOpen(true);
+        }
+    }, [currentPath]);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -111,6 +155,105 @@ export default function AdminLayout({ children, currentPath }: any) {
                                 </Link>
                             );
                         })}
+                        
+                        {/* Order Management Section */}
+                        <div className="mt-2">
+                            <button
+                                onClick={() => setOrderManagementOpen(!orderManagementOpen)}
+                                className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                                    isOrderManagementActive()
+                                        ? 'bg-indigo-50 text-indigo-600'
+                                        : 'text-gray-700 hover:bg-gray-100 hover:text-indigo-600'
+                                }`}
+                            >
+                                <div className="flex items-center">
+                                    <ShoppingBagIcon className="h-5 w-5 mr-3" />
+                                    Order Management
+                                </div>
+                                {orderManagementOpen ? (
+                                    <ChevronUpIcon className="h-4 w-4" />
+                                ) : (
+                                    <ChevronDownIcon className="h-4 w-4" />
+                                )}
+                            </button>
+                            
+                            {orderManagementOpen && (
+                                <div className="mt-1 ml-4 space-y-1">
+                                    {orderManagementItems.map((item) => {
+                                        // Check if current path matches the item href exactly
+                                        // Also handle default /admin/orders route as "All Orders"
+                                        const active = currentPath === item.href || 
+                                                      (item.href === '/admin/orders/all' && (currentPath === '/admin/orders' || currentPath === '/admin/orders/all'));
+                                        
+                                        return (
+                                            <Link
+                                                key={item.name}
+                                                href={item.href}
+                                                className={`block px-4 py-2 text-sm rounded-lg transition-colors ${
+                                                    active
+                                                        ? 'bg-gray-100 text-indigo-600 font-medium'
+                                                        : 'text-gray-600 hover:bg-gray-50 hover:text-indigo-600'
+                                                }`}
+                                                onClick={() => setSidebarOpen(false)}
+                                            >
+                                                <span className="ml-2">• {item.name}</span>
+                                            </Link>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                            
+                            {/* Coupon Management Section */}
+                            <div className="mt-2">
+                                <button
+                                    onClick={() => setCouponManagementOpen(!couponManagementOpen)}
+                                    className={`w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors ${
+                                        isCouponManagementActive()
+                                            ? 'bg-indigo-50 text-indigo-600'
+                                            : 'text-gray-700 hover:bg-gray-100 hover:text-indigo-600'
+                                    }`}
+                                >
+                                    <div className="flex items-center">
+                                        <TicketIcon className="h-5 w-5 mr-3" />
+                                        Coupon Management
+                                    </div>
+                                    {couponManagementOpen ? (
+                                        <ChevronUpIcon className="h-4 w-4" />
+                                    ) : (
+                                        <ChevronDownIcon className="h-4 w-4" />
+                                    )}
+                                </button>
+                                
+                                {couponManagementOpen && (
+                                    <div className="mt-1 ml-4 space-y-1">
+                                        {couponManagementItems.map((item) => {
+                                            let active = false;
+                                            if (item.href === '/admin/coupons/usage') {
+                                                active = currentPath === '/admin/coupons/usage';
+                                            } else {
+                                                active = currentPath === item.href || 
+                                                          (item.href === '/admin/coupons' && currentPath.startsWith('/admin/coupons') && !currentPath.includes('/usage'));
+                                            }
+                                            
+                                            return (
+                                                <Link
+                                                    key={item.name}
+                                                    href={item.href}
+                                                    className={`block px-4 py-2 text-sm rounded-lg transition-colors ${
+                                                        active
+                                                            ? 'bg-gray-100 text-indigo-600 font-medium'
+                                                            : 'text-gray-600 hover:bg-gray-50 hover:text-indigo-600'
+                                                    }`}
+                                                    onClick={() => setSidebarOpen(false)}
+                                                >
+                                                    <span className="ml-2">• {item.name}</span>
+                                                </Link>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </nav>
 
                     {/* User Section */}

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminCartController;
 use App\Http\Controllers\Admin\AdminRecentlyViewedController;
+use App\Http\Controllers\Admin\AdminCouponController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -55,6 +56,7 @@ Route::prefix('admin')->middleware(['auth.token', 'admin'])->group(function () {
         Route::post('/show', [AdminOrderController::class, 'show']);
         Route::post('/update-status', [AdminOrderController::class, 'updateStatus']);
         Route::post('/cancel', [AdminOrderController::class, 'cancel']);
+        Route::post('/counts', [AdminOrderController::class, 'getCounts']);
     });
     
     // User Management
@@ -78,5 +80,17 @@ Route::prefix('admin')->middleware(['auth.token', 'admin'])->group(function () {
         Route::post('/', [AdminRecentlyViewedController::class, 'index']);
         Route::post('/show', [AdminRecentlyViewedController::class, 'show']);
         Route::post('/delete', [AdminRecentlyViewedController::class, 'destroy']);
+    });
+    
+    // Coupon Management
+    Route::prefix('coupons')->group(function () {
+        Route::post('/', [AdminCouponController::class, 'index']);
+        Route::post('/store', [AdminCouponController::class, 'store']);
+        Route::post('/show', [AdminCouponController::class, 'show']);
+        Route::post('/update', [AdminCouponController::class, 'update']);
+        Route::post('/delete', [AdminCouponController::class, 'destroy']);
+        Route::post('/toggle-status', [AdminCouponController::class, 'toggleStatus']);
+        Route::post('/usages', [AdminCouponController::class, 'getUsages']);
+        Route::post('/all-usages', [AdminCouponController::class, 'getAllUsages']);
     });
 });
