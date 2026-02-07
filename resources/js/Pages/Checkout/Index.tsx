@@ -4,10 +4,14 @@ import { useState, useEffect } from 'react';
 import { useCartStore } from '../Cart/useCartStore';
 import { useCheckoutStore } from './useCheckoutStore';
 import { useCouponStore } from '../Products/useCouponStore';
+import { useAddressStore } from './useAddressStore';
+import { isAuthenticated } from '../../utils/sessionStorage';
 import FormInput from '../../Components/FormInput/FormInput';
 import FormTextarea from '../../Components/FormInput/FormTextarea';
 import Button from '../../Components/Button';
-import { XMarkIcon, TicketIcon } from '@heroicons/react/24/outline';
+import AlertModal from '../../Components/AlertModal';
+import AddressModal from './AddressModal';
+import { XMarkIcon, TicketIcon, PencilIcon } from '@heroicons/react/24/outline';
 
 export default function Index() {
     const [cart, setCart] = useState<any>(null);
@@ -19,6 +23,14 @@ export default function Index() {
     const [couponDiscount, setCouponDiscount] = useState(0);
     const [validatingCoupon, setValidatingCoupon] = useState(false);
     const [couponError, setCouponError] = useState('');
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
+    const [currentStep, setCurrentStep] = useState(1);
+    const [showAddressModal, setShowAddressModal] = useState(false);
+    const [addresses, setAddresses] = useState<any[]>([]);
+    const [selectedAddress, setSelectedAddress] = useState<any>(null);
+    const [loadingAddresses, setLoadingAddresses] = useState(false);
     
     const [formData, setFormData] = useState({
         name: '',
@@ -43,16 +55,53 @@ export default function Index() {
                     name: user.name || '',
                     email: user.email || '',
                     phone: user.phone || user.mobile || '',
-                    address: user.address || '',
-                    city: user.city || '',
-                    postal_code: user.postal_code || '',
-                    country: user.country || '',
                 }));
             } catch (e) {
                 console.error('Error parsing user data:', e);
             }
         }
+        
+        // Load addresses if user is authenticated
+        if (isAuthenticated()) {
+            loadAddresses();
+        }
     }, []);
+
+    const loadAddresses = async () => {
+        if (!isAuthenticated()) return;
+        
+        try {
+            setLoadingAddresses(true);
+            const response = await useAddressStore.list();
+            if (response.data?.status) {
+                const addressList = response.data.data || [];
+                setAddresses(addressList);
+                
+                // Set default address if available
+                const defaultAddress = addressList.find((a: any) => a.is_default) || addressList[0];
+                if (defaultAddress) {
+                    handleSelectAddress(defaultAddress);
+                }
+            }
+        } catch (error: any) {
+            console.error('Error loading addresses:', error);
+        } finally {
+            setLoadingAddresses(false);
+        }
+    };
+
+    const handleSelectAddress = (address: any) => {
+        setSelectedAddress(address);
+        setFormData(prev => ({
+            ...prev,
+            name: address.name || prev.name,
+            phone: address.phone || prev.phone,
+            address: address.address || prev.address,
+            city: address.city || prev.city,
+            postal_code: address.postal_code || prev.postal_code,
+            country: address.country || prev.country,
+        }));
+    };
 
     const fetchCart = async () => {
         try {
@@ -134,7 +183,9 @@ export default function Index() {
         }
 
         if (!cart || !cart.items || cart.items.length === 0) {
-            alert('Your cart is empty');
+            setAlertMessage('Your cart is empty');
+            setAlertType('warning');
+            setShowAlert(true);
             return;
         }
 
@@ -142,11 +193,27 @@ export default function Index() {
             setProcessing(true);
             setErrors({});
 
-            const response = await useCheckoutStore.placeOrder({
+            // Use selected address data if available, otherwise use form data
+            const orderData = selectedAddress && isAuthenticated() ? {
+                name: selectedAddress.name,
+                email: formData.email, // Email is not in address, keep from form
+                phone: selectedAddress.phone,
+                address: selectedAddress.address,
+                city: selectedAddress.city,
+                postal_code: selectedAddress.postal_code,
+                country: selectedAddress.country,
+                notes: formData.notes,
+                use_cart: true,
+                coupon_code: appliedCoupon ? appliedCoupon.code : null,
+                payment_method: 'cash_on_delivery',
+            } : {
                 ...formData,
                 use_cart: true,
                 coupon_code: appliedCoupon ? appliedCoupon.code : null,
-            });
+                payment_method: 'cash_on_delivery',
+            };
+
+            const response = await useCheckoutStore.placeOrder(orderData);
 
             if (response.data?.status && response.data?.data) {
                 // Clear cart count
@@ -157,17 +224,23 @@ export default function Index() {
                     data: { order: response.data.data },
                 });
             } else {
-                alert(response.data?.message || 'Failed to place order');
+                setAlertMessage(response.data?.message || 'Failed to place order');
+                setAlertType('error');
+                setShowAlert(true);
             }
         } catch (error: any) {
             console.error('Error placing order:', error);
             
             if (error.response?.data?.message) {
-                alert(error.response.data.message);
+                setAlertMessage(error.response.data.message);
+                setAlertType('error');
+                setShowAlert(true);
             } else if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
             } else {
-                alert('Failed to place order. Please try again.');
+                setAlertMessage('Failed to place order. Please try again.');
+                setAlertType('error');
+                setShowAlert(true);
             }
         } finally {
             setProcessing(false);
@@ -253,11 +326,111 @@ export default function Index() {
                     </div>
                 ) : (
                     <form onSubmit={handleSubmit}>
+                        {/* Checkout Steps Indicator */}
+                        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                            <div className="flex items-center justify-center space-x-4">
+                                <div className={`flex items-center ${currentStep >= 1 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 1 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                                        {currentStep > 1 ? '✓' : '1'}
+                                    </div>
+                                    <span className="ml-2 font-medium hidden sm:inline">Shipping</span>
+                                </div>
+                                <div className="w-16 h-0.5 bg-gray-300"></div>
+                                <div className={`flex items-center ${currentStep >= 2 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 2 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                                        {currentStep > 2 ? '✓' : '2'}
+                                    </div>
+                                    <span className="ml-2 font-medium hidden sm:inline">Review</span>
+                                </div>
+                                <div className="w-16 h-0.5 bg-gray-300"></div>
+                                <div className={`flex items-center ${currentStep >= 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 3 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                                        3
+                                    </div>
+                                    <span className="ml-2 font-medium hidden sm:inline">Payment</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                             {/* Checkout Form */}
                             <div className="lg:col-span-2">
+                                {/* Step 1: Shipping Information */}
+                                {currentStep === 1 && (
                                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                                    <h2 className="text-xl font-bold mb-4">Shipping Information</h2>
+                                    <h2 className="text-xl font-bold mb-4">Step 1: Shipping Information</h2>
+                                    
+                                    {/* Address Selection for Authenticated Users */}
+                                    {isAuthenticated() && (
+                                        <div className="mb-6">
+                                            <div className="flex items-center justify-between mb-4">
+                                                <h3 className="text-lg font-semibold text-gray-900">Delivery Address</h3>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowAddressModal(true)}
+                                                    className="text-indigo-600 hover:text-indigo-700 font-medium text-sm flex items-center gap-1"
+                                                >
+                                                    <PencilIcon className="h-4 w-4" />
+                                                    Change
+                                                </button>
+                                            </div>
+                                            
+                                            {loadingAddresses ? (
+                                                <div className="border rounded-lg p-4 text-center text-gray-500">
+                                                    Loading addresses...
+                                                </div>
+                                            ) : selectedAddress ? (
+                                                <div className="border rounded-lg p-4 bg-gray-50">
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2 mb-2">
+                                                                <span className="font-semibold text-gray-900">
+                                                                    {selectedAddress.name}
+                                                                </span>
+                                                                {selectedAddress.address_type && (
+                                                                    <span className={`px-2 py-0.5 rounded text-xs text-white ${
+                                                                        selectedAddress.address_type === 'home' ? 'bg-teal-600' :
+                                                                        selectedAddress.address_type === 'work' ? 'bg-blue-600' :
+                                                                        'bg-gray-600'
+                                                                    }`}>
+                                                                        {selectedAddress.address_type.charAt(0).toUpperCase() + selectedAddress.address_type.slice(1)}
+                                                                    </span>
+                                                                )}
+                                                                {selectedAddress.is_default && (
+                                                                    <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-800">
+                                                                        Default
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <p className="text-sm text-gray-600 mb-1">
+                                                                {selectedAddress.address}
+                                                            </p>
+                                                            <p className="text-sm text-gray-600 mb-1">
+                                                                {selectedAddress.city}, {selectedAddress.postal_code}
+                                                            </p>
+                                                            <p className="text-sm text-gray-600">
+                                                                {selectedAddress.country}
+                                                            </p>
+                                                            <p className="text-sm text-gray-600 mt-1">
+                                                                Phone: {selectedAddress.phone}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="border rounded-lg p-4 text-center">
+                                                    <p className="text-gray-500 mb-3">No saved address</p>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowAddressModal(true)}
+                                                        className="text-indigo-600 hover:text-indigo-700 font-medium"
+                                                    >
+                                                        + Add New Address
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                     
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -339,12 +512,32 @@ export default function Index() {
                                             error={errors.notes}
                                             rows={3}
                                         />
+                                        
+                                        <div className="flex justify-end mt-6">
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (validateForm()) {
+                                                        setCurrentStep(2);
+                                                    }
+                                                }}
+                                                className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition"
+                                            >
+                                                Continue to Review →
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
+                                )}
 
-                                {/* Order Items Summary */}
-                                <div className="bg-white rounded-lg shadow-md p-6">
-                                    <h2 className="text-xl font-bold mb-4">Order Items</h2>
+                                {/* Step 2: Order Review */}
+                                {currentStep === 2 && (
+                                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                                        <h2 className="text-xl font-bold mb-4">Step 2: Review Your Order</h2>
+                                        
+                                        {/* Order Items Summary */}
+                                        <div className="mb-6">
+                                            <h3 className="text-lg font-semibold mb-4">Order Items</h3>
                                     
                                     <div className="space-y-4">
                                         {items.map((item: any) => {
@@ -397,14 +590,100 @@ export default function Index() {
                                         })}
                                     </div>
                                 </div>
+                                        
+                                        {/* Shipping Information Review */}
+                                        <div className="border-t pt-6 mt-6">
+                                            <h3 className="text-lg font-semibold mb-4">Shipping Details</h3>
+                                            <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                                                <p><span className="font-semibold">Name:</span> {formData.name}</p>
+                                                <p><span className="font-semibold">Email:</span> {formData.email}</p>
+                                                <p><span className="font-semibold">Phone:</span> {formData.phone}</p>
+                                                <p><span className="font-semibold">Address:</span> {formData.address}</p>
+                                                <p><span className="font-semibold">City:</span> {formData.city}, {formData.postal_code}</p>
+                                                <p><span className="font-semibold">Country:</span> {formData.country}</p>
+                                                {formData.notes && (
+                                                    <p><span className="font-semibold">Notes:</span> {formData.notes}</p>
+                                                )}
+                                            </div>
+                                            
+                                            <div className="flex justify-between mt-6">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCurrentStep(1)}
+                                                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
+                                                >
+                                                    ← Back to Shipping
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCurrentStep(3)}
+                                                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition"
+                                                >
+                                                    Continue to Payment →
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Step 3: Payment Method */}
+                                {currentStep === 3 && (
+                                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                                        <h2 className="text-xl font-bold mb-4">Step 3: Payment Method</h2>
+                                        
+                                        <div className="space-y-4">
+                                            <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-6">
+                                                <div className="flex items-start">
+                                                    <div className="flex-shrink-0">
+                                                        <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center">
+                                                            <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                    <div className="ml-4 flex-1">
+                                                        <h3 className="text-lg font-semibold text-gray-900 mb-1">Cash on Delivery</h3>
+                                                        <p className="text-sm text-gray-600 mb-3">Pay when you receive your order</p>
+                                                        <div className="bg-white rounded-md p-3 border border-indigo-200">
+                                                            <p className="text-xs text-gray-500 mb-1 font-semibold">Payment Instructions:</p>
+                                                            <ul className="text-xs text-gray-700 space-y-1 list-disc list-inside">
+                                                                <li>You will pay the delivery person when your order arrives</li>
+                                                                <li>Please have exact change ready if possible</li>
+                                                                <li>Your order will be processed immediately</li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                    <div className="ml-4">
+                                                        <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center">
+                                                            <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                            </svg>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="flex justify-between mt-6">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCurrentStep(2)}
+                                                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
+                                                >
+                                                    ← Back to Review
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Order Summary */}
+                            {/* Order Summary Sidebar */}
                             <div className="lg:col-span-1">
                                 <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
                                     <h2 className="text-xl font-bold mb-4">Order Summary</h2>
                                     
-                                    {/* Coupon Code Section */}
+                                    {/* Show coupon section only on step 1 and 2 */}
+                                    {(currentStep === 1 || currentStep === 2) && (
                                     <div className="mb-4 pb-4 border-b">
                                         {!appliedCoupon ? (
                                             <div>
@@ -461,6 +740,7 @@ export default function Index() {
                                             </div>
                                         )}
                                     </div>
+                                    )}
                                     
                                     <div className="space-y-2 mb-4">
                                         <div className="flex justify-between text-gray-600">
@@ -490,13 +770,43 @@ export default function Index() {
                                         </div>
                                     </div>
                                     
-                                    <Button
-                                        type="submit"
-                                        disabled={processing}
-                                        className="w-full"
-                                    >
-                                        {processing ? 'Processing...' : 'Place Order'}
-                                    </Button>
+                                    {/* Payment Method - Show only on step 3 */}
+                                    {currentStep === 3 && (
+                                        <div className="mb-4 pb-4 border-b">
+                                            <h3 className="text-sm font-medium text-gray-700 mb-2">Payment Method</h3>
+                                            <div className="bg-indigo-50 border border-indigo-200 rounded-md p-3">
+                                                <div className="flex items-center">
+                                                    <div className="flex-shrink-0">
+                                                        <svg className="h-5 w-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                                        </svg>
+                                                    </div>
+                                                    <div className="ml-3">
+                                                        <p className="text-sm font-medium text-gray-900">Cash on Delivery</p>
+                                                        <p className="text-xs text-gray-500">Pay when you receive your order</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Place Order Button - Only show on step 3 */}
+                                    {currentStep === 3 && (
+                                        <Button
+                                            type="submit"
+                                            disabled={processing}
+                                            className="w-full"
+                                        >
+                                            {processing ? 'Processing...' : 'Place Order'}
+                                        </Button>
+                                    )}
+                                    
+                                    {/* Show step navigation message */}
+                                    {currentStep < 3 && (
+                                        <div className="text-center text-sm text-gray-500 mt-4">
+                                            Complete all steps to place your order
+                                        </div>
+                                    )}
                                     
                                     <Link
                                         href="/cart"
@@ -510,6 +820,25 @@ export default function Index() {
                     </form>
                 )}
             </div>
+            
+            <AlertModal
+                isOpen={showAlert}
+                onClose={() => setShowAlert(false)}
+                message={alertMessage}
+                type={alertType}
+            />
+            
+            {isAuthenticated() && (
+                <AddressModal
+                    isOpen={showAddressModal}
+                    onClose={() => {
+                        setShowAddressModal(false);
+                        loadAddresses();
+                    }}
+                    onSelect={handleSelectAddress}
+                    selectedAddressId={selectedAddress?.id}
+                />
+            )}
         </AppLayout>
     );
 }

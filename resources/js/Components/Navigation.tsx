@@ -8,7 +8,8 @@ import {
     Squares2X2Icon,
     TagIcon,
     ArrowRightOnRectangleIcon,
-    ShieldCheckIcon
+    ShieldCheckIcon,
+    TruckIcon
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/Pages/Auth/useAuthStore';
@@ -117,9 +118,14 @@ export default function Navigation() {
     const handleLogout = async () => {
         try {
             await useAuthStore.logout();
-        } catch (error) {
-            console.error('Logout error:', error);
+        } catch (error: any) {
+            // Log error but don't block logout - continue with local cleanup
+            // 429 (rate limit) or other errors shouldn't prevent logout
+            if (error.response?.status !== 429) {
+                console.error('Logout error:', error);
+            }
         } finally {
+            // Always clear local storage and redirect, even if API call fails
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
             // Clear session on logout (backend will create new session for next guest session)
@@ -186,6 +192,16 @@ export default function Navigation() {
                                     >
                                         <ShieldCheckIcon className="h-6 w-6 mr-2" />
                                         <span className="hidden md:inline">Admin</span>
+                                    </Link>
+                                )}
+                                {currentUser.role === 'delivery_boy' && (
+                                    <Link
+                                        href="/delivery-boy"
+                                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
+                                        title="Delivery Dashboard"
+                                    >
+                                        <TruckIcon className="h-6 w-6 mr-2" />
+                                        <span className="hidden md:inline">Delivery</span>
                                     </Link>
                                 )}
                                 <Link

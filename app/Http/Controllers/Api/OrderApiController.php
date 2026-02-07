@@ -255,7 +255,7 @@ class OrderApiController extends Controller
             'id' => 'required|exists:orders,id',
         ]);
 
-        $order = Order::with(['items.product', 'couponCode'])
+        $order = Order::with(['items.product', 'couponCode', 'deliveryBoy'])
             ->where('user_id', $request->user()->id)
             ->findOrFail($request->id);
 

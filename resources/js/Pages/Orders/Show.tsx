@@ -9,6 +9,11 @@ export default function Show() {
     const orderId = (props as any).id;
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
     const [cancelling, setCancelling] = useState(false);
 
     useEffect(() => {
@@ -30,20 +35,26 @@ export default function Show() {
     };
 
     const handleCancel = async () => {
-        if (!confirm('Are you sure you want to cancel this order?')) {
-            return;
-        }
+        setShowConfirm(true);
+        setConfirmAction(() => () => handleCancelConfirm());
+    };
 
+    const handleCancelConfirm = async () => {
+        setShowConfirm(false);
         try {
             setCancelling(true);
             const response = await useOrderStore.cancel({ id: orderId });
             if (response.data?.status) {
                 await fetchOrder();
-                alert('Order cancelled successfully');
+                setAlertMessage('Order cancelled successfully');
+                setAlertType('success');
+                setShowAlert(true);
             }
         } catch (error: any) {
             console.error('Error cancelling order:', error);
-            alert(error.response?.data?.message || 'Failed to cancel order');
+            setAlertMessage(error.response?.data?.message || 'Failed to cancel order');
+            setAlertType('error');
+            setShowAlert(true);
         } finally {
             setCancelling(false);
         }
@@ -56,6 +67,8 @@ export default function Show() {
             cancelled: 'bg-red-100 text-red-800',
             processing: 'bg-blue-100 text-blue-800',
             shipped: 'bg-purple-100 text-purple-800',
+            out_for_delivery: 'bg-indigo-100 text-indigo-800',
+            delivered: 'bg-green-100 text-green-800',
         };
 
         return (
@@ -212,6 +225,30 @@ export default function Show() {
                                 <p><span className="font-semibold">City:</span> {order.city}</p>
                                 <p><span className="font-semibold">Postal Code:</span> {order.postal_code}</p>
                                 <p><span className="font-semibold">Country:</span> {order.country}</p>
+                                <p><span className="font-semibold">Payment Method:</span> <span className="capitalize">Cash on Delivery</span></p>
+                                
+                                {/* Delivery Boy Information - Only show when order is NOT verified/delivered */}
+                                {order.delivery_boy && !order.otp_verified && order.status !== 'delivered' && (
+                                    <div className="mt-4 pt-4 border-t">
+                                        <p className="text-sm font-semibold text-gray-900 mb-2">Delivery Boy</p>
+                                        <p className="text-sm text-gray-700">{order.delivery_boy.name}</p>
+                                        {order.delivery_boy.phone && (
+                                            <p className="text-sm text-gray-700">Phone: {order.delivery_boy.phone}</p>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* OTP Display - Only show when OTP is generated and NOT verified */}
+                                {order.otp_code && !order.otp_verified && (
+                                    <div className="mt-4 pt-4 border-t">
+                                        <p className="text-sm font-semibold text-gray-900 mb-2">Delivery OTP</p>
+                                        <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                                            <p className="text-xs text-gray-600 mb-1">Share this OTP with the delivery boy to complete delivery</p>
+                                            <p className="text-2xl font-mono font-bold text-indigo-600 text-center">{order.otp_code}</p>
+                                            <p className="text-xs text-gray-500 text-center mt-2">Pending verification</p>
+                                        </div>
+                                    </div>
+                                )}
                                 {order.notes && (
                                     <p className="mt-4">
                                         <span className="font-semibold">Notes:</span> {order.notes}

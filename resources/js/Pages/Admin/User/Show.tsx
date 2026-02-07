@@ -163,12 +163,37 @@ export default function UserShow() {
                                     </div>
                                 </div>
 
-                                {user.address && (
+                                {user.addresses && user.addresses.length > 0 && (
                                     <div className="flex items-start">
                                         <MapPinIcon className="h-5 w-5 text-gray-400 mr-3 mt-0.5" />
-                                        <div>
-                                            <p className="text-xs text-gray-500">Address</p>
-                                            <p className="text-sm font-medium text-gray-900">{user.address}</p>
+                                        <div className="flex-1">
+                                            <p className="text-xs text-gray-500 mb-2">Addresses</p>
+                                            <div className="space-y-2">
+                                                {user.addresses.map((address: any, index: number) => (
+                                                    <div key={address.id || index} className="border rounded p-2 bg-gray-50">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="text-sm font-medium text-gray-900">{address.name}</span>
+                                                            {address.address_type && (
+                                                                <span className={`px-2 py-0.5 rounded text-xs text-white ${
+                                                                    address.address_type === 'home' ? 'bg-teal-600' :
+                                                                    address.address_type === 'work' ? 'bg-blue-600' :
+                                                                    'bg-gray-600'
+                                                                }`}>
+                                                                    {address.address_type.charAt(0).toUpperCase() + address.address_type.slice(1)}
+                                                                </span>
+                                                            )}
+                                                            {address.is_default && (
+                                                                <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-800">
+                                                                    Default
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-gray-600">{address.address}</p>
+                                                        <p className="text-xs text-gray-600">{address.city}, {address.postal_code}, {address.country}</p>
+                                                        <p className="text-xs text-gray-600">Phone: {address.phone}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
                                 )}

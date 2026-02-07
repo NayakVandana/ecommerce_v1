@@ -17,10 +17,6 @@ class User extends Authenticatable
         'role',
         'phone',
         'mobile',
-        'address',
-        'city',
-        'postal_code',
-        'country',
         'is_registered',
     ];
 
@@ -60,9 +56,29 @@ class User extends Authenticatable
         return $this->hasMany(UserToken::class);
     }
 
+    public function addresses()
+    {
+        return $this->hasMany(UserAddress::class);
+    }
+
+    public function defaultAddress()
+    {
+        return $this->hasOne(UserAddress::class)->where('is_default', true);
+    }
+
     public function isAdmin()
     {
         return $this->role === 'admin';
+    }
+
+    public function isDeliveryBoy()
+    {
+        return $this->role === 'delivery_boy';
+    }
+
+    public function deliveryOrders()
+    {
+        return $this->hasMany(Order::class, 'delivery_boy_id');
     }
 }
 

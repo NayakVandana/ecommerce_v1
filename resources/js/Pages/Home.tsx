@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { useProductStore } from './Products/useProductStore';
 import { useCategoryStore } from './Categories/useCategoryStore';
 import { useCartStore } from './Cart/useCartStore';
+import AlertModal from '../Components/AlertModal';
 import RecentlyViewedProducts from '../Components/RecentlyViewedProducts';
 import Pagination from '../Components/Pagination';
 
@@ -21,6 +22,9 @@ export default function Home() {
     const [loading, setLoading] = useState(true);
     const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
     const [addingToCart, setAddingToCart] = useState<{ [key: number]: boolean }>({});
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
 
     useEffect(() => {
         fetchData();
@@ -42,7 +46,9 @@ export default function Home() {
         
         // Check stock availability
         if (product.total_quantity !== null && product.total_quantity < quantity) {
-            alert(`Only ${product.total_quantity} items available in stock`);
+            setAlertMessage(`Only ${product.total_quantity} items available in stock`);
+            setAlertType('warning');
+            setShowAlert(true);
             return;
         }
         
@@ -61,7 +67,9 @@ export default function Home() {
             }
         } catch (error) {
             console.error('Error adding to cart:', error);
-            alert('Failed to add product to cart');
+            setAlertMessage('Failed to add product to cart');
+            setAlertType('error');
+            setShowAlert(true);
         } finally {
             setAddingToCart(prev => ({ ...prev, [product.id]: false }));
         }
@@ -259,6 +267,13 @@ export default function Home() {
                     </>
                 )}
             </Container>
+            
+            <AlertModal
+                isOpen={showAlert}
+                onClose={() => setShowAlert(false)}
+                message={alertMessage}
+                type={alertType}
+            />
         </AppLayout>
     );
 }

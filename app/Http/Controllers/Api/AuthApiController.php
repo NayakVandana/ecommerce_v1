@@ -148,8 +148,10 @@ class AuthApiController extends Controller
     {
         $user = $request->user();
         
-        // Log logout
-        $this->logUserLogout($user->id, $request);
+        // Log logout only if user is authenticated
+        if ($user) {
+            $this->logUserLogout($user->id, $request);
+        }
 
         // Delete token
         $token = $request->bearerToken() ?? $request->header('Authorization');

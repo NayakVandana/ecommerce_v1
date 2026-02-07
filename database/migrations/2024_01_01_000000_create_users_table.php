@@ -20,10 +20,6 @@ return new class extends Migration
             $table->string('role', 20)->default('user');
             $table->boolean('is_registered')->default(true);
             $table->string('phone')->nullable();
-            $table->text('address')->nullable();
-            $table->string('city')->nullable();
-            $table->string('postal_code')->nullable();
-            $table->string('country')->nullable();
             
             $table->timestamps();
         });

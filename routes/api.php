@@ -7,6 +7,8 @@ use App\Http\Controllers\Api\OrderApiController;
 use App\Http\Controllers\Api\AuthApiController;
 use App\Http\Controllers\Api\RecentlyViewedProductApiController;
 use App\Http\Controllers\Api\CouponApiController;
+use App\Http\Controllers\Api\AddressApiController;
+use App\Http\Controllers\Api\DeliveryBoyApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -62,7 +64,8 @@ Route::middleware('auth.token')->prefix('auth')->group(function () {
     // User Profile (require authentication)
     Route::post('/user', [AuthApiController::class, 'getUser']);
     Route::post('/user/update', [AuthApiController::class, 'updateProfile']);
-    Route::post('/logout', [AuthApiController::class, 'logout']);
+    // Logout with higher rate limit to prevent 429 errors
+    Route::middleware('throttle:logout')->post('/logout', [AuthApiController::class, 'logout']);
     
     // Order Routes (require authentication)
     Route::prefix('orders')->group(function () {
@@ -94,5 +97,22 @@ Route::middleware('auth.token')->prefix('auth')->group(function () {
         Route::post('/', [RecentlyViewedProductApiController::class, 'index']);
         Route::post('/clear', [RecentlyViewedProductApiController::class, 'clear']);
         Route::post('/remove', [RecentlyViewedProductApiController::class, 'remove']);
+    });
+    
+    // Address Routes (require authentication)
+    Route::prefix('addresses')->group(function () {
+        Route::post('/', [AddressApiController::class, 'index']);
+        Route::post('/store', [AddressApiController::class, 'store']);
+        Route::post('/update', [AddressApiController::class, 'update']);
+        Route::post('/delete', [AddressApiController::class, 'destroy']);
+        Route::post('/set-default', [AddressApiController::class, 'setDefault']);
+    });
+    
+    // Delivery Boy Routes (require authentication and delivery_boy role)
+    Route::prefix('delivery-boy')->group(function () {
+        Route::post('/orders', [DeliveryBoyApiController::class, 'index']);
+        Route::post('/orders/show', [DeliveryBoyApiController::class, 'show']);
+        Route::post('/orders/verify-otp', [DeliveryBoyApiController::class, 'verifyOTP']);
+        Route::post('/stats', [DeliveryBoyApiController::class, 'getStats']);
     });
 });

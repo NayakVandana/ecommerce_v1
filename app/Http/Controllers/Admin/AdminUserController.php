@@ -43,7 +43,7 @@ class AdminUserController extends Controller
             'id' => 'required|exists:users,id',
         ]);
 
-        $user = User::with('orders')->findOrFail($request->id);
+        $user = User::with(['orders', 'addresses'])->findOrFail($request->id);
 
         return $this->sendJsonResponse(true, 'User fetched successfully', $user, 200);
     }

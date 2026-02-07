@@ -113,10 +113,11 @@ export default function SeederIndex() {
     };
 
     const handleRunAll = async () => {
-        if (!confirm('Are you sure you want to run all seeders? This may take a while.')) {
-            return;
-        }
+        setShowRunAllModal(true);
+    };
 
+    const handleRunAllConfirm = async () => {
+        setShowRunAllModal(false);
         try {
             setRunningSeeder('all');
             const response = await useSeederStore.runAll();
@@ -273,6 +274,18 @@ export default function SeederIndex() {
                     confirmText="Refresh"
                     cancelText="Cancel"
                     confirmButtonColor="red"
+                />
+
+                {/* Run All Confirmation Modal */}
+                <ConfirmationModal
+                    isOpen={showRunAllModal}
+                    onClose={() => setShowRunAllModal(false)}
+                    onConfirm={handleRunAllConfirm}
+                    title="Run All Seeders"
+                    message="Are you sure you want to run all seeders? This may take a while."
+                    confirmText="Run All"
+                    cancelText="Cancel"
+                    confirmButtonColor="indigo"
                 />
 
                 {/* Alert Modal */}

@@ -75,9 +75,14 @@ export default function AdminLayout({ children, currentPath }: any) {
     const handleLogout = async () => {
         try {
             await useAuthStore.logout();
-        } catch (error) {
-            console.error('Logout error:', error);
+        } catch (error: any) {
+            // Log error but don't block logout - continue with local cleanup
+            // 429 (rate limit) or other errors shouldn't prevent logout
+            if (error.response?.status !== 429) {
+                console.error('Logout error:', error);
+            }
         } finally {
+            // Always clear local storage and redirect, even if API call fails
             localStorage.removeItem('auth_token');
             localStorage.removeItem('auth_user');
             // Clear session on logout (backend will create new session for next guest session)

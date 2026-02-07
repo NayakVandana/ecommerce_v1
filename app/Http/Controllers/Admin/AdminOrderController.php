@@ -10,7 +10,7 @@ class AdminOrderController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::with(['user', 'items.product', 'couponCode']);
+        $query = Order::with(['user', 'items.product', 'couponCode', 'deliveryBoy']);
 
         // Handle section-based filtering
         if ($request->has('section')) {
@@ -27,11 +27,10 @@ class AdminOrderController extends Controller
                     $query->where('status', 'shipped');
                     break;
                 case 'out-for-delivery':
-                    // Map to shipped status for now, or create a new status
-                    $query->where('status', 'shipped');
+                    $query->where('status', 'out_for_delivery');
                     break;
                 case 'delivered':
-                    $query->where('status', 'completed');
+                    $query->where('status', 'delivered');
                     break;
                 case 'failed-delivery':
                     $query->where('status', 'cancelled');
@@ -98,7 +97,7 @@ class AdminOrderController extends Controller
             'id' => 'required|exists:orders,id',
         ]);
 
-        $order = Order::with(['user', 'items.product', 'couponCode'])->findOrFail($request->id);
+        $order = Order::with(['user', 'items.product', 'couponCode', 'deliveryBoy'])->findOrFail($request->id);
 
         return $this->sendJsonResponse(true, 'Order fetched successfully', $order, 200);
     }
@@ -115,14 +114,20 @@ class AdminOrderController extends Controller
         // Map UI statuses to database statuses
         $statusMapping = [
             'ready_for_shipping' => 'processing',
-            'out_for_delivery' => 'shipped',
-            'delivered' => 'completed',
+            'out_for_delivery' => 'out_for_delivery',
+            'delivered' => 'delivered',
             'failed_delivery' => 'cancelled',
             'picked_up' => 'completed',
             'return_refund' => 'cancelled',
         ];
         
         $status = $statusMapping[$request->status] ?? $request->status;
+        
+        // Generate OTP when order is assigned for delivery
+        if ($status === 'out_for_delivery' && !$order->otp_code) {
+            $order->generateOTP();
+        }
+        
         $order->update(['status' => $status]);
 
         return $this->sendJsonResponse(true, 'Order status updated successfully', $order->fresh(), 200);
@@ -156,8 +161,8 @@ class AdminOrderController extends Controller
             'pending' => Order::where('status', 'pending')->count(),
             'ready-for-shipping' => Order::where('status', 'processing')->count(),
             'shipped' => Order::where('status', 'shipped')->count(),
-            'out-for-delivery' => Order::where('status', 'shipped')->count(),
-            'delivered' => Order::where('status', 'completed')->count(),
+            'out-for-delivery' => Order::where('status', 'out_for_delivery')->count(),
+            'delivered' => Order::where('status', 'delivered')->count(),
             'failed-delivery' => Order::where('status', 'cancelled')->count(),
             'picked-up' => Order::where('status', 'completed')->count(),
             'completed' => Order::where('status', 'completed')->count(),
@@ -167,6 +172,44 @@ class AdminOrderController extends Controller
         ];
 
         return $this->sendJsonResponse(true, 'Order counts fetched successfully', $counts, 200);
+    }
+
+    public function assignDeliveryBoy(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:orders,id',
+            'delivery_boy_id' => 'required|exists:users,id',
+        ]);
+
+        $order = Order::findOrFail($request->id);
+        $deliveryBoy = \App\Models\User::findOrFail($request->delivery_boy_id);
+
+        // Check if user is a delivery boy
+        if ($deliveryBoy->role !== 'delivery_boy') {
+            return $this->sendJsonResponse(false, 'Selected user is not a delivery boy', [], 400);
+        }
+
+        // Assign delivery boy and generate OTP
+        $order->update([
+            'delivery_boy_id' => $request->delivery_boy_id,
+            'status' => 'out_for_delivery',
+        ]);
+
+        // Generate OTP if not already generated
+        if (!$order->otp_code) {
+            $order->generateOTP();
+        }
+
+        return $this->sendJsonResponse(true, 'Delivery boy assigned successfully', $order->fresh(['deliveryBoy']), 200);
+    }
+
+    public function getDeliveryBoys(Request $request)
+    {
+        $deliveryBoys = \App\Models\User::where('role', 'delivery_boy')
+            ->select('id', 'name', 'email', 'phone')
+            ->get();
+
+        return $this->sendJsonResponse(true, 'Delivery boys fetched successfully', $deliveryBoys, 200);
     }
 }
 

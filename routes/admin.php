@@ -57,6 +57,8 @@ Route::prefix('admin')->middleware(['auth.token', 'admin'])->group(function () {
         Route::post('/update-status', [AdminOrderController::class, 'updateStatus']);
         Route::post('/cancel', [AdminOrderController::class, 'cancel']);
         Route::post('/counts', [AdminOrderController::class, 'getCounts']);
+        Route::post('/assign-delivery-boy', [AdminOrderController::class, 'assignDeliveryBoy']);
+        Route::post('/delivery-boys', [AdminOrderController::class, 'getDeliveryBoys']);
     });
     
     // User Management

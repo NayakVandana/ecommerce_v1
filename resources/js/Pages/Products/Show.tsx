@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { useState, useEffect, useMemo } from 'react';
 import { useProductStore } from './useProductStore';
 import { useCartStore } from '../Cart/useCartStore';
+import AlertModal from '../../Components/AlertModal';
 import ImageGallery from 'react-image-gallery';
 import 'react-image-gallery/styles/css/image-gallery.css';
 
@@ -17,6 +18,9 @@ export default function Show() {
     const [selectedGender, setSelectedGender] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [addingToCart, setAddingToCart] = useState(false);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
 
     useEffect(() => {
         if (productId) {
@@ -58,7 +62,9 @@ export default function Show() {
         }
         
         if (!selectedVariation && product.total_quantity !== null && product.total_quantity < quantity) {
-            alert(`Only ${product.total_quantity} items available in stock`);
+            setAlertMessage(`Only ${product.total_quantity} items available in stock`);
+            setAlertType('warning');
+            setShowAlert(true);
             return;
         }
         
@@ -73,13 +79,16 @@ export default function Show() {
             });
             
             if (response.data?.status) {
-                alert('Product added to cart successfully!');
                 // Dispatch event to update cart count in navigation
                 window.dispatchEvent(new Event('cartUpdated'));
+                // Open cart sidebar
+                window.dispatchEvent(new Event('openCart'));
             }
         } catch (error) {
             console.error('Error adding to cart:', error);
-            alert('Failed to add product to cart');
+            setAlertMessage('Failed to add product to cart');
+            setAlertType('error');
+            setShowAlert(true);
         } finally {
             setAddingToCart(false);
         }
@@ -713,6 +722,13 @@ export default function Show() {
                     </div>
                 </div>
             </div>
+            
+            <AlertModal
+                isOpen={showAlert}
+                onClose={() => setShowAlert(false)}
+                message={alertMessage}
+                type={alertType}
+            />
         </AppLayout>
     );
 }

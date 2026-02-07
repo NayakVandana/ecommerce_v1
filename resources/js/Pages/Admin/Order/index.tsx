@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Link, usePage, router } from '@inertiajs/react';
 import { useOrderStore } from './useOrderStore';
+import { useDeliveryBoyStore } from './useDeliveryBoyStore';
 import AdminLayout from '../Layout';
 import FormDatePicker from '../../../Components/FormInput/FormDatePicker';
+import AlertModal from '../../../Components/AlertModal';
 import { 
     EyeIcon, 
     MagnifyingGlassIcon, 
@@ -15,7 +17,9 @@ import {
     ArrowPathIcon,
     FaceSmileIcon,
     ExclamationTriangleIcon,
-    StarIcon
+    StarIcon,
+    UserIcon,
+    XMarkIcon
 } from '@heroicons/react/24/outline';
 
 export default function OrderIndex() {
@@ -33,11 +37,26 @@ export default function OrderIndex() {
         startDate: null,
         endDate: null,
     });
+    const [showDeliveryBoyModal, setShowDeliveryBoyModal] = useState(false);
+    const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+    const [deliveryBoys, setDeliveryBoys] = useState<any[]>([]);
+    const [loadingDeliveryBoys, setLoadingDeliveryBoys] = useState(false);
+    const [selectedDeliveryBoyId, setSelectedDeliveryBoyId] = useState<number | null>(null);
+    const [assigningDeliveryBoy, setAssigningDeliveryBoy] = useState(false);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
 
     useEffect(() => {
         loadOrders();
         loadOrderCounts();
     }, [dateRange, normalizedSection]);
+
+    useEffect(() => {
+        if (showDeliveryBoyModal) {
+            loadDeliveryBoys();
+        }
+    }, [showDeliveryBoyModal]);
 
     const loadOrderCounts = async () => {
         try {
@@ -118,6 +137,68 @@ export default function OrderIndex() {
             loadOrderCounts();
         } catch (error) {
             console.error('Error updating order status:', error);
+        }
+    };
+
+    const loadDeliveryBoys = async () => {
+        try {
+            setLoadingDeliveryBoys(true);
+            const response = await useDeliveryBoyStore.getDeliveryBoys();
+            if (response.data?.status) {
+                setDeliveryBoys(response.data.data || []);
+            }
+        } catch (error) {
+            console.error('Error loading delivery boys:', error);
+            setAlertMessage('Failed to load delivery boys');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setLoadingDeliveryBoys(false);
+        }
+    };
+
+    const handleAssignDeliveryBoyClick = (orderId: number) => {
+        setSelectedOrderId(orderId);
+        setSelectedDeliveryBoyId(null);
+        setShowDeliveryBoyModal(true);
+    };
+
+    const handleAssignDeliveryBoy = async () => {
+        if (!selectedDeliveryBoyId || !selectedOrderId) {
+            setAlertMessage('Please select a delivery boy');
+            setAlertType('warning');
+            setShowAlert(true);
+            return;
+        }
+
+        try {
+            setAssigningDeliveryBoy(true);
+            const response = await useDeliveryBoyStore.assignDeliveryBoy({
+                id: selectedOrderId,
+                delivery_boy_id: selectedDeliveryBoyId,
+            });
+
+            if (response.data?.status) {
+                await loadOrders();
+                await loadOrderCounts();
+                setShowDeliveryBoyModal(false);
+                setSelectedOrderId(null);
+                setSelectedDeliveryBoyId(null);
+                setAlertMessage('Delivery boy assigned successfully. OTP has been generated.');
+                setAlertType('success');
+                setShowAlert(true);
+            } else {
+                setAlertMessage(response.data?.message || 'Failed to assign delivery boy');
+                setAlertType('error');
+                setShowAlert(true);
+            }
+        } catch (error: any) {
+            console.error('Error assigning delivery boy:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to assign delivery boy');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setAssigningDeliveryBoy(false);
         }
     };
 
@@ -432,6 +513,9 @@ export default function OrderIndex() {
                                             Payment Status
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                            Delivery Boy
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                                             Date
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
@@ -470,6 +554,18 @@ export default function OrderIndex() {
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     {getPaymentStatusBadge('ONLINE')}
                                                 </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {order.delivery_boy ? (
+                                                        <div>
+                                                            <p className="font-medium">{order.delivery_boy.name}</p>
+                                                            {order.delivery_boy.phone && (
+                                                                <p className="text-xs text-gray-500">{order.delivery_boy.phone}</p>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-gray-400 text-xs">Not assigned</span>
+                                                    )}
+                                                </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {new Date(order.created_at).toISOString().split('T')[0]}
                                                 </td>
@@ -482,6 +578,20 @@ export default function OrderIndex() {
                                                         >
                                                             <EyeIcon className="h-5 w-5" />
                                                         </Link>
+                                                        {/* All Orders - Assign Delivery Boy for processing/shipped orders */}
+                                                        {(normalizedSection === 'all' || normalizedSection === 'ready-for-shipping' || normalizedSection === 'shipped') && 
+                                                         (order.status === 'processing' || order.status === 'shipped') && 
+                                                         !order.delivery_boy_id && (
+                                                            <button
+                                                                onClick={() => handleAssignDeliveryBoyClick(order.id)}
+                                                                className="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 flex items-center gap-1"
+                                                                title="Assign Delivery Boy"
+                                                            >
+                                                                <UserIcon className="h-3 w-3" />
+                                                                Assign Delivery
+                                                            </button>
+                                                        )}
+
                                                         {/* Pending Orders Actions */}
                                                         {normalizedSection === 'pending' && order.status === 'pending' && (
                                                             <>
@@ -504,35 +614,71 @@ export default function OrderIndex() {
                                                         
                                                         {/* Ready for Shipping Actions */}
                                                         {normalizedSection === 'ready-for-shipping' && order.status === 'processing' && (
-                                                            <button
-                                                                onClick={() => handleStatusUpdate(order.id, 'shipped')}
-                                                                className="px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
-                                                                title="Mark as Shipped"
-                                                            >
-                                                                Mark as Shipped
-                                                            </button>
+                                                            <>
+                                                                {!order.delivery_boy_id && (
+                                                                    <button
+                                                                        onClick={() => handleAssignDeliveryBoyClick(order.id)}
+                                                                        className="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 flex items-center gap-1"
+                                                                        title="Assign Delivery Boy"
+                                                                    >
+                                                                        <UserIcon className="h-3 w-3" />
+                                                                        Assign Delivery
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    onClick={() => handleStatusUpdate(order.id, 'shipped')}
+                                                                    className="px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
+                                                                    title="Mark as Shipped"
+                                                                >
+                                                                    Mark as Shipped
+                                                                </button>
+                                                            </>
                                                         )}
                                                         
                                                         {/* Shipped Orders Actions */}
                                                         {normalizedSection === 'shipped' && order.status === 'shipped' && (
-                                                            <button
-                                                                onClick={() => handleStatusUpdate(order.id, 'completed')}
-                                                                className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700"
-                                                                title="Mark as Delivered"
-                                                            >
-                                                                Mark as Delivered
-                                                            </button>
+                                                            <>
+                                                                {!order.delivery_boy_id && (
+                                                                    <button
+                                                                        onClick={() => handleAssignDeliveryBoyClick(order.id)}
+                                                                        className="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 flex items-center gap-1"
+                                                                        title="Assign Delivery Boy"
+                                                                    >
+                                                                        <UserIcon className="h-3 w-3" />
+                                                                        Assign Delivery
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    onClick={() => handleStatusUpdate(order.id, 'completed')}
+                                                                    className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700"
+                                                                    title="Mark as Delivered"
+                                                                >
+                                                                    Mark as Delivered
+                                                                </button>
+                                                            </>
                                                         )}
                                                         
                                                         {/* Out for Delivery Actions */}
-                                                        {normalizedSection === 'out-for-delivery' && order.status === 'shipped' && (
-                                                            <button
-                                                                onClick={() => handleStatusUpdate(order.id, 'completed')}
-                                                                className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700"
-                                                                title="Mark as Delivered"
-                                                            >
-                                                                Mark as Delivered
-                                                            </button>
+                                                        {normalizedSection === 'out-for-delivery' && order.status === 'out_for_delivery' && (
+                                                            <>
+                                                                {!order.delivery_boy_id && (
+                                                                    <button
+                                                                        onClick={() => handleAssignDeliveryBoyClick(order.id)}
+                                                                        className="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 flex items-center gap-1"
+                                                                        title="Assign Delivery Boy"
+                                                                    >
+                                                                        <UserIcon className="h-3 w-3" />
+                                                                        Assign Delivery
+                                                                    </button>
+                                                                )}
+                                                                <button
+                                                                    onClick={() => handleStatusUpdate(order.id, 'delivered')}
+                                                                    className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700"
+                                                                    title="Mark as Delivered"
+                                                                >
+                                                                    Mark as Delivered
+                                                                </button>
+                                                            </>
                                                         )}
                                                         
                                                         {/* Failed Delivery Actions - Can retry or cancel */}
@@ -562,7 +708,7 @@ export default function OrderIndex() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={8} className="px-6 py-4 text-center text-sm text-gray-500">
+                                            <td colSpan={9} className="px-6 py-4 text-center text-sm text-gray-500">
                                                 No orders found
                                             </td>
                                         </tr>
@@ -573,6 +719,100 @@ export default function OrderIndex() {
                     )}
                 </div>
             </div>
+
+            <AlertModal
+                isOpen={showAlert}
+                onClose={() => setShowAlert(false)}
+                message={alertMessage}
+                type={alertType}
+            />
+
+            {/* Delivery Boy Assignment Modal */}
+            {showDeliveryBoyModal && (
+                <div className="fixed inset-0 z-[9999] overflow-y-auto">
+                    <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                        <div
+                            className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                            onClick={() => {
+                                setShowDeliveryBoyModal(false);
+                                setSelectedOrderId(null);
+                                setSelectedDeliveryBoyId(null);
+                            }}
+                        ></div>
+
+                        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-semibold text-gray-900">Assign Delivery Boy</h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowDeliveryBoyModal(false);
+                                            setSelectedOrderId(null);
+                                            setSelectedDeliveryBoyId(null);
+                                        }}
+                                        className="text-gray-400 hover:text-gray-500"
+                                    >
+                                        <XMarkIcon className="h-6 w-6" />
+                                    </button>
+                                </div>
+
+                                {loadingDeliveryBoys ? (
+                                    <div className="text-center py-8">
+                                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                                        <p className="mt-2 text-sm text-gray-500">Loading delivery boys...</p>
+                                    </div>
+                                ) : deliveryBoys.length === 0 ? (
+                                    <div className="text-center py-8">
+                                        <p className="text-gray-500">No delivery boys available</p>
+                                        <p className="text-sm text-gray-400 mt-2">Please create delivery boy users first</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-3">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Select Delivery Boy
+                                        </label>
+                                        <select
+                                            value={selectedDeliveryBoyId || ''}
+                                            onChange={(e) => setSelectedDeliveryBoyId(Number(e.target.value))}
+                                            className="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                        >
+                                            <option value="">-- Select Delivery Boy --</option>
+                                            {deliveryBoys.map((boy: any) => (
+                                                <option key={boy.id} value={boy.id}>
+                                                    {boy.name} ({boy.email}) {boy.phone ? `- ${boy.phone}` : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+
+                                        <div className="flex gap-3 pt-4">
+                                            <button
+                                                type="button"
+                                                onClick={handleAssignDeliveryBoy}
+                                                disabled={!selectedDeliveryBoyId || assigningDeliveryBoy}
+                                                className="flex-1 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+                                            >
+                                                {assigningDeliveryBoy ? 'Assigning...' : 'Assign'}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setShowDeliveryBoyModal(false);
+                                                    setSelectedOrderId(null);
+                                                    setSelectedDeliveryBoyId(null);
+                                                }}
+                                                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AdminLayout>
     );
 }

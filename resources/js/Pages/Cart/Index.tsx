@@ -2,6 +2,8 @@ import AppLayout from '../Layouts/AppLayout';
 import { Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { useCartStore } from './useCartStore';
+import AlertModal from '../../Components/AlertModal';
+import ConfirmationModal from '../../Components/ConfirmationModal';
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { isAuthenticated } from '../../utils/sessionStorage';
 
@@ -9,6 +11,13 @@ export default function Index() {
     const [cart, setCart] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState<number | null>(null);
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
+    const [showConfirm, setShowConfirm] = useState(false);
+    const [confirmMessage, setConfirmMessage] = useState('');
+    const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
+    const [showLoginConfirm, setShowLoginConfirm] = useState(false);
 
     useEffect(() => {
         fetchCart();
@@ -46,15 +55,22 @@ export default function Index() {
             }
         } catch (error) {
             console.error('Error updating cart:', error);
-            alert('Failed to update cart');
+            setAlertMessage('Failed to update cart');
+            setAlertType('error');
+            setShowAlert(true);
         } finally {
             setUpdating(null);
         }
     };
 
     const removeItem = async (item: any) => {
-        if (!confirm('Are you sure you want to remove this item from cart?')) return;
-        
+        setConfirmMessage('Are you sure you want to remove this item from cart?');
+        setConfirmAction(() => () => handleRemoveConfirm(item));
+        setShowConfirm(true);
+    };
+
+    const handleRemoveConfirm = async (item: any) => {
+        setShowConfirm(false);
         try {
             setUpdating(item.id);
             const response = await useCartStore.remove({
@@ -69,15 +85,22 @@ export default function Index() {
             }
         } catch (error) {
             console.error('Error removing item:', error);
-            alert('Failed to remove item');
+            setAlertMessage('Failed to remove item');
+            setAlertType('error');
+            setShowAlert(true);
         } finally {
             setUpdating(null);
         }
     };
 
     const clearCart = async () => {
-        if (!confirm('Are you sure you want to clear your cart?')) return;
-        
+        setConfirmMessage('Are you sure you want to clear your cart?');
+        setConfirmAction(() => () => handleClearConfirm());
+        setShowConfirm(true);
+    };
+
+    const handleClearConfirm = async () => {
+        setShowConfirm(false);
         try {
             const response = await useCartStore.clear();
             if (response.data?.status) {
@@ -87,7 +110,9 @@ export default function Index() {
             }
         } catch (error) {
             console.error('Error clearing cart:', error);
-            alert('Failed to clear cart');
+            setAlertMessage('Failed to clear cart');
+            setAlertType('error');
+            setShowAlert(true);
         }
     };
 
@@ -253,9 +278,12 @@ export default function Index() {
                                 <button
                                     onClick={() => {
                                         if (!isAuthenticated()) {
-                                            if (confirm('You need to login to proceed to checkout. Would you like to login now?')) {
+                                            setConfirmMessage('You need to login to proceed to checkout. Would you like to login now?');
+                                            setConfirmAction(() => () => {
+                                                setShowLoginConfirm(false);
                                                 router.visit('/login');
-                                            }
+                                            });
+                                            setShowLoginConfirm(true);
                                         } else {
                                             router.visit('/checkout');
                                         }
@@ -269,6 +297,51 @@ export default function Index() {
                     </div>
                 )}
             </div>
+            
+            <AlertModal
+                isOpen={showAlert}
+                onClose={() => setShowAlert(false)}
+                message={alertMessage}
+                type={alertType}
+            />
+            
+            <ConfirmationModal
+                isOpen={showConfirm}
+                onClose={() => {
+                    setShowConfirm(false);
+                    setConfirmAction(null);
+                }}
+                onConfirm={() => {
+                    if (confirmAction) {
+                        confirmAction();
+                        setConfirmAction(null);
+                    }
+                }}
+                title="Confirm Action"
+                message={confirmMessage}
+                confirmText="Confirm"
+                cancelText="Cancel"
+                confirmButtonColor="red"
+            />
+            
+            <ConfirmationModal
+                isOpen={showLoginConfirm}
+                onClose={() => {
+                    setShowLoginConfirm(false);
+                    setConfirmAction(null);
+                }}
+                onConfirm={() => {
+                    if (confirmAction) {
+                        confirmAction();
+                        setConfirmAction(null);
+                    }
+                }}
+                title="Login Required"
+                message={confirmMessage}
+                confirmText="Login"
+                cancelText="Cancel"
+                confirmButtonColor="indigo"
+            />
         </AppLayout>
     );
 }

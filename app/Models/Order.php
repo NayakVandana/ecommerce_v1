@@ -11,6 +11,7 @@ class Order extends Model
 
     protected $fillable = [
         'user_id',
+        'delivery_boy_id',
         'order_number',
         'name',
         'email',
@@ -27,11 +28,24 @@ class Order extends Model
         'coupon_code_id',
         'status',
         'notes',
+        'otp_code',
+        'otp_verified',
+        'otp_generated_at',
+        'delivered_at',
     ];
 
     protected $casts = [
         'total' => 'decimal:2',
+        'otp_verified' => 'boolean',
+        'otp_generated_at' => 'datetime',
+        'delivered_at' => 'datetime',
     ];
+
+    // Accessor for payment_method (always cash on delivery, not stored in DB)
+    public function getPaymentMethodAttribute()
+    {
+        return 'cash_on_delivery';
+    }
 
     public function user()
     {
@@ -46,6 +60,41 @@ class Order extends Model
     public function couponCode()
     {
         return $this->belongsTo(CouponCode::class);
+    }
+
+    public function deliveryBoy()
+    {
+        return $this->belongsTo(User::class, 'delivery_boy_id');
+    }
+
+    /**
+     * Generate OTP for order delivery
+     */
+    public function generateOTP()
+    {
+        $otp = str_pad((string)rand(100000, 999999), 6, '0', STR_PAD_LEFT);
+        $this->update([
+            'otp_code' => $otp,
+            'otp_generated_at' => now(),
+            'otp_verified' => false,
+        ]);
+        return $otp;
+    }
+
+    /**
+     * Verify OTP for order delivery
+     */
+    public function verifyOTP($otp)
+    {
+        if ($this->otp_code === $otp && !$this->otp_verified) {
+            $this->update([
+                'otp_verified' => true,
+                'status' => 'delivered',
+                'delivered_at' => now(),
+            ]);
+            return true;
+        }
+        return false;
     }
 }
 

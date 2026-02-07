@@ -680,7 +680,8 @@ export default function ProductCreate() {
     };
 
     const handleDeleteMedia = async (mediaId: number) => {
-        if (!confirm('Are you sure you want to delete this media?')) return;
+        setShowDeleteMediaConfirm(true);
+        setMediaToDelete(mediaId);
 
         try {
             const response = await useProductStore.deleteMedia({ id: mediaId });

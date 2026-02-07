@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
      *    - Requires variations to exist (depends on step 4)
      * 6. Discounts - Product discounts
      * 7. CouponCodes - Coupon codes
+     * 8. Addresses - User addresses (requires users to exist)
      * 
      * Variant-Wise Media Flow:
      * - ProductVariationSeeder creates all variations first
@@ -32,12 +33,13 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             UserSeeder::class,              // Step 1: Create users
-            CategorySeeder::class,           // Step 2: Create categories
-            ProductSeeder::class,            // Step 3: Create products
-            ProductVariationSeeder::class,   // Step 4: Create variations (size, color, gender) - MUST be before media
-            ProductMediaSeeder::class,       // Step 5: Create media (can link to variations) - Requires variations
-            DiscountSeeder::class,          // Step 6: Create discounts
-            CouponCodeSeeder::class,        // Step 7: Create coupon codes
+            AddressSeeder::class,           // Step 2: Create addresses (requires users)
+            CategorySeeder::class,           // Step 3: Create categories
+            ProductSeeder::class,            // Step 4: Create products
+            ProductVariationSeeder::class,   // Step 5: Create variations (size, color, gender) - MUST be before media
+            ProductMediaSeeder::class,       // Step 6: Create media (can link to variations) - Requires variations
+            DiscountSeeder::class,          // Step 7: Create discounts
+            CouponCodeSeeder::class,        // Step 8: Create coupon codes
         ]);
     }
 }

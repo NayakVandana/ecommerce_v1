@@ -66,6 +66,11 @@ Route::middleware('auth')->group(function () {
             'id' => $id
         ]);
     })->name('orders.show');
+    
+    // Delivery Boy Dashboard
+    Route::get('/delivery-boy', function () {
+        return Inertia::render('DeliveryBoy/Index');
+    })->name('delivery-boy.dashboard');
 });
 
 // Static Pages
