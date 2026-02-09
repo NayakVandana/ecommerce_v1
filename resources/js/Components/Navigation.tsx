@@ -9,7 +9,10 @@ import {
     TagIcon,
     ArrowRightOnRectangleIcon,
     ShieldCheckIcon,
-    TruckIcon
+    TruckIcon,
+    ShoppingBagIcon,
+    MapPinIcon,
+    ChevronDownIcon
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/Pages/Auth/useAuthStore';
@@ -24,6 +27,7 @@ const navigation = [
 export default function Navigation() {
     const { auth, url } = usePage().props;
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [userMenuOpen, setUserMenuOpen] = useState(false);
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [cartCount, setCartCount] = useState(0);
@@ -204,20 +208,64 @@ export default function Navigation() {
                                         <span className="hidden md:inline">Delivery</span>
                                     </Link>
                                 )}
-                                <Link
-                                    href="/orders"
-                                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
-                                >
-                                    <UserIcon className="h-6 w-6 mr-2" />
-                                    <span className="hidden md:inline">{currentUser.name}</span>
-                                </Link>
-                                <button
-                                    onClick={handleLogout}
-                                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
-                                    title="Logout"
-                                >
-                                    <ArrowRightOnRectangleIcon className="h-6 w-6" />
-                                </button>
+                                
+                                {/* User Menu Dropdown */}
+                                <div className="relative">
+                                    <button
+                                        onClick={() => setUserMenuOpen(!userMenuOpen)}
+                                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
+                                    >
+                                        <UserIcon className="h-6 w-6 mr-2" />
+                                        <span className="hidden md:inline">{currentUser.name}</span>
+                                        <ChevronDownIcon className={`h-4 w-4 ml-1 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    
+                                    {userMenuOpen && (
+                                        <>
+                                            <div
+                                                className="fixed inset-0 z-10"
+                                                onClick={() => setUserMenuOpen(false)}
+                                            ></div>
+                                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 border border-gray-200">
+                                                <Link
+                                                    href="/orders"
+                                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                                                    onClick={() => setUserMenuOpen(false)}
+                                                >
+                                                    <ShoppingBagIcon className="h-5 w-5 mr-2" />
+                                                    Orders
+                                                </Link>
+                                                <Link
+                                                    href="/profile"
+                                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                                                    onClick={() => setUserMenuOpen(false)}
+                                                >
+                                                    <UserIcon className="h-5 w-5 mr-2" />
+                                                    Profile
+                                                </Link>
+                                                <Link
+                                                    href="/addresses"
+                                                    className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                                                    onClick={() => setUserMenuOpen(false)}
+                                                >
+                                                    <MapPinIcon className="h-5 w-5 mr-2" />
+                                                    Your Addresses
+                                                </Link>
+                                                <div className="border-t border-gray-200 my-1"></div>
+                                                <button
+                                                    onClick={() => {
+                                                        setUserMenuOpen(false);
+                                                        handleLogout();
+                                                    }}
+                                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                                                >
+                                                    <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2" />
+                                                    Logout
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         ) : (
                             <Link

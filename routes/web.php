@@ -67,6 +67,16 @@ Route::middleware('auth')->group(function () {
         ]);
     })->name('orders.show');
     
+    // Profile Routes
+    Route::get('/profile', function () {
+        return Inertia::render('Profile/Index');
+    })->name('profile.index');
+    
+    // Address Routes
+    Route::get('/addresses', function () {
+        return Inertia::render('Addresses/Index');
+    })->name('addresses.index');
+    
     // Delivery Boy Dashboard
     Route::get('/delivery-boy', function () {
         return Inertia::render('DeliveryBoy/Index');
