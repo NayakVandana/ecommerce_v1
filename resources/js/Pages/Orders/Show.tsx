@@ -215,7 +215,7 @@ export default function Show() {
                      !order.return_status && (
                         <div className="mt-4">
                             {/* Check if all products are returnable */}
-                            {order.items && order.items.some((item: any) => !(item.is_returnable ?? true)) ? (
+                            {order.items && order.items.some((item: any) => !(item.is_returnable ?? false)) ? (
                                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md mb-3">
                                     <p className="text-sm font-semibold text-yellow-900 mb-2">⚠️ Return Not Available</p>
                                     <p className="text-xs text-yellow-800 mb-2">
@@ -223,7 +223,7 @@ export default function Show() {
                                     </p>
                                     <ul className="text-xs text-yellow-700 list-disc list-inside">
                                         {order.items
-                                            .filter((item: any) => !(item.is_returnable ?? true))
+                                            .filter((item: any) => !(item.is_returnable ?? false))
                                             .map((item: any, index: number) => (
                                                 <li key={index}>{item.product_name}</li>
                                             ))

@@ -28,7 +28,7 @@ export default function ProductCreate() {
         category: '',
         total_quantity: '',
         is_approve: 0,
-        is_returnable: true,
+        is_returnable: false,
         return_policy_note: '',
     });
     const [errors, setErrors] = useState<any>({});
@@ -67,7 +67,7 @@ export default function ProductCreate() {
                 category: product.category || '',
                 total_quantity: product.total_quantity || '',
                 is_approve: product.is_approve || 0,
-                is_returnable: product.is_returnable !== undefined ? product.is_returnable : true,
+                is_returnable: product.is_returnable !== undefined ? product.is_returnable : false,
                 return_policy_note: product.return_policy_note || '',
             });
             
@@ -923,7 +923,7 @@ export default function ProductCreate() {
                 category: parseInt(formData.category),
                 total_quantity: parseInt(formData.total_quantity),
                 is_approve: formData.is_approve,
-                is_returnable: formData.is_returnable !== undefined ? formData.is_returnable : true,
+                is_returnable: formData.is_returnable !== undefined ? formData.is_returnable : false,
                 return_policy_note: formData.return_policy_note || null,
                 variations: variations.map((v: any) => ({
                     size: v.size || null,

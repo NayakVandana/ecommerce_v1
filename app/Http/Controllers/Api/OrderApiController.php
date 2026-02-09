@@ -200,7 +200,7 @@ class OrderApiController extends Controller
                     'quantity' => $itemData['quantity'],
                     'price' => $itemData['price'],
                     'subtotal' => $itemData['subtotal'],
-                    'is_returnable' => $product->is_returnable ?? true, // Store returnable status at time of order
+                    'is_returnable' => $product->is_returnable ?? false, // Store returnable status at time of order
                 ]);
 
                 // Update stock
@@ -310,7 +310,7 @@ class OrderApiController extends Controller
 
         // Check if all products in order are returnable
         $nonReturnableItems = $order->items->filter(function ($item) {
-            return !($item->is_returnable ?? true);
+            return !($item->is_returnable ?? false);
         });
 
         if ($nonReturnableItems->count() > 0) {

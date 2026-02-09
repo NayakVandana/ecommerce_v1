@@ -33,13 +33,26 @@ export default function Index() {
             cancelled: 'bg-red-100 text-red-800',
             processing: 'bg-blue-100 text-blue-800',
             shipped: 'bg-purple-100 text-purple-800',
+            delivered: 'bg-green-100 text-green-800',
+            'out_for_delivery': 'bg-indigo-100 text-indigo-800',
+            'out-for-delivery': 'bg-indigo-100 text-indigo-800',
+            'return_refund': 'bg-orange-100 text-orange-800',
+            'return-refund': 'bg-orange-100 text-orange-800',
         };
+
+        // Format status display - replace underscores and hyphens with spaces, then capitalize each word
+        const statusDisplay = status
+            .replace(/_/g, ' ')
+            .replace(/-/g, ' ')
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
 
         return (
             <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                 statusColors[status] || 'bg-gray-100 text-gray-800'
             }`}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
+                {statusDisplay}
             </span>
         );
     };
