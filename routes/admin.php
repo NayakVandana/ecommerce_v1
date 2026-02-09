@@ -62,6 +62,7 @@ Route::prefix('admin')->middleware(['auth.token', 'admin'])->group(function () {
         Route::post('/approve-return', [AdminOrderController::class, 'approveReturn']);
         Route::post('/reject-return', [AdminOrderController::class, 'rejectReturn']);
         Route::post('/process-refund', [AdminOrderController::class, 'processRefund']);
+        Route::post('/update-delivery-date', [AdminOrderController::class, 'updateDeliveryDate']);
     });
     
     // User Management

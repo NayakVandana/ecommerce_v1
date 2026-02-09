@@ -45,12 +45,12 @@ class AdminOrderController extends Controller
                 case 'cancelled':
                     $query->where('status', 'cancelled');
                     break;
-            case 'return-refund':
+                case 'return-refund':
                 $query->where('return_status', 'pending')
                     ->orWhere('return_status', 'approved')
                     ->orWhere('return_status', 'refunded')
                     ->orWhere('status', 'return_refund');
-                break;
+                    break;
                 case 'processed':
                     // Orders that are shipped or completed
                     $query->whereIn('status', ['shipped', 'completed']);
@@ -227,6 +227,22 @@ class AdminOrderController extends Controller
         ]);
 
         return $this->sendJsonResponse(true, 'Refund processed successfully', $order->fresh(), 200);
+    }
+
+    public function updateDeliveryDate(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:orders,id',
+            'delivery_date' => 'required|date|after_or_equal:today',
+        ]);
+
+        $order = Order::findOrFail($request->id);
+
+        $order->update([
+            'delivery_date' => $request->delivery_date,
+        ]);
+
+        return $this->sendJsonResponse(true, 'Delivery date updated successfully', $order->fresh(), 200);
     }
 
     public function getCounts(Request $request)

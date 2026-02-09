@@ -454,6 +454,36 @@ export default function Show() {
                                     </p>
                                 )}
                             </div>
+
+                            {/* Expected Delivery Date */}
+                            <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <div className="flex items-center gap-2">
+                                    <svg className="h-5 w-5 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <div>
+                                        <p className="text-sm font-semibold text-blue-900 mb-1">
+                                            Expected Delivery Date
+                                        </p>
+                                        <p className="text-sm text-blue-800">
+                                            {(() => {
+                                                // Calculate default delivery date: 2 days after tomorrow (3 days from today)
+                                                const deliveryDate = new Date();
+                                                deliveryDate.setDate(deliveryDate.getDate() + 3);
+                                                return deliveryDate.toLocaleDateString('en-US', { 
+                                                    weekday: 'long', 
+                                                    year: 'numeric', 
+                                                    month: 'long', 
+                                                    day: 'numeric' 
+                                                });
+                                            })()}
+                                        </p>
+                                        <p className="text-xs text-blue-600 mt-1">
+                                            Orders placed today will be delivered by this date
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                             
                             {/* Return/Refund Policy */}
                             <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">

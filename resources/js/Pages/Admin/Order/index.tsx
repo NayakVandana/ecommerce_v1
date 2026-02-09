@@ -54,6 +54,10 @@ export default function OrderIndex() {
     const [pendingCancelOrderId, setPendingCancelOrderId] = useState<number | null>(null);
     const [cancelling, setCancelling] = useState(false);
     const [processingReturn, setProcessingReturn] = useState<number | null>(null);
+    const [showDeliveryDateModal, setShowDeliveryDateModal] = useState(false);
+    const [selectedOrderForDeliveryDate, setSelectedOrderForDeliveryDate] = useState<number | null>(null);
+    const [deliveryDate, setDeliveryDate] = useState('');
+    const [updatingDeliveryDate, setUpdatingDeliveryDate] = useState(false);
 
     useEffect(() => {
         loadOrders();
@@ -229,6 +233,68 @@ export default function OrderIndex() {
             setShowAlert(true);
         } finally {
             setProcessingReturn(null);
+        }
+    };
+
+    const handleEditDeliveryDate = (orderId: number, currentDeliveryDate?: string) => {
+        setSelectedOrderForDeliveryDate(orderId);
+        if (currentDeliveryDate) {
+            const date = new Date(currentDeliveryDate);
+            setDeliveryDate(date.toISOString().split('T')[0]);
+        } else {
+            // Default to 3 days from today
+            const defaultDate = new Date();
+            defaultDate.setDate(defaultDate.getDate() + 3);
+            setDeliveryDate(defaultDate.toISOString().split('T')[0]);
+        }
+        setShowDeliveryDateModal(true);
+    };
+
+    const handleUpdateDeliveryDate = async () => {
+        if (!selectedOrderForDeliveryDate || !deliveryDate) {
+            setAlertMessage('Please select a delivery date');
+            setAlertType('error');
+            setShowAlert(true);
+            return;
+        }
+
+        const selectedDate = new Date(deliveryDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        selectedDate.setHours(0, 0, 0, 0);
+
+        if (selectedDate < today) {
+            setAlertMessage('Delivery date cannot be in the past');
+            setAlertType('error');
+            setShowAlert(true);
+            return;
+        }
+
+        try {
+            setUpdatingDeliveryDate(true);
+            const response = await useOrderStore.updateDeliveryDate({
+                id: selectedOrderForDeliveryDate,
+                delivery_date: deliveryDate,
+            });
+            if (response.data?.status) {
+                loadOrders();
+                setShowDeliveryDateModal(false);
+                setSelectedOrderForDeliveryDate(null);
+                setAlertMessage('Delivery date updated successfully');
+                setAlertType('success');
+                setShowAlert(true);
+            } else {
+                setAlertMessage(response.data?.message || 'Failed to update delivery date');
+                setAlertType('error');
+                setShowAlert(true);
+            }
+        } catch (error: any) {
+            console.error('Error updating delivery date:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to update delivery date');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setUpdatingDeliveryDate(false);
         }
     };
 
@@ -667,6 +733,9 @@ export default function OrderIndex() {
                                             Date
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                            Expected Delivery Date
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
                                             Action
                                         </th>
                                     </tr>
@@ -716,6 +785,31 @@ export default function OrderIndex() {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {new Date(order.created_at).toISOString().split('T')[0]}
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    <div className="flex items-center gap-2">
+                                                        {order.delivery_date ? (
+                                                            <span className="text-sm font-medium text-indigo-600">
+                                                                {new Date(order.delivery_date).toLocaleDateString('en-US', { 
+                                                                    year: 'numeric', 
+                                                                    month: 'short', 
+                                                                    day: 'numeric' 
+                                                                })}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-xs text-gray-400">Not set</span>
+                                                        )}
+                                                        {order.status !== 'shipped' && (
+                                                            <button
+                                                                onClick={() => handleEditDeliveryDate(order.id, order.delivery_date)}
+                                                                className="px-2 py-1 text-xs font-medium text-white bg-purple-600 rounded hover:bg-purple-700 flex items-center gap-1"
+                                                                title="Set Delivery Date"
+                                                            >
+                                                                <TruckIcon className="h-3 w-3" />
+                                                                {order.delivery_date ? 'Change' : 'Set'}
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                     <div className="flex items-center gap-2">
@@ -841,7 +935,7 @@ export default function OrderIndex() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={9} className="px-6 py-4 text-center text-sm text-gray-500">
+                                            <td colSpan={10} className="px-6 py-4 text-center text-sm text-gray-500">
                                                 No orders found
                                             </td>
                                         </tr>
@@ -965,6 +1059,75 @@ export default function OrderIndex() {
                                         </div>
                                     </div>
                                 )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delivery Date Modal */}
+            {showDeliveryDateModal && (
+                <div className="fixed inset-0 z-[9999] overflow-y-auto">
+                    <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                        <div
+                            className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                            onClick={() => {
+                                setShowDeliveryDateModal(false);
+                                setSelectedOrderForDeliveryDate(null);
+                            }}
+                        ></div>
+
+                        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                            <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-semibold text-gray-900">Set Delivery Date</h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowDeliveryDateModal(false);
+                                            setSelectedOrderForDeliveryDate(null);
+                                        }}
+                                        className="text-gray-400 hover:text-gray-500"
+                                    >
+                                        <XMarkIcon className="h-6 w-6" />
+                                    </button>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Expected Delivery Date
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={deliveryDate}
+                                        onChange={(e) => setDeliveryDate(e.target.value)}
+                                        min={new Date().toISOString().split('T')[0]} // Today
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    />
+                                    <p className="mt-2 text-xs text-gray-500">
+                                        Select today's date or a future date for delivery
+                                    </p>
+                                </div>
+                                <div className="flex gap-3 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={handleUpdateDeliveryDate}
+                                        disabled={updatingDeliveryDate || !deliveryDate}
+                                        className="flex-1 inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+                                    >
+                                        {updatingDeliveryDate ? 'Updating...' : 'Update Date'}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setShowDeliveryDateModal(false);
+                                            setSelectedOrderForDeliveryDate(null);
+                                        }}
+                                        disabled={updatingDeliveryDate}
+                                        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

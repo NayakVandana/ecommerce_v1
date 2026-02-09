@@ -38,5 +38,6 @@ export const useOrderStore = {
     approveReturn: (data: any) => adminApi.post('/orders/approve-return', data),
     rejectReturn: (data: any) => adminApi.post('/orders/reject-return', data),
     processRefund: (data: any) => adminApi.post('/orders/process-refund', data),
+    updateDeliveryDate: (data: any) => adminApi.post('/orders/update-delivery-date', data),
 };
 

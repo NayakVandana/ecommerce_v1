@@ -173,6 +173,18 @@ export default function Show() {
                             <p className="text-gray-600">
                                 Placed on: {new Date(order.created_at).toLocaleString()}
                             </p>
+                            {order.delivery_date && (
+                                <p className="text-gray-600 mt-1">
+                                    Expected Delivery: <span className="font-semibold text-indigo-600">
+                                        {new Date(order.delivery_date).toLocaleDateString('en-US', { 
+                                            weekday: 'long', 
+                                            year: 'numeric', 
+                                            month: 'long', 
+                                            day: 'numeric' 
+                                        })}
+                                    </span>
+                                </p>
+                            )}
                             {order.status === 'cancelled' && order.cancellation_reason && (
                                 <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
                                     <p className="text-sm font-semibold text-red-900 mb-1">Cancellation Reason:</p>

@@ -40,6 +40,7 @@ class Order extends Model
         'otp_verified',
         'otp_generated_at',
         'delivered_at',
+        'delivery_date',
     ];
 
     protected $casts = [
@@ -48,6 +49,7 @@ class Order extends Model
         'otp_verified' => 'boolean',
         'otp_generated_at' => 'datetime',
         'delivered_at' => 'datetime',
+        'delivery_date' => 'date',
         'return_requested_at' => 'datetime',
         'return_processed_at' => 'datetime',
     ];

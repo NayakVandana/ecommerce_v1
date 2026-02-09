@@ -148,6 +148,9 @@ class OrderApiController extends Controller
         try {
             DB::beginTransaction();
 
+            // Calculate default delivery date: 2 days after tomorrow (3 days from today)
+            $defaultDeliveryDate = now()->addDays(3)->format('Y-m-d');
+
             $order = Order::create([
                 'user_id' => $userId,
                 'order_number' => $orderNumber,
@@ -166,6 +169,7 @@ class OrderApiController extends Controller
                 'total' => $total,
                 'status' => 'pending',
                 'notes' => $request->notes,
+                'delivery_date' => $request->delivery_date ?? $defaultDeliveryDate,
             ]);
             
             // Record coupon usage if coupon was applied
