@@ -12,6 +12,7 @@ export default function DeliveryBoyIndex() {
     const [selectedOrder, setSelectedOrder] = useState<any>(null);
     const [otpCodes, setOtpCodes] = useState<{[key: number]: string}>({});
     const [verifyingOTP, setVerifyingOTP] = useState<number | null>(null);
+    const [generatingOTP, setGeneratingOTP] = useState<number | null>(null);
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
     const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
@@ -108,6 +109,35 @@ export default function DeliveryBoyIndex() {
         }));
     };
 
+    const handleGenerateOTP = async (orderId: number) => {
+        try {
+            setGeneratingOTP(orderId);
+            const response = await useDeliveryBoyStore.generateOTP({
+                id: orderId,
+            });
+
+            if (response.data?.status) {
+                setAlertMessage('OTP generated successfully!');
+                setAlertType('success');
+                setShowAlert(true);
+                
+                // Reload orders to get the updated OTP
+                await loadOrders();
+            } else {
+                setAlertMessage(response.data?.message || 'Failed to generate OTP');
+                setAlertType('error');
+                setShowAlert(true);
+            }
+        } catch (error: any) {
+            console.error('Error generating OTP:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to generate OTP');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setGeneratingOTP(null);
+        }
+    };
+
     if (loading) {
         return (
             <AppLayout>
@@ -186,7 +216,11 @@ export default function DeliveryBoyIndex() {
                     ) : (
                         <div className="divide-y divide-gray-200">
                             {orders
-                                .filter((order: any) => order.status === 'out_for_delivery' && !order.otp_verified)
+                                .filter((order: any) => 
+                                    order.status === 'out_for_delivery' && 
+                                    !order.otp_verified &&
+                                    order.delivery_boy_id // Only show orders assigned to this delivery boy
+                                )
                                 .map((order: any) => (
                                 <div key={order.id} className="p-6 hover:bg-gray-50 transition-colors">
                                     <div className="flex items-start justify-between">
@@ -222,13 +256,9 @@ export default function DeliveryBoyIndex() {
                                         <div className="ml-6">
                                             {order.otp_code && !order.otp_verified ? (
                                                 <div className="w-80 bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
-                                                    <p className="text-sm font-semibold text-gray-900 mb-2">Delivery OTP</p>
-                                                    <div className="bg-white rounded-md p-3 mb-3 text-center border border-indigo-300">
-                                                        <p className="text-xs text-gray-600 mb-1">OTP Code</p>
-                                                        <p className="text-2xl font-mono font-bold text-indigo-600">{order.otp_code}</p>
-                                                    </div>
+                                                    <p className="text-sm font-semibold text-gray-900 mb-3">Enter OTP to Complete Delivery</p>
+                                                    <p className="text-xs text-gray-600 mb-3">Ask the customer for the 6-digit OTP code to verify delivery</p>
                                                     <div className="space-y-3">
-                                                        <p className="text-sm font-semibold text-gray-900 mb-2">Enter OTP to Complete Delivery</p>
                                                         <input
                                                             type="text"
                                                             maxLength={6}
@@ -260,8 +290,16 @@ export default function DeliveryBoyIndex() {
                                             ) : (
                                                 <div className="w-80 bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4 text-center">
                                                     <ClockIcon className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
-                                                    <p className="text-sm font-semibold text-yellow-900">Waiting for OTP</p>
-                                                    <p className="text-xs text-yellow-700 mt-1">OTP will be generated when order is ready</p>
+                                                    <p className="text-sm font-semibold text-yellow-900 mb-2">OTP Not Generated</p>
+                                                    <p className="text-xs text-yellow-700 mb-3">Click the button below to generate OTP for this order</p>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => handleGenerateOTP(order.id)}
+                                                        disabled={generatingOTP === order.id}
+                                                        className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    >
+                                                        {generatingOTP === order.id ? 'Generating...' : 'Generate OTP'}
+                                                    </button>
                                                 </div>
                                             )}
                                         </div>

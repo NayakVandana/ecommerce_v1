@@ -112,6 +112,7 @@ Route::middleware('auth.token')->prefix('auth')->group(function () {
     Route::prefix('delivery-boy')->group(function () {
         Route::post('/orders', [DeliveryBoyApiController::class, 'index']);
         Route::post('/orders/show', [DeliveryBoyApiController::class, 'show']);
+        Route::post('/orders/generate-otp', [DeliveryBoyApiController::class, 'generateOTP']);
         Route::post('/orders/verify-otp', [DeliveryBoyApiController::class, 'verifyOTP']);
         Route::post('/stats', [DeliveryBoyApiController::class, 'getStats']);
     });

@@ -87,7 +87,8 @@ export default function OrderShow() {
                 await fetchOrder();
                 setShowDeliveryBoyModal(false);
                 setSelectedDeliveryBoyId(null);
-                setAlertMessage('Delivery boy assigned successfully. OTP has been generated.');
+                
+                setAlertMessage('Delivery boy assigned successfully. Delivery boy can generate OTP from their dashboard.');
                 setAlertType('success');
                 setShowAlert(true);
             } else {

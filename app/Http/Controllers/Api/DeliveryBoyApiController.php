@@ -75,6 +75,31 @@ class DeliveryBoyApiController extends Controller
         return $this->sendJsonResponse(false, 'Invalid OTP code', [], 400);
     }
 
+    public function generateOTP(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user || $user->role !== 'delivery_boy') {
+            return $this->sendJsonResponse(false, 'Unauthorized. Delivery boy access required.', [], 403);
+        }
+
+        $request->validate([
+            'id' => 'required|exists:orders,id',
+        ]);
+
+        $order = Order::where('delivery_boy_id', $user->id)
+            ->findOrFail($request->id);
+
+        if ($order->otp_verified) {
+            return $this->sendJsonResponse(false, 'Order already delivered', [], 400);
+        }
+
+        // Generate OTP
+        $otp = $order->generateOTP();
+
+        return $this->sendJsonResponse(true, 'OTP generated successfully', $order->fresh(), 200);
+    }
+
     public function getStats(Request $request)
     {
         $user = $request->user();

@@ -5,6 +5,7 @@ import { useDeliveryBoyStore } from './useDeliveryBoyStore';
 import AdminLayout from '../Layout';
 import FormDatePicker from '../../../Components/FormInput/FormDatePicker';
 import AlertModal from '../../../Components/AlertModal';
+import ConfirmationModal from '../../../Components/ConfirmationModal';
 import { 
     EyeIcon, 
     MagnifyingGlassIcon, 
@@ -46,6 +47,8 @@ export default function OrderIndex() {
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
     const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{ orderId: number; newStatus: string; actionType: string } | null>(null);
 
     useEffect(() => {
         loadOrders();
@@ -104,40 +107,73 @@ export default function OrderIndex() {
         setDateRange(dates);
     };
 
-    const handleAcceptOrder = async (orderId: number) => {
-        try {
-            await useOrderStore.updateStatus({
-                id: orderId,
-                status: 'processing'
-            });
-            loadOrders();
-            loadOrderCounts();
-        } catch (error) {
-            console.error('Error accepting order:', error);
-        }
+    const handleAcceptOrder = (orderId: number) => {
+        setPendingStatusUpdate({
+            orderId,
+            newStatus: 'processing',
+            actionType: 'accept'
+        });
+        setShowConfirmModal(true);
     };
 
-    const handleRejectOrder = async (orderId: number) => {
-        try {
-            await useOrderStore.cancel({ id: orderId });
-            loadOrders();
-            loadOrderCounts();
-        } catch (error) {
-            console.error('Error rejecting order:', error);
-        }
+    const handleRejectOrder = (orderId: number) => {
+        setPendingStatusUpdate({
+            orderId,
+            newStatus: 'cancelled',
+            actionType: 'reject'
+        });
+        setShowConfirmModal(true);
     };
 
-    const handleStatusUpdate = async (orderId: number, newStatus: string) => {
+    const handleStatusUpdate = (orderId: number, newStatus: string, actionType: string = 'update') => {
+        setPendingStatusUpdate({
+            orderId,
+            newStatus,
+            actionType
+        });
+        setShowConfirmModal(true);
+    };
+
+    const confirmStatusUpdate = async () => {
+        if (!pendingStatusUpdate) return;
+
         try {
-            await useOrderStore.updateStatus({
-                id: orderId,
-                status: newStatus
-            });
+            if (pendingStatusUpdate.actionType === 'reject') {
+                await useOrderStore.cancel({ id: pendingStatusUpdate.orderId });
+            } else {
+                await useOrderStore.updateStatus({
+                    id: pendingStatusUpdate.orderId,
+                    status: pendingStatusUpdate.newStatus
+                });
+            }
             loadOrders();
             loadOrderCounts();
+            setShowConfirmModal(false);
+            setPendingStatusUpdate(null);
         } catch (error) {
             console.error('Error updating order status:', error);
+            setAlertMessage('Failed to update order status');
+            setAlertType('error');
+            setShowAlert(true);
+            setShowConfirmModal(false);
+            setPendingStatusUpdate(null);
         }
+    };
+
+    const getStatusUpdateMessage = () => {
+        if (!pendingStatusUpdate) return '';
+        
+        const statusLabels: any = {
+            'processing': 'Accept',
+            'cancelled': 'Reject',
+            'shipped': 'Mark as Shipped',
+            'completed': 'Mark as Completed',
+            'delivered': 'Mark as Delivered',
+            'pending': 'Retry',
+        };
+
+        const actionLabel = statusLabels[pendingStatusUpdate.newStatus] || 'Update';
+        return `Are you sure you want to ${actionLabel.toLowerCase()} this order? This action will change the order status to "${pendingStatusUpdate.newStatus}".`;
     };
 
     const loadDeliveryBoys = async () => {
@@ -184,7 +220,7 @@ export default function OrderIndex() {
                 setShowDeliveryBoyModal(false);
                 setSelectedOrderId(null);
                 setSelectedDeliveryBoyId(null);
-                setAlertMessage('Delivery boy assigned successfully. OTP has been generated.');
+                setAlertMessage('Delivery boy assigned successfully. Delivery boy can generate OTP from their dashboard.');
                 setAlertType('success');
                 setShowAlert(true);
             } else {
@@ -578,10 +614,10 @@ export default function OrderIndex() {
                                                         >
                                                             <EyeIcon className="h-5 w-5" />
                                                         </Link>
-                                                        {/* All Orders - Assign Delivery Boy for processing/shipped orders */}
-                                                        {(normalizedSection === 'all' || normalizedSection === 'ready-for-shipping' || normalizedSection === 'shipped') && 
-                                                         (order.status === 'processing' || order.status === 'shipped') && 
-                                                         !order.delivery_boy_id && (
+                                                        
+                                                        {/* Assign Delivery Boy - Show once for orders that need delivery boy */}
+                                                        {!order.delivery_boy_id && 
+                                                         (order.status === 'processing' || order.status === 'shipped' || order.status === 'out_for_delivery') && (
                                                             <button
                                                                 onClick={() => handleAssignDeliveryBoyClick(order.id)}
                                                                 className="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 flex items-center gap-1"
@@ -614,77 +650,41 @@ export default function OrderIndex() {
                                                         
                                                         {/* Ready for Shipping Actions */}
                                                         {normalizedSection === 'ready-for-shipping' && order.status === 'processing' && (
-                                                            <>
-                                                                {!order.delivery_boy_id && (
-                                                                    <button
-                                                                        onClick={() => handleAssignDeliveryBoyClick(order.id)}
-                                                                        className="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 flex items-center gap-1"
-                                                                        title="Assign Delivery Boy"
-                                                                    >
-                                                                        <UserIcon className="h-3 w-3" />
-                                                                        Assign Delivery
-                                                                    </button>
-                                                                )}
-                                                                <button
-                                                                    onClick={() => handleStatusUpdate(order.id, 'shipped')}
-                                                                    className="px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
-                                                                    title="Mark as Shipped"
-                                                                >
-                                                                    Mark as Shipped
-                                                                </button>
-                                                            </>
+                                                            <button
+                                                                onClick={() => handleStatusUpdate(order.id, 'shipped', 'ship')}
+                                                                className="px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
+                                                                title="Mark as Shipped"
+                                                            >
+                                                                Mark as Shipped
+                                                            </button>
                                                         )}
                                                         
                                                         {/* Shipped Orders Actions */}
                                                         {normalizedSection === 'shipped' && order.status === 'shipped' && (
-                                                            <>
-                                                                {!order.delivery_boy_id && (
-                                                                    <button
-                                                                        onClick={() => handleAssignDeliveryBoyClick(order.id)}
-                                                                        className="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 flex items-center gap-1"
-                                                                        title="Assign Delivery Boy"
-                                                                    >
-                                                                        <UserIcon className="h-3 w-3" />
-                                                                        Assign Delivery
-                                                                    </button>
-                                                                )}
-                                                                <button
-                                                                    onClick={() => handleStatusUpdate(order.id, 'completed')}
-                                                                    className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700"
-                                                                    title="Mark as Delivered"
-                                                                >
-                                                                    Mark as Delivered
-                                                                </button>
-                                                            </>
+                                                            <button
+                                                                onClick={() => handleStatusUpdate(order.id, 'completed', 'complete')}
+                                                                className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700"
+                                                                title="Mark as Delivered"
+                                                            >
+                                                                Mark as Delivered
+                                                            </button>
                                                         )}
                                                         
                                                         {/* Out for Delivery Actions */}
                                                         {normalizedSection === 'out-for-delivery' && order.status === 'out_for_delivery' && (
-                                                            <>
-                                                                {!order.delivery_boy_id && (
-                                                                    <button
-                                                                        onClick={() => handleAssignDeliveryBoyClick(order.id)}
-                                                                        className="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 flex items-center gap-1"
-                                                                        title="Assign Delivery Boy"
-                                                                    >
-                                                                        <UserIcon className="h-3 w-3" />
-                                                                        Assign Delivery
-                                                                    </button>
-                                                                )}
-                                                                <button
-                                                                    onClick={() => handleStatusUpdate(order.id, 'delivered')}
-                                                                    className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700"
-                                                                    title="Mark as Delivered"
-                                                                >
-                                                                    Mark as Delivered
-                                                                </button>
-                                                            </>
+                                                            <button
+                                                                onClick={() => handleStatusUpdate(order.id, 'delivered', 'deliver')}
+                                                                className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700"
+                                                                title="Mark as Delivered"
+                                                            >
+                                                                Mark as Delivered
+                                                            </button>
                                                         )}
                                                         
                                                         {/* Failed Delivery Actions - Can retry or cancel */}
                                                         {normalizedSection === 'failed-delivery' && order.status === 'cancelled' && (
                                                             <button
-                                                                onClick={() => handleStatusUpdate(order.id, 'pending')}
+                                                                onClick={() => handleStatusUpdate(order.id, 'pending', 'retry')}
                                                                 className="px-3 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700"
                                                                 title="Retry Order"
                                                             >
@@ -695,7 +695,7 @@ export default function OrderIndex() {
                                                         {/* Return & Refund Actions */}
                                                         {normalizedSection === 'return-refund' && order.status === 'cancelled' && (
                                                             <button
-                                                                onClick={() => handleStatusUpdate(order.id, 'completed')}
+                                                                onClick={() => handleStatusUpdate(order.id, 'completed', 'refund')}
                                                                 className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700"
                                                                 title="Process Refund"
                                                             >
@@ -725,6 +725,20 @@ export default function OrderIndex() {
                 onClose={() => setShowAlert(false)}
                 message={alertMessage}
                 type={alertType}
+            />
+
+            <ConfirmationModal
+                isOpen={showConfirmModal}
+                onClose={() => {
+                    setShowConfirmModal(false);
+                    setPendingStatusUpdate(null);
+                }}
+                onConfirm={confirmStatusUpdate}
+                title="Confirm Status Update"
+                message={getStatusUpdateMessage()}
+                confirmText="Confirm"
+                cancelText="Cancel"
+                confirmButtonColor={pendingStatusUpdate?.actionType === 'reject' ? 'red' : 'indigo'}
             />
 
             {/* Delivery Boy Assignment Modal */}
