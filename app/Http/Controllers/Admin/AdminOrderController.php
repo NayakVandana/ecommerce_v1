@@ -45,10 +45,12 @@ class AdminOrderController extends Controller
                 case 'cancelled':
                     $query->where('status', 'cancelled');
                     break;
-                case 'return-refund':
-                    // Map to cancelled for now, or create a new status
-                    $query->where('status', 'cancelled');
-                    break;
+            case 'return-refund':
+                $query->where('return_status', 'pending')
+                    ->orWhere('return_status', 'approved')
+                    ->orWhere('return_status', 'refunded')
+                    ->orWhere('status', 'return_refund');
+                break;
                 case 'processed':
                     // Orders that are shipped or completed
                     $query->whereIn('status', ['shipped', 'completed']);
@@ -106,7 +108,7 @@ class AdminOrderController extends Controller
     {
         $request->validate([
             'id' => 'required|exists:orders,id',
-            'status' => 'required|in:pending,processing,shipped,completed,cancelled,ready_for_shipping,out_for_delivery,delivered,failed_delivery,picked_up,return_refund',
+            'status' => 'required|in:pending,processing,shipped,completed,cancelled,ready_for_shipping,out_for_delivery,delivered,failed_delivery,picked_up,return_refund,returned',
         ]);
 
         $order = Order::findOrFail($request->id);
@@ -118,7 +120,7 @@ class AdminOrderController extends Controller
             'delivered' => 'delivered',
             'failed_delivery' => 'cancelled',
             'picked_up' => 'completed',
-            'return_refund' => 'cancelled',
+            'return_refund' => 'return_refund',
         ];
         
         $status = $statusMapping[$request->status] ?? $request->status;
@@ -133,6 +135,8 @@ class AdminOrderController extends Controller
     {
         $request->validate([
             'id' => 'required|exists:orders,id',
+            'cancellation_reason' => 'nullable|string|in:customer_request,out_of_stock,payment_failed,delivery_issue,changed_mind,found_better_price,wrong_item,delivery_address_incorrect,delayed_delivery,other',
+            'cancellation_notes' => 'nullable|string|max:500',
         ]);
 
         $order = Order::findOrFail($request->id);
@@ -145,9 +149,84 @@ class AdminOrderController extends Controller
             return $this->sendJsonResponse(false, 'Cannot cancel completed order', [], 400);
         }
 
-        $order->update(['status' => 'cancelled']);
+        $order->update([
+            'status' => 'cancelled',
+            'cancellation_reason' => $request->cancellation_reason,
+            'cancellation_notes' => $request->cancellation_notes,
+        ]);
 
         return $this->sendJsonResponse(true, 'Order cancelled successfully', $order->fresh(), 200);
+    }
+
+    public function approveReturn(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:orders,id',
+        ]);
+
+        $order = Order::findOrFail($request->id);
+
+        if ($order->return_status !== 'pending') {
+            return $this->sendJsonResponse(false, 'Return request is not pending', [], 400);
+        }
+
+        // Calculate refund amount (full order total)
+        $refundAmount = $order->total;
+
+        $order->update([
+            'return_status' => 'approved',
+            'refund_amount' => $refundAmount,
+            'return_processed_at' => now(),
+            'status' => 'return_refund',
+        ]);
+
+        return $this->sendJsonResponse(true, 'Return approved and refund processed successfully', $order->fresh(), 200);
+    }
+
+    public function rejectReturn(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:orders,id',
+            'rejection_reason' => 'nullable|string|max:500',
+        ]);
+
+        $order = Order::findOrFail($request->id);
+
+        if ($order->return_status !== 'pending') {
+            return $this->sendJsonResponse(false, 'Return request is not pending', [], 400);
+        }
+
+        $order->update([
+            'return_status' => 'rejected',
+            'return_notes' => $request->rejection_reason ? ($order->return_notes . ' | Rejection: ' . $request->rejection_reason) : $order->return_notes,
+            'return_processed_at' => now(),
+        ]);
+
+        return $this->sendJsonResponse(true, 'Return request rejected', $order->fresh(), 200);
+    }
+
+    public function processRefund(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:orders,id',
+        ]);
+
+        $order = Order::findOrFail($request->id);
+
+        if ($order->return_status !== 'approved') {
+            return $this->sendJsonResponse(false, 'Return must be approved before processing refund', [], 400);
+        }
+
+        if ($order->return_status === 'refunded') {
+            return $this->sendJsonResponse(false, 'Refund already processed', [], 400);
+        }
+
+        $order->update([
+            'return_status' => 'refunded',
+            'return_processed_at' => now(),
+        ]);
+
+        return $this->sendJsonResponse(true, 'Refund processed successfully', $order->fresh(), 200);
     }
 
     public function getCounts(Request $request)
@@ -163,7 +242,12 @@ class AdminOrderController extends Controller
             'picked-up' => Order::where('status', 'completed')->count(),
             'completed' => Order::where('status', 'completed')->count(),
             'cancelled' => Order::where('status', 'cancelled')->count(),
-            'return-refund' => Order::where('status', 'cancelled')->count(),
+            'return-refund' => Order::where(function($query) {
+                $query->where('return_status', 'pending')
+                    ->orWhere('return_status', 'approved')
+                    ->orWhere('return_status', 'refunded')
+                    ->orWhere('status', 'return_refund');
+            })->count(),
             'processed' => Order::whereIn('status', ['shipped', 'completed'])->count(),
         ];
 

@@ -35,5 +35,8 @@ export const useOrderStore = {
     updateStatus: (data: any) => adminApi.post('/orders/update-status', data),
     cancel: (data: any) => adminApi.post('/orders/cancel', data),
     getCounts: (data?: any) => adminApi.post('/orders/counts', data || {}),
+    approveReturn: (data: any) => adminApi.post('/orders/approve-return', data),
+    rejectReturn: (data: any) => adminApi.post('/orders/reject-return', data),
+    processRefund: (data: any) => adminApi.post('/orders/process-refund', data),
 };
 

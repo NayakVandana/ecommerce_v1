@@ -54,6 +54,8 @@ class AdminProductController extends Controller
             'category' => 'required|exists:categories,id',
             'total_quantity' => 'required|integer|min:0',
             'is_approve' => 'sometimes|integer|in:0,1',
+            'is_returnable' => 'sometimes|boolean',
+            'return_policy_note' => 'nullable|string|max:500',
         ]);
 
         $productData = $request->all();
@@ -110,6 +112,8 @@ class AdminProductController extends Controller
             'category' => 'sometimes|exists:categories,id',
             'total_quantity' => 'sometimes|integer|min:0',
             'is_approve' => 'sometimes|integer|in:0,1',
+            'is_returnable' => 'sometimes|boolean',
+            'return_policy_note' => 'nullable|string|max:500',
         ]);
 
         try {

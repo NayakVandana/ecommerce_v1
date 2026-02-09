@@ -20,12 +20,14 @@ class OrderItem extends Model
         'quantity',
         'price',
         'subtotal',
+        'is_returnable',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
         'price' => 'decimal:2',
         'subtotal' => 'decimal:2',
+        'is_returnable' => 'boolean',
     ];
 
     public function order()

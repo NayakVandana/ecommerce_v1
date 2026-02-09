@@ -38,6 +38,8 @@ class Product extends Model
         'discount_percent',
         'is_approve',
         'total_quantity',
+        'is_returnable',
+        'return_policy_note',
     ];
 
     protected $casts = [
@@ -52,6 +54,7 @@ class Product extends Model
         'gst' => 'integer',
         'is_approve' => 'integer',
         'total_quantity' => 'integer',
+        'is_returnable' => 'boolean',
         'category' => 'integer',
         'subcategory_1' => 'integer',
         'subcategory_2' => 'integer',

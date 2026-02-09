@@ -3,6 +3,9 @@ import { Link, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { useOrderStore } from './useOrderStore';
 import Button from '../../Components/Button';
+import CancellationReasonModal from '../../Components/CancellationReasonModal';
+import ReturnReasonModal from '../../Components/ReturnReasonModal';
+import AlertModal from '../../Components/AlertModal';
 
 export default function Show() {
     const { props } = usePage();
@@ -12,9 +15,10 @@ export default function Show() {
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
     const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
-    const [showConfirm, setShowConfirm] = useState(false);
-    const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
+    const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelling, setCancelling] = useState(false);
+    const [showReturnModal, setShowReturnModal] = useState(false);
+    const [requestingReturn, setRequestingReturn] = useState(false);
 
     useEffect(() => {
         fetchOrder();
@@ -34,17 +38,20 @@ export default function Show() {
         }
     };
 
-    const handleCancel = async () => {
-        setShowConfirm(true);
-        setConfirmAction(() => () => handleCancelConfirm());
+    const handleCancel = () => {
+        setShowCancelModal(true);
     };
 
-    const handleCancelConfirm = async () => {
-        setShowConfirm(false);
+    const handleCancelConfirm = async (cancelData: { cancellation_reason: string; cancellation_notes: string | null }) => {
         try {
             setCancelling(true);
-            const response = await useOrderStore.cancel({ id: orderId });
+            const response = await useOrderStore.cancel({ 
+                id: orderId,
+                cancellation_reason: cancelData.cancellation_reason,
+                cancellation_notes: cancelData.cancellation_notes,
+            });
             if (response.data?.status) {
+                setShowCancelModal(false);
                 await fetchOrder();
                 setAlertMessage('Order cancelled successfully');
                 setAlertType('success');
@@ -57,6 +64,35 @@ export default function Show() {
             setShowAlert(true);
         } finally {
             setCancelling(false);
+        }
+    };
+
+    const handleReturnRequest = () => {
+        setShowReturnModal(true);
+    };
+
+    const handleReturnConfirm = async (returnData: { return_reason: string; return_notes: string | null }) => {
+        try {
+            setRequestingReturn(true);
+            const response = await useOrderStore.requestReturn({
+                id: orderId,
+                return_reason: returnData.return_reason,
+                return_notes: returnData.return_notes,
+            });
+            if (response.data?.status) {
+                setShowReturnModal(false);
+                await fetchOrder();
+                setAlertMessage('Return request submitted successfully');
+                setAlertType('success');
+                setShowAlert(true);
+            }
+        } catch (error: any) {
+            console.error('Error requesting return:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to submit return request');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setRequestingReturn(false);
         }
     };
 
@@ -137,13 +173,33 @@ export default function Show() {
                             <p className="text-gray-600">
                                 Placed on: {new Date(order.created_at).toLocaleString()}
                             </p>
+                            {order.status === 'cancelled' && order.cancellation_reason && (
+                                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
+                                    <p className="text-sm font-semibold text-red-900 mb-1">Cancellation Reason:</p>
+                                    <p className="text-sm text-red-800">
+                                        {order.cancellation_reason === 'changed_mind' && 'Changed My Mind'}
+                                        {order.cancellation_reason === 'found_better_price' && 'Found Better Price Elsewhere'}
+                                        {order.cancellation_reason === 'wrong_item' && 'Wrong Item Ordered'}
+                                        {order.cancellation_reason === 'delivery_address_incorrect' && 'Delivery Address Incorrect'}
+                                        {order.cancellation_reason === 'delayed_delivery' && 'Delivery Taking Too Long'}
+                                        {order.cancellation_reason === 'customer_request' && 'Customer Request'}
+                                        {order.cancellation_reason === 'out_of_stock' && 'Out of Stock'}
+                                        {order.cancellation_reason === 'payment_failed' && 'Payment Failed'}
+                                        {order.cancellation_reason === 'delivery_issue' && 'Delivery Issue'}
+                                        {order.cancellation_reason === 'other' && 'Other'}
+                                    </p>
+                                    {order.cancellation_notes && (
+                                        <p className="text-sm text-red-700 mt-2 italic">"{order.cancellation_notes}"</p>
+                                    )}
+                                </div>
+                            )}
                         </div>
                         <div>
                             {getStatusBadge(order.status)}
                         </div>
                     </div>
 
-                    {order.status === 'pending' && (
+                            {order.status === 'pending' && (
                         <div className="mt-4">
                             <Button
                                 variant="danger"
@@ -154,7 +210,92 @@ export default function Show() {
                             </Button>
                         </div>
                     )}
+
+                    {(order.status === 'shipped' || order.status === 'delivered' || order.status === 'completed') && 
+                     !order.return_status && (
+                        <div className="mt-4">
+                            {/* Check if all products are returnable */}
+                            {order.items && order.items.some((item: any) => !(item.is_returnable ?? true)) ? (
+                                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md mb-3">
+                                    <p className="text-sm font-semibold text-yellow-900 mb-2">⚠️ Return Not Available</p>
+                                    <p className="text-xs text-yellow-800 mb-2">
+                                        Some products in this order are not returnable:
+                                    </p>
+                                    <ul className="text-xs text-yellow-700 list-disc list-inside">
+                                        {order.items
+                                            .filter((item: any) => !(item.is_returnable ?? true))
+                                            .map((item: any, index: number) => (
+                                                <li key={index}>{item.product_name}</li>
+                                            ))
+                                        }
+                                    </ul>
+                                </div>
+                            ) : (
+                                <Button
+                                    variant="warning"
+                                    onClick={handleReturnRequest}
+                                    disabled={requestingReturn}
+                                >
+                                    {requestingReturn ? 'Submitting...' : 'Request Return/Refund'}
+                                </Button>
+                            )}
+                        </div>
+                    )}
+
+                    {order.return_status && (
+                        <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-md">
+                            <p className="text-sm font-semibold text-orange-900 mb-1">Return Status:</p>
+                            <p className="text-sm text-orange-800 capitalize mb-2">
+                                {order.return_status === 'pending' && '⏳ Return Request Pending'}
+                                {order.return_status === 'approved' && '✅ Return Approved - Refund Processing'}
+                                {order.return_status === 'rejected' && '❌ Return Request Rejected'}
+                                {order.return_status === 'refunded' && '💰 Refund Processed'}
+                            </p>
+                            {order.return_reason && (
+                                <p className="text-sm text-orange-700">
+                                    <span className="font-semibold">Reason:</span> 
+                                    {order.return_reason === 'defective_item' && ' Defective Item'}
+                                    {order.return_reason === 'wrong_item' && ' Wrong Item Received'}
+                                    {order.return_reason === 'not_as_described' && ' Not as Described'}
+                                    {order.return_reason === 'changed_mind' && ' Changed My Mind'}
+                                    {order.return_reason === 'damaged_during_delivery' && ' Damaged During Delivery'}
+                                    {order.return_reason === 'other' && ' Other'}
+                                </p>
+                            )}
+                            {order.return_notes && (
+                                <p className="text-sm text-orange-700 mt-1 italic">"{order.return_notes}"</p>
+                            )}
+                            {order.refund_amount && (
+                                <p className="text-sm font-semibold text-orange-900 mt-2">
+                                    Refund Amount: ${Number(order.refund_amount).toFixed(2)}
+                                </p>
+                            )}
+                        </div>
+                    )}
                 </div>
+
+                <CancellationReasonModal
+                    isOpen={showCancelModal}
+                    onClose={() => setShowCancelModal(false)}
+                    onConfirm={handleCancelConfirm}
+                    loading={cancelling}
+                    isCustomer={true}
+                />
+
+                <ReturnReasonModal
+                    isOpen={showReturnModal}
+                    onClose={() => setShowReturnModal(false)}
+                    onConfirm={handleReturnConfirm}
+                    loading={requestingReturn}
+                />
+
+                <AlertModal
+                    isOpen={showAlert}
+                    onClose={() => setShowAlert(false)}
+                    title={alertType === 'success' ? 'Success' : alertType === 'error' ? 'Error' : 'Information'}
+                    message={alertMessage}
+                    type={alertType}
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Order Items */}
@@ -200,6 +341,16 @@ export default function Show() {
                                                 <p className="text-sm text-gray-600 mt-1">
                                                     Quantity: {item.quantity} × ${Number(item.price || 0).toFixed(2)}
                                                 </p>
+                                                {/* Return Eligibility Badge */}
+                                                {item.is_returnable !== false ? (
+                                                    <span className="inline-flex items-center mt-2 px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                        ✓ Returnable
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center mt-2 px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                        ✗ Not Returnable
+                                                    </span>
+                                                )}
                                             </div>
                                             
                                             <div className="text-right">

@@ -6,6 +6,7 @@ import AdminLayout from '../Layout';
 import FormDatePicker from '../../../Components/FormInput/FormDatePicker';
 import AlertModal from '../../../Components/AlertModal';
 import ConfirmationModal from '../../../Components/ConfirmationModal';
+import CancellationReasonModal from '../../../Components/CancellationReasonModal';
 import { 
     EyeIcon, 
     MagnifyingGlassIcon, 
@@ -49,6 +50,10 @@ export default function OrderIndex() {
     const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{ orderId: number; newStatus: string; actionType: string } | null>(null);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [pendingCancelOrderId, setPendingCancelOrderId] = useState<number | null>(null);
+    const [cancelling, setCancelling] = useState(false);
+    const [processingReturn, setProcessingReturn] = useState<number | null>(null);
 
     useEffect(() => {
         loadOrders();
@@ -117,12 +122,114 @@ export default function OrderIndex() {
     };
 
     const handleRejectOrder = (orderId: number) => {
-        setPendingStatusUpdate({
-            orderId,
-            newStatus: 'cancelled',
-            actionType: 'reject'
-        });
-        setShowConfirmModal(true);
+        setPendingCancelOrderId(orderId);
+        setShowCancelModal(true);
+    };
+
+    const handleCancelConfirm = async (cancelData: { cancellation_reason: string; cancellation_notes: string | null }) => {
+        if (!pendingCancelOrderId) return;
+
+        try {
+            setCancelling(true);
+            await useOrderStore.cancel({
+                id: pendingCancelOrderId,
+                cancellation_reason: cancelData.cancellation_reason,
+                cancellation_notes: cancelData.cancellation_notes,
+            });
+            loadOrders();
+            loadOrderCounts();
+            setShowCancelModal(false);
+            setPendingCancelOrderId(null);
+            setAlertMessage('Order cancelled successfully');
+            setAlertType('success');
+            setShowAlert(true);
+        } catch (error) {
+            console.error('Error cancelling order:', error);
+            setAlertMessage('Failed to cancel order');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setCancelling(false);
+        }
+    };
+
+    const handleApproveReturn = async (orderId: number) => {
+        try {
+            setProcessingReturn(orderId);
+            const response = await useOrderStore.approveReturn({ id: orderId });
+            if (response.data?.status) {
+                loadOrders();
+                loadOrderCounts();
+                setAlertMessage('Return approved and refund processed successfully');
+                setAlertType('success');
+                setShowAlert(true);
+            } else {
+                setAlertMessage(response.data?.message || 'Failed to approve return');
+                setAlertType('error');
+                setShowAlert(true);
+            }
+        } catch (error: any) {
+            console.error('Error approving return:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to approve return');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setProcessingReturn(null);
+        }
+    };
+
+    const handleRejectReturn = async (orderId: number) => {
+        const rejectionReason = prompt('Please enter rejection reason (optional):');
+        try {
+            setProcessingReturn(orderId);
+            const response = await useOrderStore.rejectReturn({ 
+                id: orderId,
+                rejection_reason: rejectionReason || null
+            });
+            if (response.data?.status) {
+                loadOrders();
+                loadOrderCounts();
+                setAlertMessage('Return request rejected');
+                setAlertType('success');
+                setShowAlert(true);
+            } else {
+                setAlertMessage(response.data?.message || 'Failed to reject return');
+                setAlertType('error');
+                setShowAlert(true);
+            }
+        } catch (error: any) {
+            console.error('Error rejecting return:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to reject return');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setProcessingReturn(null);
+        }
+    };
+
+    const handleProcessRefund = async (orderId: number) => {
+        try {
+            setProcessingReturn(orderId);
+            const response = await useOrderStore.processRefund({ id: orderId });
+            if (response.data?.status) {
+                loadOrders();
+                loadOrderCounts();
+                setAlertMessage('Refund processed successfully');
+                setAlertType('success');
+                setShowAlert(true);
+            } else {
+                setAlertMessage(response.data?.message || 'Failed to process refund');
+                setAlertType('error');
+                setShowAlert(true);
+            }
+        } catch (error: any) {
+            console.error('Error processing refund:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to process refund');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setProcessingReturn(null);
+        }
     };
 
     const handleStatusUpdate = (orderId: number, newStatus: string, actionType: string = 'update') => {
@@ -138,8 +245,13 @@ export default function OrderIndex() {
         if (!pendingStatusUpdate) return;
 
         try {
+            // Reject is now handled by cancellation modal, so this shouldn't happen
             if (pendingStatusUpdate.actionType === 'reject') {
-                await useOrderStore.cancel({ id: pendingStatusUpdate.orderId });
+                setShowConfirmModal(false);
+                setPendingStatusUpdate(null);
+                setPendingCancelOrderId(pendingStatusUpdate.orderId);
+                setShowCancelModal(true);
+                return;
             } else {
                 await useOrderStore.updateStatus({
                     id: pendingStatusUpdate.orderId,
@@ -693,13 +805,34 @@ export default function OrderIndex() {
                                                         )}
                                                         
                                                         {/* Return & Refund Actions */}
-                                                        {normalizedSection === 'return-refund' && order.status === 'cancelled' && (
+                                                        {normalizedSection === 'return-refund' && order.return_status === 'pending' && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handleApproveReturn(order.id)}
+                                                                    disabled={processingReturn === order.id}
+                                                                    className={`px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700 ${processingReturn === order.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                    title="Approve Return"
+                                                                >
+                                                                    {processingReturn === order.id ? 'Processing...' : 'Approve Return'}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleRejectReturn(order.id)}
+                                                                    disabled={processingReturn === order.id}
+                                                                    className={`px-3 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 ${processingReturn === order.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                    title="Reject Return"
+                                                                >
+                                                                    {processingReturn === order.id ? 'Processing...' : 'Reject Return'}
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                        {normalizedSection === 'return-refund' && order.return_status === 'approved' && (
                                                             <button
-                                                                onClick={() => handleStatusUpdate(order.id, 'completed', 'refund')}
-                                                                className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700"
+                                                                onClick={() => handleProcessRefund(order.id)}
+                                                                disabled={processingReturn === order.id}
+                                                                className={`px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 ${processingReturn === order.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                                 title="Process Refund"
                                                             >
-                                                                Process Refund
+                                                                {processingReturn === order.id ? 'Processing...' : 'Process Refund'}
                                                             </button>
                                                         )}
                                                     </div>
@@ -739,6 +872,16 @@ export default function OrderIndex() {
                 confirmText="Confirm"
                 cancelText="Cancel"
                 confirmButtonColor={pendingStatusUpdate?.actionType === 'reject' ? 'red' : 'indigo'}
+            />
+
+            <CancellationReasonModal
+                isOpen={showCancelModal}
+                onClose={() => {
+                    setShowCancelModal(false);
+                    setPendingCancelOrderId(null);
+                }}
+                onConfirm={handleCancelConfirm}
+                loading={cancelling}
             />
 
             {/* Delivery Boy Assignment Modal */}

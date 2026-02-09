@@ -25,6 +25,35 @@ window.addEventListener('storage', updateAuthToken);
 // Update token on page load
 updateAuthToken();
 
+// Suppress browser extension errors (harmless but annoying)
+window.addEventListener('error', (event) => {
+    // Suppress browser extension message channel errors
+    if (
+        event.message?.includes('message channel closed') ||
+        event.message?.includes('asynchronous response') ||
+        event.message?.includes('Extension context invalidated')
+    ) {
+        event.preventDefault();
+        return false;
+    }
+});
+
+// Suppress unhandled promise rejections from browser extensions
+window.addEventListener('unhandledrejection', (event) => {
+    const errorMessage = event.reason?.message || event.reason?.toString() || '';
+    
+    // Suppress browser extension errors
+    if (
+        errorMessage.includes('message channel closed') ||
+        errorMessage.includes('asynchronous response') ||
+        errorMessage.includes('Extension context invalidated') ||
+        errorMessage.includes('A listener indicated an asynchronous response')
+    ) {
+        event.preventDefault();
+        return false;
+    }
+});
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) => resolvePageComponent(`./Pages/${name}.tsx`, import.meta.glob('./Pages/**/*.tsx')),

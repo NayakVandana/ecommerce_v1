@@ -28,6 +28,14 @@ class Order extends Model
         'coupon_code_id',
         'status',
         'notes',
+        'cancellation_reason',
+        'cancellation_notes',
+        'return_reason',
+        'return_notes',
+        'return_status',
+        'return_requested_at',
+        'return_processed_at',
+        'refund_amount',
         'otp_code',
         'otp_verified',
         'otp_generated_at',
@@ -36,9 +44,12 @@ class Order extends Model
 
     protected $casts = [
         'total' => 'decimal:2',
+        'refund_amount' => 'decimal:2',
         'otp_verified' => 'boolean',
         'otp_generated_at' => 'datetime',
         'delivered_at' => 'datetime',
+        'return_requested_at' => 'datetime',
+        'return_processed_at' => 'datetime',
     ];
 
     // Accessor for payment_method (always cash on delivery, not stored in DB)

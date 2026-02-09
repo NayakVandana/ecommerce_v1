@@ -73,6 +73,7 @@ Route::middleware('auth.token')->prefix('auth')->group(function () {
         Route::post('/store', [OrderApiController::class, 'store']);
         Route::post('/show', [OrderApiController::class, 'show']);
         Route::post('/cancel', [OrderApiController::class, 'cancel']);
+        Route::post('/request-return', [OrderApiController::class, 'requestReturn']);
     });
     
     // Coupon Routes (require authentication)

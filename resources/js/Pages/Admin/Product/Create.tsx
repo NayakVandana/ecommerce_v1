@@ -28,6 +28,8 @@ export default function ProductCreate() {
         category: '',
         total_quantity: '',
         is_approve: 0,
+        is_returnable: true,
+        return_policy_note: '',
     });
     const [errors, setErrors] = useState<any>({});
     const [submitting, setSubmitting] = useState(false);
@@ -65,6 +67,8 @@ export default function ProductCreate() {
                 category: product.category || '',
                 total_quantity: product.total_quantity || '',
                 is_approve: product.is_approve || 0,
+                is_returnable: product.is_returnable !== undefined ? product.is_returnable : true,
+                return_policy_note: product.return_policy_note || '',
             });
             
             // Set category hierarchy based on selected category
@@ -301,10 +305,18 @@ export default function ProductCreate() {
         const { name, value, type } = e.target;
         const checked = (e.target as HTMLInputElement).checked;
         
-        setFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? (checked ? 1 : 0) : value
-        }));
+        // Handle boolean checkboxes differently
+        if (name === 'is_returnable') {
+            setFormData(prev => ({
+                ...prev,
+                [name]: checked
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: type === 'checkbox' ? (checked ? 1 : 0) : value
+            }));
+        }
 
         // Clear error for this field
         if (errors[name]) {
@@ -911,6 +923,8 @@ export default function ProductCreate() {
                 category: parseInt(formData.category),
                 total_quantity: parseInt(formData.total_quantity),
                 is_approve: formData.is_approve,
+                is_returnable: formData.is_returnable !== undefined ? formData.is_returnable : true,
+                return_policy_note: formData.return_policy_note || null,
                 variations: variations.map((v: any) => ({
                     size: v.size || null,
                     color: v.color || null,
@@ -1352,6 +1366,51 @@ export default function ProductCreate() {
                                     <label htmlFor="is_approve" className="ml-2 block text-sm text-gray-900">
                                         Approve Product
                                     </label>
+                                </div>
+                            </div>
+
+                            {/* Return/Refund Settings */}
+                            <div className="border-t pt-6">
+                                <h3 className="text-lg font-semibold text-gray-900 mb-4">Return/Refund Settings</h3>
+                                
+                                <div className="space-y-4">
+                                    {/* Is Returnable */}
+                                    <div>
+                                        <div className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                name="is_returnable"
+                                                id="is_returnable"
+                                                checked={formData.is_returnable === true}
+                                                onChange={(e) => setFormData({ ...formData, is_returnable: e.target.checked })}
+                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                            />
+                                            <label htmlFor="is_returnable" className="ml-2 block text-sm text-gray-900">
+                                                Product is Returnable & Refundable
+                                            </label>
+                                        </div>
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            Uncheck if this product cannot be returned or refunded
+                                        </p>
+                                    </div>
+
+                                    {/* Return Policy Note */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Return Policy Note (Optional)
+                                        </label>
+                                        <textarea
+                                            name="return_policy_note"
+                                            value={formData.return_policy_note}
+                                            onChange={handleInputChange}
+                                            rows={3}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            placeholder="e.g., Returnable within 7 days, items must be unused and in original packaging..."
+                                        />
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            This note will be displayed to customers on the product page
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 

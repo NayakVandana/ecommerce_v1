@@ -5,6 +5,7 @@ import { useDeliveryBoyStore } from './useDeliveryBoyStore';
 import AdminLayout from '../Layout';
 import AlertModal from '../../../Components/AlertModal';
 import ConfirmationModal from '../../../Components/ConfirmationModal';
+import CancellationReasonModal from '../../../Components/CancellationReasonModal';
 import { 
     ArrowLeftIcon,
     CheckCircleIcon,
@@ -36,6 +37,8 @@ export default function OrderShow() {
     const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
     const [newStatus, setNewStatus] = useState<string | null>(null);
     const [updatingStatus, setUpdatingStatus] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancelling, setCancelling] = useState(false);
     const [deliveryBoys, setDeliveryBoys] = useState<any[]>([]);
     const [loadingDeliveryBoys, setLoadingDeliveryBoys] = useState(false);
     const [showDeliveryBoyModal, setShowDeliveryBoyModal] = useState(false);
@@ -237,7 +240,123 @@ export default function OrderShow() {
     };
 
     const handleQuickAction = async (newStatus: string) => {
-        await handleStatusUpdate(newStatus);
+        if (newStatus === 'cancelled') {
+            setShowCancelModal(true);
+        } else if (newStatus === 'approve_return') {
+            await handleApproveReturn();
+        } else if (newStatus === 'reject_return') {
+            await handleRejectReturn();
+        } else if (newStatus === 'process_refund') {
+            await handleProcessRefund();
+        } else {
+            await handleStatusUpdate(newStatus);
+        }
+    };
+
+    const handleApproveReturn = async () => {
+        try {
+            setUpdatingStatus(true);
+            const response = await useOrderStore.approveReturn({ id: orderId });
+            if (response.data?.status) {
+                await fetchOrder();
+                setAlertMessage('Return approved and refund processed successfully');
+                setAlertType('success');
+                setShowAlert(true);
+            } else {
+                setAlertMessage(response.data?.message || 'Failed to approve return');
+                setAlertType('error');
+                setShowAlert(true);
+            }
+        } catch (error: any) {
+            console.error('Error approving return:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to approve return');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setUpdatingStatus(false);
+        }
+    };
+
+    const handleRejectReturn = async () => {
+        const rejectionReason = prompt('Please enter rejection reason (optional):');
+        try {
+            setUpdatingStatus(true);
+            const response = await useOrderStore.rejectReturn({ 
+                id: orderId,
+                rejection_reason: rejectionReason || null
+            });
+            if (response.data?.status) {
+                await fetchOrder();
+                setAlertMessage('Return request rejected');
+                setAlertType('success');
+                setShowAlert(true);
+            } else {
+                setAlertMessage(response.data?.message || 'Failed to reject return');
+                setAlertType('error');
+                setShowAlert(true);
+            }
+        } catch (error: any) {
+            console.error('Error rejecting return:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to reject return');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setUpdatingStatus(false);
+        }
+    };
+
+    const handleProcessRefund = async () => {
+        try {
+            setUpdatingStatus(true);
+            const response = await useOrderStore.processRefund({ id: orderId });
+            if (response.data?.status) {
+                await fetchOrder();
+                setAlertMessage('Refund processed successfully');
+                setAlertType('success');
+                setShowAlert(true);
+            } else {
+                setAlertMessage(response.data?.message || 'Failed to process refund');
+                setAlertType('error');
+                setShowAlert(true);
+            }
+        } catch (error: any) {
+            console.error('Error processing refund:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to process refund');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setUpdatingStatus(false);
+        }
+    };
+
+    const handleCancelConfirm = async (cancelData: { cancellation_reason: string; cancellation_notes: string | null }) => {
+        try {
+            setCancelling(true);
+            const response = await useOrderStore.cancel({
+                id: orderId,
+                cancellation_reason: cancelData.cancellation_reason,
+                cancellation_notes: cancelData.cancellation_notes,
+            });
+            
+            if (response.data?.status) {
+                await fetchOrder();
+                setShowCancelModal(false);
+                setAlertMessage('Order cancelled successfully');
+                setAlertType('success');
+                setShowAlert(true);
+            } else {
+                setAlertMessage(response.data?.message || 'Failed to cancel order');
+                setAlertType('error');
+                setShowAlert(true);
+            }
+        } catch (error: any) {
+            console.error('Error cancelling order:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to cancel order');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setCancelling(false);
+        }
     };
 
     const currentPath = getCurrentPath();
@@ -298,6 +417,67 @@ export default function OrderShow() {
                             <p className="mt-1 text-sm text-gray-600">
                                 Order #{order.order_number || order.id}
                             </p>
+                            {order.status === 'cancelled' && order.cancellation_reason && (
+                                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md max-w-2xl">
+                                    <p className="text-sm font-semibold text-red-900 mb-1">Cancellation Reason:</p>
+                                    <p className="text-sm text-red-800">
+                                        {order.cancellation_reason === 'changed_mind' && 'Changed My Mind'}
+                                        {order.cancellation_reason === 'found_better_price' && 'Found Better Price Elsewhere'}
+                                        {order.cancellation_reason === 'wrong_item' && 'Wrong Item Ordered'}
+                                        {order.cancellation_reason === 'delivery_address_incorrect' && 'Delivery Address Incorrect'}
+                                        {order.cancellation_reason === 'delayed_delivery' && 'Delivery Taking Too Long'}
+                                        {order.cancellation_reason === 'customer_request' && 'Customer Request'}
+                                        {order.cancellation_reason === 'out_of_stock' && 'Out of Stock'}
+                                        {order.cancellation_reason === 'payment_failed' && 'Payment Failed'}
+                                        {order.cancellation_reason === 'delivery_issue' && 'Delivery Issue'}
+                                        {order.cancellation_reason === 'other' && 'Other'}
+                                    </p>
+                                    {order.cancellation_notes && (
+                                        <p className="text-sm text-red-700 mt-2 italic">"{order.cancellation_notes}"</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {order.return_status && (
+                                <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-md max-w-2xl">
+                                    <p className="text-sm font-semibold text-orange-900 mb-1">Return/Refund Status:</p>
+                                    <p className="text-sm text-orange-800 capitalize mb-2">
+                                        {order.return_status === 'pending' && '⏳ Return Request Pending'}
+                                        {order.return_status === 'approved' && '✅ Return Approved - Refund Processing'}
+                                        {order.return_status === 'rejected' && '❌ Return Request Rejected'}
+                                        {order.return_status === 'refunded' && '💰 Refund Processed'}
+                                    </p>
+                                    {order.return_reason && (
+                                        <p className="text-sm text-orange-700 mb-1">
+                                            <span className="font-semibold">Reason:</span> 
+                                            {order.return_reason === 'defective_item' && ' Defective Item'}
+                                            {order.return_reason === 'wrong_item' && ' Wrong Item Received'}
+                                            {order.return_reason === 'not_as_described' && ' Not as Described'}
+                                            {order.return_reason === 'changed_mind' && ' Changed My Mind'}
+                                            {order.return_reason === 'damaged_during_delivery' && ' Damaged During Delivery'}
+                                            {order.return_reason === 'other' && ' Other'}
+                                        </p>
+                                    )}
+                                    {order.return_notes && (
+                                        <p className="text-sm text-orange-700 mt-1 italic">"{order.return_notes}"</p>
+                                    )}
+                                    {order.refund_amount && (
+                                        <p className="text-sm font-semibold text-orange-900 mt-2">
+                                            Refund Amount: ${Number(order.refund_amount).toFixed(2)}
+                                        </p>
+                                    )}
+                                    {order.return_requested_at && (
+                                        <p className="text-xs text-orange-600 mt-1">
+                                            Requested: {new Date(order.return_requested_at).toLocaleString()}
+                                        </p>
+                                    )}
+                                    {order.return_processed_at && (
+                                        <p className="text-xs text-orange-600 mt-1">
+                                            Processed: {new Date(order.return_processed_at).toLocaleString()}
+                                        </p>
+                                    )}
+                                </div>
+                            )}
                         </div>
                         <div className="flex items-center gap-3">
                             {getStatusBadge(order.status)}
@@ -484,6 +664,16 @@ export default function OrderShow() {
                                                 <p className="text-xs text-gray-600 mt-1">
                                                     Quantity: {item.quantity} × ${Number(item.price || 0).toFixed(2)}
                                                 </p>
+                                                {/* Return Eligibility Badge */}
+                                                {item.is_returnable !== false ? (
+                                                    <span className="inline-flex items-center mt-2 px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                        ✓ Returnable
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center mt-2 px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                        ✗ Not Returnable
+                                                    </span>
+                                                )}
                                             </div>
                                             
                                             <div className="text-right">
@@ -566,6 +756,13 @@ export default function OrderShow() {
                 confirmText="Update"
                 cancelText="Cancel"
                 confirmButtonColor="indigo"
+            />
+
+            <CancellationReasonModal
+                isOpen={showCancelModal}
+                onClose={() => setShowCancelModal(false)}
+                onConfirm={handleCancelConfirm}
+                loading={cancelling}
             />
 
             {/* Delivery Boy Assignment Modal */}

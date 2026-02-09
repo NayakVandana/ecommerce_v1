@@ -200,6 +200,7 @@ class OrderApiController extends Controller
                     'quantity' => $itemData['quantity'],
                     'price' => $itemData['price'],
                     'subtotal' => $itemData['subtotal'],
+                    'is_returnable' => $product->is_returnable ?? true, // Store returnable status at time of order
                 ]);
 
                 // Update stock
@@ -266,6 +267,8 @@ class OrderApiController extends Controller
     {
         $request->validate([
             'id' => 'required|exists:orders,id',
+            'cancellation_reason' => 'nullable|string|in:customer_request,out_of_stock,payment_failed,delivery_issue,changed_mind,found_better_price,wrong_item,delivery_address_incorrect,delayed_delivery,other',
+            'cancellation_notes' => 'nullable|string|max:500',
         ]);
 
         $order = Order::where('user_id', $request->user()->id)
@@ -275,9 +278,54 @@ class OrderApiController extends Controller
             return $this->sendJsonResponse(false, 'Order is already cancelled', [], 400);
         }
 
-        $order->update(['status' => 'cancelled']);
+        $order->update([
+            'status' => 'cancelled',
+            'cancellation_reason' => $request->cancellation_reason,
+            'cancellation_notes' => $request->cancellation_notes,
+        ]);
 
         return $this->sendJsonResponse(true, 'Order cancelled successfully', $order, 200);
+    }
+
+    public function requestReturn(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:orders,id',
+            'return_reason' => 'required|string|in:defective_item,wrong_item,not_as_described,changed_mind,damaged_during_delivery,other',
+            'return_notes' => 'nullable|string|max:500',
+        ]);
+
+        $order = Order::with('items')->where('user_id', $request->user()->id)
+            ->findOrFail($request->id);
+
+        // Allow return for shipped, delivered, or completed orders
+        if (!in_array($order->status, ['shipped', 'delivered', 'completed'])) {
+            return $this->sendJsonResponse(false, 'Return can only be requested for shipped, delivered, or completed orders', [], 400);
+        }
+
+        // Check if return already requested
+        if ($order->return_status === 'pending' || $order->return_status === 'approved') {
+            return $this->sendJsonResponse(false, 'Return request already exists for this order', [], 400);
+        }
+
+        // Check if all products in order are returnable
+        $nonReturnableItems = $order->items->filter(function ($item) {
+            return !($item->is_returnable ?? true);
+        });
+
+        if ($nonReturnableItems->count() > 0) {
+            $nonReturnableNames = $nonReturnableItems->pluck('product_name')->implode(', ');
+            return $this->sendJsonResponse(false, "Some products in this order are not returnable: {$nonReturnableNames}", [], 400);
+        }
+
+        $order->update([
+            'return_reason' => $request->return_reason,
+            'return_notes' => $request->return_notes,
+            'return_status' => 'pending',
+            'return_requested_at' => now(),
+        ]);
+
+        return $this->sendJsonResponse(true, 'Return request submitted successfully', $order->fresh(), 200);
     }
 
     private function validateAndApplyCoupon(?string $code, float $subtotal, ?int $userId): ?CouponCode
