@@ -768,7 +768,12 @@ export default function OrderIndex() {
                                                 className={shouldHighlight ? "bg-red-100 hover:bg-red-200" : "hover:bg-gray-50"}
                                             >
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    {order.order_number || `#${order.id}`}
+                                                    <Link
+                                                        href={`/admin/orders/${order.id}?section=${normalizedSection}`}
+                                                        className="text-indigo-600 hover:text-indigo-900 font-medium hover:underline"
+                                                    >
+                                                        {order.order_number || `#${order.id}`}
+                                                    </Link>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                     {order.items?.length || 0}
