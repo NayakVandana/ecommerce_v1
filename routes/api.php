@@ -115,6 +115,9 @@ Route::middleware('auth.token')->prefix('auth')->group(function () {
         Route::post('/orders/show', [DeliveryBoyApiController::class, 'show']);
         Route::post('/orders/generate-otp', [DeliveryBoyApiController::class, 'generateOTP']);
         Route::post('/orders/verify-otp', [DeliveryBoyApiController::class, 'verifyOTP']);
+        Route::post('/orders/upload-open-box-media', [DeliveryBoyApiController::class, 'uploadOpenBoxMedia']);
+        Route::post('/orders/get-open-box-media', [DeliveryBoyApiController::class, 'getOpenBoxMedia']);
+        Route::post('/orders/delete-open-box-media', [DeliveryBoyApiController::class, 'deleteOpenBoxMedia']);
         Route::post('/stats', [DeliveryBoyApiController::class, 'getStats']);
     });
 });

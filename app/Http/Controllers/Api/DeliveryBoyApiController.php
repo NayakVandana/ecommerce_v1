@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\DeliveryVerificationMedia;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class DeliveryBoyApiController extends Controller
 {
@@ -16,7 +18,7 @@ class DeliveryBoyApiController extends Controller
             return $this->sendJsonResponse(false, 'Unauthorized. Delivery boy access required.', [], 403);
         }
 
-        $query = Order::with(['user', 'items.product'])
+        $query = Order::with(['user', 'items.product.media', 'items.variation', 'deliveryVerificationMedia'])
             ->where('delivery_boy_id', $user->id);
 
         // Filter by status
@@ -41,7 +43,7 @@ class DeliveryBoyApiController extends Controller
             'id' => 'required|exists:orders,id',
         ]);
 
-        $order = Order::with(['user', 'items.product', 'couponCode'])
+        $order = Order::with(['user', 'items.product.media', 'items.variation', 'couponCode', 'deliveryVerificationMedia'])
             ->where('delivery_boy_id', $user->id)
             ->findOrFail($request->id);
 
@@ -124,6 +126,112 @@ class DeliveryBoyApiController extends Controller
         ];
 
         return $this->sendJsonResponse(true, 'Stats fetched successfully', $stats, 200);
+    }
+
+    public function uploadOpenBoxMedia(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user || $user->role !== 'delivery_boy') {
+            return $this->sendJsonResponse(false, 'Unauthorized. Delivery boy access required.', [], 403);
+        }
+
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+            'order_item_id' => 'nullable|exists:order_items,id',
+            'files' => 'required|array|min:1',
+            'files.*' => 'required|file|mimes:jpeg,jpg,png,gif,webp,mp4,mov,avi|max:10240', // 10MB max
+            'description' => 'nullable|string|max:500',
+        ]);
+
+        $order = Order::where('delivery_boy_id', $user->id)
+            ->findOrFail($request->order_id);
+
+        if ($order->otp_verified) {
+            return $this->sendJsonResponse(false, 'Order already delivered', [], 400);
+        }
+
+        $uploadedMedia = [];
+
+        try {
+            foreach ($request->file('files') as $file) {
+                $mimeType = $file->getMimeType();
+                $type = (strpos($mimeType, 'video/') === 0) ? 'video' : 'image';
+                $path = $file->store("delivery-verification/{$order->id}", 'public');
+                $url = asset('storage/' . $path);
+
+                $media = DeliveryVerificationMedia::create([
+                    'order_id' => $order->id,
+                    'order_item_id' => $request->order_item_id,
+                    'type' => $type,
+                    'file_path' => $path,
+                    'url' => $url,
+                    'description' => $request->description,
+                ]);
+
+                $uploadedMedia[] = $media;
+            }
+
+            return $this->sendJsonResponse(true, 'Media uploaded successfully', [
+                'media' => $uploadedMedia,
+                'order' => $order->fresh(['deliveryVerificationMedia']),
+            ], 200);
+        } catch (\Exception $e) {
+            return $this->sendJsonResponse(false, 'Failed to upload media: ' . $e->getMessage(), [], 500);
+        }
+    }
+
+    public function getOpenBoxMedia(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user || $user->role !== 'delivery_boy') {
+            return $this->sendJsonResponse(false, 'Unauthorized. Delivery boy access required.', [], 403);
+        }
+
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+        ]);
+
+        $order = Order::where('delivery_boy_id', $user->id)
+            ->findOrFail($request->order_id);
+
+        $media = DeliveryVerificationMedia::where('order_id', $order->id)
+            ->with('orderItem')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return $this->sendJsonResponse(true, 'Media fetched successfully', $media, 200);
+    }
+
+    public function deleteOpenBoxMedia(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user || $user->role !== 'delivery_boy') {
+            return $this->sendJsonResponse(false, 'Unauthorized. Delivery boy access required.', [], 403);
+        }
+
+        $request->validate([
+            'id' => 'required|exists:delivery_verification_media,id',
+        ]);
+
+        $media = DeliveryVerificationMedia::findOrFail($request->id);
+        $order = $media->order;
+
+        // Verify the order belongs to this delivery boy
+        if ($order->delivery_boy_id !== $user->id) {
+            return $this->sendJsonResponse(false, 'Unauthorized. You can only delete media for your own orders.', [], 403);
+        }
+
+        // Delete file from storage
+        if ($media->file_path && Storage::disk('public')->exists($media->file_path)) {
+            Storage::disk('public')->delete($media->file_path);
+        }
+
+        $media->delete();
+
+        return $this->sendJsonResponse(true, 'Media deleted successfully', [], 200);
     }
 }
 

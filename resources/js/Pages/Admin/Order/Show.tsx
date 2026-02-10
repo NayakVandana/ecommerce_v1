@@ -13,7 +13,10 @@ import {
     XMarkIcon,
     TruckIcon,
     ArrowPathIcon,
-    UserIcon
+    UserIcon,
+    FolderOpenIcon,
+    PhotoIcon,
+    VideoCameraIcon
 } from '@heroicons/react/24/outline';
 
 export default function OrderShow() {
@@ -787,6 +790,90 @@ export default function OrderShow() {
                                 })}
                             </div>
                         </div>
+
+                        {/* Open Box Delivery Verification */}
+                        {(order.delivery_verification_media && order.delivery_verification_media.length > 0) || 
+                         (order.status === 'out_for_delivery' || order.status === 'delivered') ? (
+                            <div className="bg-white shadow rounded-lg p-6">
+                                <div className="flex items-center gap-2 mb-4">
+                                    <FolderOpenIcon className="h-6 w-6 text-green-600" />
+                                    <h2 className="text-lg font-semibold text-gray-900">Open Box Delivery Verification</h2>
+                                </div>
+                                <p className="text-sm text-gray-600 mb-4">
+                                    Photos and videos captured by the delivery boy during box opening verification
+                                </p>
+                                
+                                {order.delivery_verification_media && order.delivery_verification_media.length > 0 ? (
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                        {order.delivery_verification_media.map((media: any) => {
+                                            const mediaUrl = media.url || (media.file_path ? `/storage/${media.file_path}` : '');
+                                            return (
+                                                <div key={media.id} className="relative group">
+                                                    {media.type === 'video' ? (
+                                                        <div className="relative">
+                                                            <video
+                                                                src={mediaUrl}
+                                                                className="w-full h-40 object-cover rounded-lg border border-gray-300"
+                                                                controls
+                                                            />
+                                                            <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                                                                <VideoCameraIcon className="h-3 w-3" />
+                                                                Video
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="relative">
+                                                            <img
+                                                                src={mediaUrl || '/placeholder-image.png'}
+                                                                alt="Open box verification"
+                                                                className="w-full h-40 object-cover rounded-lg border border-gray-300 cursor-pointer hover:opacity-90 transition-opacity"
+                                                                onError={(e) => {
+                                                                    (e.target as HTMLImageElement).src = '/placeholder-image.png';
+                                                                }}
+                                                                onClick={() => {
+                                                                    if (mediaUrl) {
+                                                                        window.open(mediaUrl, '_blank');
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
+                                                                <PhotoIcon className="h-3 w-3" />
+                                                                Photo
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {media.description && (
+                                                        <p className="text-xs text-gray-600 mt-1 truncate" title={media.description}>
+                                                            {media.description}
+                                                        </p>
+                                                    )}
+                                                    {media.order_item && (
+                                                        <p className="text-xs text-gray-500 mt-1">
+                                                            Item: {media.order_item.product_name || 'N/A'}
+                                                        </p>
+                                                    )}
+                                                    <p className="text-xs text-gray-400 mt-1">
+                                                        {new Date(media.created_at).toLocaleString()}
+                                                    </p>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                                        <FolderOpenIcon className="h-12 w-12 text-gray-400 mx-auto mb-2" />
+                                        <p className="text-sm text-gray-500">
+                                            No verification media has been uploaded yet
+                                        </p>
+                                        {order.status === 'out_for_delivery' && (
+                                            <p className="text-xs text-gray-400 mt-1">
+                                                The delivery boy can upload verification photos/videos from their dashboard
+                                            </p>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        ) : null}
 
                         {order.notes && (
                             <div className="bg-white shadow rounded-lg p-6">

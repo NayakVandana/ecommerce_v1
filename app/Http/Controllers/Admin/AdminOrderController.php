@@ -99,7 +99,7 @@ class AdminOrderController extends Controller
             'id' => 'required|exists:orders,id',
         ]);
 
-        $order = Order::with(['user', 'items.product', 'couponCode', 'deliveryBoy'])->findOrFail($request->id);
+        $order = Order::with(['user', 'items.product', 'items.product.media', 'couponCode', 'deliveryBoy', 'deliveryVerificationMedia.orderItem'])->findOrFail($request->id);
 
         return $this->sendJsonResponse(true, 'Order fetched successfully', $order, 200);
     }

@@ -80,6 +80,11 @@ class Order extends Model
         return $this->belongsTo(User::class, 'delivery_boy_id');
     }
 
+    public function deliveryVerificationMedia()
+    {
+        return $this->hasMany(DeliveryVerificationMedia::class);
+    }
+
     /**
      * Generate OTP for order delivery
      */
