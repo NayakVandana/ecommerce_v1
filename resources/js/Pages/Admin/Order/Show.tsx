@@ -16,7 +16,9 @@ import {
     UserIcon,
     FolderOpenIcon,
     PhotoIcon,
-    VideoCameraIcon
+    VideoCameraIcon,
+    DocumentArrowDownIcon,
+    EyeIcon
 } from '@heroicons/react/24/outline';
 
 export default function OrderShow() {
@@ -547,6 +549,22 @@ export default function OrderShow() {
                         </div>
                         <div className="flex items-center gap-3">
                             {getStatusBadge(order.status)}
+                            <a
+                                href={`/admin/orders/${order.id}/invoice`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors"
+                            >
+                                <EyeIcon className="h-4 w-4 mr-2" />
+                                View Invoice
+                            </a>
+                            <a
+                                href={`/admin/orders/${order.id}/invoice/download`}
+                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
+                            >
+                                <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
+                                Download PDF
+                            </a>
                         </div>
                     </div>
 

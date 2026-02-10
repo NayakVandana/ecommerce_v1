@@ -605,6 +605,24 @@ export default function OrderIndex() {
         );
     };
 
+    const isToday = (dateString: string | null | undefined): boolean => {
+        if (!dateString) return false;
+        const date = new Date(dateString);
+        const today = new Date();
+        return (
+            date.getDate() === today.getDate() &&
+            date.getMonth() === today.getMonth() &&
+            date.getFullYear() === today.getFullYear()
+        );
+    };
+
+    const shouldHighlightOrder = (order: any): boolean => {
+        const status = order.status;
+        const isPendingOrReadyForShipping = status === 'pending' || status === 'processing';
+        const isDeliveryDateToday = isToday(order.delivery_date);
+        return isPendingOrReadyForShipping && isDeliveryDateToday;
+    };
+
     const currentPath = `/admin/orders${normalizedSection !== 'all' ? `/${normalizedSection}` : '/all'}`;
 
     return (
@@ -742,8 +760,13 @@ export default function OrderIndex() {
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
                                     {orders.length > 0 ? (
-                                        orders.map((order: any) => (
-                                            <tr key={order.id} className="hover:bg-gray-50">
+                                        orders.map((order: any) => {
+                                            const shouldHighlight = shouldHighlightOrder(order);
+                                            return (
+                                            <tr 
+                                                key={order.id} 
+                                                className={shouldHighlight ? "bg-red-100 hover:bg-red-200" : "hover:bg-gray-50"}
+                                            >
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                                     {order.order_number || `#${order.id}`}
                                                 </td>
@@ -932,7 +955,8 @@ export default function OrderIndex() {
                                                     </div>
                                                 </td>
                                             </tr>
-                                        ))
+                                            );
+                                        })
                                     ) : (
                                         <tr>
                                             <td colSpan={10} className="px-6 py-4 text-center text-sm text-gray-500">

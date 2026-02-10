@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\Admin\AdminOrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -234,6 +235,12 @@ Route::prefix('admin')->group(function () {
             'section' => $section
         ]);
     })->name('admin.orders.show');
+    
+    // Invoice routes
+    Route::get('/orders/{id}/invoice', [AdminOrderController::class, 'invoice'])
+        ->name('admin.orders.invoice');
+    Route::get('/orders/{id}/invoice/download', [AdminOrderController::class, 'downloadInvoice'])
+        ->name('admin.orders.invoice.download');
     
     Route::get('/users', function () {
         return Inertia::render('Admin/User/index');

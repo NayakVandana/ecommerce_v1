@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class AdminOrderController extends Controller
 {
@@ -301,6 +302,26 @@ class AdminOrderController extends Controller
             ->get();
 
         return $this->sendJsonResponse(true, 'Delivery boys fetched successfully', $deliveryBoys, 200);
+    }
+
+    public function invoice($id)
+    {
+        $order = Order::with(['user', 'items.product', 'items.product.media', 'couponCode', 'deliveryBoy'])
+            ->findOrFail($id);
+
+        return view('admin.orders.invoice', compact('order'));
+    }
+
+    public function downloadInvoice($id)
+    {
+        $order = Order::with(['user', 'items.product', 'items.product.media', 'couponCode', 'deliveryBoy'])
+            ->findOrFail($id);
+
+        $pdf = Pdf::loadView('admin.orders.invoice', compact('order'));
+        
+        $filename = 'Invoice-' . ($order->order_number ?? $order->id) . '.pdf';
+        
+        return $pdf->download($filename);
     }
 }
 
