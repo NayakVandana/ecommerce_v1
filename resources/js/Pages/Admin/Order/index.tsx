@@ -772,7 +772,7 @@ export default function OrderIndex() {
                                                         href={`/admin/orders/${order.id}?section=${normalizedSection}`}
                                                         className="text-indigo-600 hover:text-indigo-900 font-medium hover:underline"
                                                     >
-                                                        {order.order_number || `#${order.id}`}
+                                                    {order.order_number || `#${order.id}`}
                                                     </Link>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

@@ -6,6 +6,12 @@ import Button from '../../Components/Button';
 import CancellationReasonModal from '../../Components/CancellationReasonModal';
 import ReturnReasonModal from '../../Components/ReturnReasonModal';
 import AlertModal from '../../Components/AlertModal';
+import { 
+    CheckCircleIcon, 
+    ArrowPathIcon, 
+    TruckIcon, 
+    XCircleIcon 
+} from '@heroicons/react/24/outline';
 
 export default function Show() {
     const { props } = usePage();
@@ -300,6 +306,203 @@ export default function Show() {
                             )}
                         </div>
                     )}
+                </div>
+
+                {/* Order Timeline */}
+                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+                    <h2 className="text-xl font-bold mb-6">Order Timeline</h2>
+                    <div className="relative">
+                        {/* Timeline Line */}
+                        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                        
+                        <div className="space-y-6">
+                            {/* Ordered */}
+                            <div className="relative flex items-start">
+                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 ${
+                                    order.created_at ? 'bg-green-500' : 'bg-gray-300'
+                                }`}>
+                                    <CheckCircleIcon className={`h-5 w-5 ${
+                                        order.created_at ? 'text-white' : 'text-gray-500'
+                                    }`} />
+                                </div>
+                                <div className="ml-4 flex-1">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className={`text-sm font-semibold ${
+                                            order.created_at ? 'text-gray-900' : 'text-gray-400'
+                                        }`}>
+                                            Order Placed
+                                        </h3>
+                                        {order.created_at && (
+                                            <span className="text-xs text-gray-500">
+                                                {new Date(order.created_at).toLocaleString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Order #{order.order_number || order.id} was successfully placed
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Under Process */}
+                            <div className="relative flex items-start">
+                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 ${
+                                    order.processing_at ? 'bg-blue-500' : 'bg-gray-300'
+                                }`}>
+                                    <ArrowPathIcon className={`h-5 w-5 ${
+                                        order.processing_at ? 'text-white' : 'text-gray-500'
+                                    }`} />
+                                </div>
+                                <div className="ml-4 flex-1">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className={`text-sm font-semibold ${
+                                            order.processing_at ? 'text-gray-900' : 'text-gray-400'
+                                        }`}>
+                                            Under Process
+                                        </h3>
+                                        {order.processing_at && (
+                                            <span className="text-xs text-gray-500">
+                                                {new Date(order.processing_at).toLocaleString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Order is being processed and prepared for shipment
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Shipped */}
+                            <div className="relative flex items-start">
+                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 ${
+                                    order.shipped_at ? 'bg-purple-500' : 'bg-gray-300'
+                                }`}>
+                                    <TruckIcon className={`h-5 w-5 ${
+                                        order.shipped_at ? 'text-white' : 'text-gray-500'
+                                    }`} />
+                                </div>
+                                <div className="ml-4 flex-1">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className={`text-sm font-semibold ${
+                                            order.shipped_at ? 'text-gray-900' : 'text-gray-400'
+                                        }`}>
+                                            Shipped
+                                        </h3>
+                                        {order.shipped_at && (
+                                            <span className="text-xs text-gray-500">
+                                                {new Date(order.shipped_at).toLocaleString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Order has been shipped and is on its way
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Out for Delivery */}
+                            {order.out_for_delivery_at && (
+                                <div className="relative flex items-start">
+                                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 bg-indigo-500">
+                                        <TruckIcon className="h-5 w-5 text-white" />
+                                    </div>
+                                    <div className="ml-4 flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-sm font-semibold text-gray-900">
+                                                Out for Delivery
+                                            </h3>
+                                            <span className="text-xs text-gray-500">
+                                                {new Date(order.out_for_delivery_at).toLocaleString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Order is out for delivery
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Delivered */}
+                            {order.delivered_at && (
+                                <div className="relative flex items-start">
+                                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 bg-green-600">
+                                        <CheckCircleIcon className="h-5 w-5 text-white" />
+                                    </div>
+                                    <div className="ml-4 flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-sm font-semibold text-gray-900">
+                                                Delivered
+                                            </h3>
+                                            <span className="text-xs text-gray-500">
+                                                {new Date(order.delivered_at).toLocaleString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Order has been successfully delivered
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Cancelled */}
+                            {order.cancelled_at && (
+                                <div className="relative flex items-start">
+                                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 bg-red-500">
+                                        <XCircleIcon className="h-5 w-5 text-white" />
+                                    </div>
+                                    <div className="ml-4 flex-1">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className="text-sm font-semibold text-gray-900">
+                                                Cancelled
+                                            </h3>
+                                            <span className="text-xs text-gray-500">
+                                                {new Date(order.cancelled_at).toLocaleString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            Order has been cancelled
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
 
                 <CancellationReasonModal

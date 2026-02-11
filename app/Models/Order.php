@@ -41,6 +41,10 @@ class Order extends Model
         'otp_generated_at',
         'delivered_at',
         'delivery_date',
+        'processing_at',
+        'shipped_at',
+        'out_for_delivery_at',
+        'cancelled_at',
     ];
 
     protected $casts = [
@@ -52,6 +56,10 @@ class Order extends Model
         'delivery_date' => 'date',
         'return_requested_at' => 'datetime',
         'return_processed_at' => 'datetime',
+        'processing_at' => 'datetime',
+        'shipped_at' => 'datetime',
+        'out_for_delivery_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
     // Accessor for payment_method (always cash on delivery, not stored in DB)
