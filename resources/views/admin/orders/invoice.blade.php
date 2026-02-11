@@ -191,8 +191,33 @@
             <td class="right-col">
                 <strong>Ship To:</strong><br>
                 {{ $order->name }}<br>
+                @if($order->receiver_name)
+                <strong>Receiver:</strong> {{ $order->receiver_name }}<br>
+                @endif
+                <strong>Receiver Number:</strong> {{ $order->receiver_number ?? $order->phone }}<br>
+                @if($order->address_type)
+                <strong>Type:</strong> {{ ucfirst($order->address_type) }}<br>
+                @endif
                 {{ $order->address }}<br>
+                @if($order->house_no)
+                House No: {{ $order->house_no }}<br>
+                @endif
+                @if($order->floor_no)
+                Floor No: {{ $order->floor_no }}<br>
+                @endif
+                @if($order->building_name)
+                {{ $order->building_name }}<br>
+                @endif
+                @if($order->landmark)
+                Landmark: {{ $order->landmark }}<br>
+                @endif
+                @if($order->district)
+                {{ $order->district }}, 
+                @endif
                 {{ $order->city }}, {{ $order->postal_code }}<br>
+                @if($order->state)
+                {{ $order->state }}, 
+                @endif
                 {{ $order->country }}
                 @if($order->delivery_date)
                 <br><br>

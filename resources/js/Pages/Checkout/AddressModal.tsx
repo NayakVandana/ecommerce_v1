@@ -10,9 +10,17 @@ interface Address {
     id: number;
     name: string;
     phone: string;
+    receiver_name?: string;
+    receiver_number?: string;
     address: string;
+    house_no?: string;
+    floor_no?: string;
+    building_name?: string;
+    landmark?: string;
+    district?: string;
     city: string;
     postal_code: string;
+    state?: string;
     country: string;
     address_type: string;
     is_default: boolean;
@@ -39,7 +47,13 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
+        receiver_name: '',
+        receiver_number: '',
         address: '',
+        house_no: '',
+        floor_no: '',
+        building_name: '',
+        landmark: '',
         district: 'Valsad',
         city: 'Vapi',
         postal_code: '',
@@ -125,12 +139,18 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
         setFormData({
             name: address.name,
             phone: address.phone,
+            receiver_name: (address as any).receiver_name || '',
+            receiver_number: (address as any).receiver_number || '',
             address: address.address,
+            house_no: (address as any).house_no || '',
+            floor_no: (address as any).floor_no || '',
+            building_name: (address as any).building_name || '',
+            landmark: (address as any).landmark || '',
             district: address.district || 'Valsad',
             city: address.city || 'Vapi',
             postal_code: address.postal_code,
             country: address.country || 'India',
-            state: 'Gujarat',
+            state: (address as any).state || 'Gujarat',
             address_type: address.address_type || 'home',
             is_default: address.is_default,
         });
@@ -198,7 +218,13 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
         setFormData({
             name: '',
             phone: '',
+            receiver_name: '',
+            receiver_number: '',
             address: '',
+            house_no: '',
+            floor_no: '',
+            building_name: '',
+            landmark: '',
             district: 'Valsad',
             city: 'Vapi',
             postal_code: '',
@@ -362,15 +388,28 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
                                                     <div className="space-y-1 mb-4">
                                                         <p className="text-sm text-gray-700 leading-relaxed">
                                                             {address.address}
+                                                            {(address as any).house_no && `, ${(address as any).house_no}`}
+                                                            {(address as any).floor_no && `, Floor ${(address as any).floor_no}`}
+                                                            {(address as any).building_name && `, ${(address as any).building_name}`}
                                                         </p>
+                                                        {(address as any).landmark && (
+                                                            <p className="text-sm text-gray-600">
+                                                                <span className="font-medium">Landmark:</span> {(address as any).landmark}
+                                                            </p>
+                                                        )}
                                                         <p className="text-sm text-gray-600">
                                                             {address.district && `${address.district}, `}{address.city}, {address.postal_code}
                                                         </p>
                                                         <p className="text-sm text-gray-600">
-                                                            Gujarat, {address.country}
+                                                            {(address as any).state || 'Gujarat'}, {address.country}
                                                         </p>
+                                                        {(address as any).receiver_name && (
+                                                            <p className="text-sm text-gray-600 mt-2">
+                                                                <span className="font-medium">Receiver:</span> {(address as any).receiver_name}
+                                                            </p>
+                                                        )}
                                                         <p className="text-sm text-gray-600 mt-2">
-                                                            <span className="font-medium">Phone:</span> {address.phone}
+                                                            <span className="font-medium">Receiver Number:</span> {(address as any).receiver_number || address.phone}
                                                         </p>
                                                     </div>
 
@@ -423,22 +462,75 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
                                     </div>
 
                                     <form onSubmit={handleSubmit} className="space-y-4">
+                                        <FormInput
+                                            label="Full Name"
+                                            name="name"
+                                            value={formData.name}
+                                            onChange={handleInputChange}
+                                            required
+                                        />
+
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             <FormInput
-                                                label="Full Name"
-                                                name="name"
-                                                value={formData.name}
+                                                label="Receiver Name"
+                                                name="receiver_name"
+                                                value={formData.receiver_name}
                                                 onChange={handleInputChange}
-                                                required
+                                                placeholder="Name of person receiving"
                                             />
                                             <FormInput
-                                                label="Phone Number"
-                                                name="phone"
+                                                label="Receiver Number"
+                                                name="receiver_number"
                                                 type="tel"
-                                                value={formData.phone}
+                                                value={formData.receiver_number}
                                                 onChange={handleInputChange}
+                                                placeholder="Phone number of receiver"
                                                 required
                                             />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-3">
+                                                Address Type <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="flex flex-wrap gap-4">
+                                                <label className="flex items-center cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="address_type"
+                                                        value="home"
+                                                        checked={formData.address_type === 'home'}
+                                                        onChange={handleInputChange}
+                                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                                                        required
+                                                    />
+                                                    <span className="ml-2 text-sm text-gray-700">Home</span>
+                                                </label>
+                                                <label className="flex items-center cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="address_type"
+                                                        value="office"
+                                                        checked={formData.address_type === 'office'}
+                                                        onChange={handleInputChange}
+                                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                                                        required
+                                                    />
+                                                    <span className="ml-2 text-sm text-gray-700">Office</span>
+                                                </label>
+                                                <label className="flex items-center cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="address_type"
+                                                        value="other"
+                                                        checked={formData.address_type === 'other'}
+                                                        onChange={handleInputChange}
+                                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                                                        required
+                                                    />
+                                                    <span className="ml-2 text-sm text-gray-700">Other</span>
+                                                </label>
+                                            </div>
                                         </div>
                                         
                                         <FormInput
@@ -447,6 +539,39 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
                                             value={formData.address}
                                             onChange={handleInputChange}
                                             required
+                                        />
+
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            <FormInput
+                                                label="House No"
+                                                name="house_no"
+                                                value={formData.house_no}
+                                                onChange={handleInputChange}
+                                                placeholder="House/Flat number"
+                                            />
+                                            <FormInput
+                                                label="Floor No"
+                                                name="floor_no"
+                                                value={formData.floor_no}
+                                                onChange={handleInputChange}
+                                                placeholder="Floor number"
+                                            />
+                                        </div>
+
+                                        <FormInput
+                                            label="Building/Apartment Name"
+                                            name="building_name"
+                                            value={formData.building_name}
+                                            onChange={handleInputChange}
+                                            placeholder="Building or apartment name"
+                                        />
+
+                                        <FormInput
+                                            label="Landmark/Area"
+                                            name="landmark"
+                                            value={formData.landmark}
+                                            onChange={handleInputChange}
+                                            placeholder="Nearby landmark or area name"
                                         />
                                         
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

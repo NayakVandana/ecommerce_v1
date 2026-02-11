@@ -405,8 +405,39 @@ export default function DeliveryBoyIndex() {
                                                 </div>
                                                 <div>
                                                     <p className="text-xs text-gray-500 mb-1">Delivery Address</p>
-                                                    <p className="text-sm text-gray-900">{order.address}</p>
-                                                    <p className="text-sm text-gray-600">{order.district ? `${order.district}, ` : ''}{order.city}, {order.postal_code}</p>
+                                                    <div className="text-sm text-gray-900 space-y-1">
+                                                        {order.receiver_name && (
+                                                            <p><span className="font-semibold">Receiver:</span> {order.receiver_name}</p>
+                                                        )}
+                                                        <p><span className="font-semibold">Receiver Number:</span> {order.receiver_number || order.phone}</p>
+                                                        {order.address_type && (
+                                                            <p>
+                                                                <span className="font-semibold">Type:</span>{' '}
+                                                                <span className="capitalize">{order.address_type === 'home' ? 'Home' : order.address_type === 'office' ? 'Office' : 'Other'}</span>
+                                                            </p>
+                                                        )}
+                                                        <p>{order.address}</p>
+                                                        {order.house_no && (
+                                                            <p>House No: {order.house_no}</p>
+                                                        )}
+                                                        {order.floor_no && (
+                                                            <p>Floor No: {order.floor_no}</p>
+                                                        )}
+                                                        {order.building_name && (
+                                                            <p>{order.building_name}</p>
+                                                        )}
+                                                        {order.landmark && (
+                                                            <p>Landmark: {order.landmark}</p>
+                                                        )}
+                                                        <p>
+                                                            {order.district && `${order.district}, `}
+                                                            {order.city}, {order.postal_code}
+                                                        </p>
+                                                        <p>
+                                                            {order.state && `${order.state}, `}
+                                                            {order.country}
+                                                        </p>
+                                                    </div>
                                                 </div>
                                             </div>
 

@@ -30,12 +30,19 @@ export default function Index() {
         name: '',
         email: '',
         phone: '',
+        receiver_name: '',
+        receiver_number: '',
         address: '',
+        house_no: '',
+        floor_no: '',
+        building_name: '',
+        landmark: '',
         district: 'Valsad',
         city: 'Vapi',
         postal_code: '',
         country: 'India',
         state: 'Gujarat',
+        address_type: 'home',
         notes: '',
     });
 
@@ -50,7 +57,7 @@ export default function Index() {
                     ...prev,
                     name: user.name || '',
                     email: user.email || '',
-                    phone: user.phone || user.mobile || '',
+                    receiver_number: user.phone || user.mobile || '',
                 }));
             } catch (e) {
                 console.error('Error parsing user data:', e);
@@ -106,8 +113,8 @@ export default function Index() {
             newErrors.email = 'Please enter a valid email address';
         }
 
-        if (!formData.phone || formData.phone.trim() === '') {
-            newErrors.phone = 'Phone number is required';
+        if (!formData.receiver_number || formData.receiver_number.trim() === '') {
+            newErrors.receiver_number = 'Receiver number is required';
         }
 
         if (!formData.address || formData.address.trim() === '') {
@@ -330,15 +337,74 @@ export default function Index() {
                                             />
                                         </div>
 
-                                        <FormInput
-                                            label="Phone Number"
-                                            name="phone"
-                                            type="tel"
-                                            value={formData.phone}
-                                            onChange={handleInputChange}
-                                            error={errors.phone}
-                                            required
-                                        />
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <FormInput
+                                                label="Receiver Name"
+                                                name="receiver_name"
+                                                type="text"
+                                                value={formData.receiver_name}
+                                                onChange={handleInputChange}
+                                                error={errors.receiver_name}
+                                                placeholder="Name of person receiving the order"
+                                            />
+                                            <FormInput
+                                                label="Receiver Number"
+                                                name="receiver_number"
+                                                type="tel"
+                                                value={formData.receiver_number}
+                                                onChange={handleInputChange}
+                                                error={errors.receiver_number}
+                                                placeholder="Phone number of receiver"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-3">
+                                                Address Type <span className="text-red-500">*</span>
+                                            </label>
+                                            <div className="flex flex-wrap gap-4">
+                                                <label className="flex items-center cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="address_type"
+                                                        value="home"
+                                                        checked={formData.address_type === 'home'}
+                                                        onChange={handleInputChange}
+                                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                                                        required
+                                                    />
+                                                    <span className="ml-2 text-sm text-gray-700">Home</span>
+                                                </label>
+                                                <label className="flex items-center cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="address_type"
+                                                        value="office"
+                                                        checked={formData.address_type === 'office'}
+                                                        onChange={handleInputChange}
+                                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                                                        required
+                                                    />
+                                                    <span className="ml-2 text-sm text-gray-700">Office</span>
+                                                </label>
+                                                <label className="flex items-center cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="address_type"
+                                                        value="other"
+                                                        checked={formData.address_type === 'other'}
+                                                        onChange={handleInputChange}
+                                                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300"
+                                                        required
+                                                    />
+                                                    <span className="ml-2 text-sm text-gray-700">Other</span>
+                                                </label>
+                                            </div>
+                                            {errors.address_type && (
+                                                <p className="mt-1 text-xs text-red-600">{errors.address_type}</p>
+                                            )}
+                                        </div>
 
                                         <FormInput
                                             label="Address"
@@ -348,6 +414,48 @@ export default function Index() {
                                             onChange={handleInputChange}
                                             error={errors.address}
                                             required
+                                            placeholder="Street address"
+                                        />
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <FormInput
+                                                label="House No"
+                                                name="house_no"
+                                                type="text"
+                                                value={formData.house_no}
+                                                onChange={handleInputChange}
+                                                error={errors.house_no}
+                                                placeholder="House/Flat number"
+                                            />
+                                            <FormInput
+                                                label="Floor No"
+                                                name="floor_no"
+                                                type="text"
+                                                value={formData.floor_no}
+                                                onChange={handleInputChange}
+                                                error={errors.floor_no}
+                                                placeholder="Floor number"
+                                            />
+                                        </div>
+
+                                        <FormInput
+                                            label="Building/Apartment Name"
+                                            name="building_name"
+                                            type="text"
+                                            value={formData.building_name}
+                                            onChange={handleInputChange}
+                                            error={errors.building_name}
+                                            placeholder="Building or apartment name"
+                                        />
+
+                                        <FormInput
+                                            label="Landmark/Area"
+                                            name="landmark"
+                                            type="text"
+                                            value={formData.landmark}
+                                            onChange={handleInputChange}
+                                            error={errors.landmark}
+                                            placeholder="Nearby landmark or area name"
                                         />
 
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -508,8 +616,24 @@ export default function Index() {
                                             <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
                                                 <p><span className="font-semibold">Name:</span> {formData.name}</p>
                                                 <p><span className="font-semibold">Email:</span> {formData.email}</p>
-                                                <p><span className="font-semibold">Phone:</span> {formData.phone}</p>
+                                                {formData.receiver_name && (
+                                                    <p><span className="font-semibold">Receiver Name:</span> {formData.receiver_name}</p>
+                                                )}
+                                                <p><span className="font-semibold">Receiver Number:</span> {formData.receiver_number}</p>
+                                                <p><span className="font-semibold">Address Type:</span> {formData.address_type === 'home' ? 'Home' : formData.address_type === 'office' ? 'Office' : 'Other'}</p>
                                                 <p><span className="font-semibold">Address:</span> {formData.address}</p>
+                                                {formData.house_no && (
+                                                    <p><span className="font-semibold">House No:</span> {formData.house_no}</p>
+                                                )}
+                                                {formData.floor_no && (
+                                                    <p><span className="font-semibold">Floor No:</span> {formData.floor_no}</p>
+                                                )}
+                                                {formData.building_name && (
+                                                    <p><span className="font-semibold">Building/Apartment:</span> {formData.building_name}</p>
+                                                )}
+                                                {formData.landmark && (
+                                                    <p><span className="font-semibold">Landmark/Area:</span> {formData.landmark}</p>
+                                                )}
                                                 <p><span className="font-semibold">District:</span> {formData.district}</p>
                                                 <p><span className="font-semibold">City:</span> {formData.city}, {formData.postal_code}</p>
                                                 <p><span className="font-semibold">State:</span> {formData.state}</p>

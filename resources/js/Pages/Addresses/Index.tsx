@@ -18,7 +18,13 @@ export default function AddressesIndex() {
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
+        receiver_name: '',
+        receiver_number: '',
         address: '',
+        house_no: '',
+        floor_no: '',
+        building_name: '',
+        landmark: '',
         district: 'Valsad',
         city: 'Vapi',
         postal_code: '',
@@ -70,7 +76,13 @@ export default function AddressesIndex() {
         setFormData({
             name: '',
             phone: '',
+            receiver_name: '',
+            receiver_number: '',
             address: '',
+            house_no: '',
+            floor_no: '',
+            building_name: '',
+            landmark: '',
             district: 'Valsad',
             city: 'Vapi',
             postal_code: '',
@@ -88,12 +100,18 @@ export default function AddressesIndex() {
         setFormData({
             name: address.name || '',
             phone: address.phone || '',
+            receiver_name: address.receiver_name || '',
+            receiver_number: address.receiver_number || '',
             address: address.address || '',
+            house_no: address.house_no || '',
+            floor_no: address.floor_no || '',
+            building_name: address.building_name || '',
+            landmark: address.landmark || '',
             district: address.district || 'Valsad',
             city: address.city || 'Vapi',
             postal_code: address.postal_code || '',
             country: address.country || 'India',
-            state: 'Gujarat',
+            state: address.state || 'Gujarat',
             address_type: address.address_type || 'home',
             is_default: address.is_default || false,
         });
@@ -248,12 +266,29 @@ export default function AddressesIndex() {
 
                                 <div className="space-y-2 mb-4">
                                     <p className="text-sm font-medium text-gray-900">{address.name}</p>
-                                    <p className="text-sm text-gray-600">{address.phone}</p>
-                                    <p className="text-sm text-gray-600">{address.address}</p>
+                                    {address.receiver_name && (
+                                        <p className="text-sm text-gray-600">
+                                            <span className="font-medium">Receiver:</span> {address.receiver_name}
+                                        </p>
+                                    )}
+                                    <p className="text-sm text-gray-600">
+                                        <span className="font-medium">Receiver Number:</span> {address.receiver_number || address.phone}
+                                    </p>
+                                    <p className="text-sm text-gray-600">
+                                        {address.address}
+                                        {address.house_no && `, ${address.house_no}`}
+                                        {address.floor_no && `, Floor ${address.floor_no}`}
+                                        {address.building_name && `, ${address.building_name}`}
+                                    </p>
+                                    {address.landmark && (
+                                        <p className="text-sm text-gray-600">
+                                            <span className="font-medium">Landmark:</span> {address.landmark}
+                                        </p>
+                                    )}
                                     <p className="text-sm text-gray-600">
                                         {address.district && `${address.district}, `}{address.city}, {address.postal_code}
                                     </p>
-                                    <p className="text-sm text-gray-600">Gujarat, {address.country}</p>
+                                    <p className="text-sm text-gray-600">{address.state || 'Gujarat'}, {address.country}</p>
                                 </div>
 
                                 <div className="flex gap-2 pt-4 border-t">
@@ -319,22 +354,96 @@ export default function AddressesIndex() {
                                             )}
                                         </div>
 
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Receiver Name
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="receiver_name"
+                                                    value={formData.receiver_name}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Name of person receiving"
+                                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                                        errors.receiver_name ? 'border-red-300' : 'border-gray-300'
+                                                    }`}
+                                                />
+                                                {errors.receiver_name && (
+                                                    <p className="mt-1 text-xs text-red-600">{errors.receiver_name}</p>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Receiver Number *
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="receiver_number"
+                                                    value={formData.receiver_number}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Phone number of receiver"
+                                                    required
+                                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                                        errors.receiver_number ? 'border-red-300' : 'border-gray-300'
+                                                    }`}
+                                                />
+                                                {errors.receiver_number && (
+                                                    <p className="mt-1 text-xs text-red-600">{errors.receiver_number}</p>
+                                                )}
+                                            </div>
+                                        </div>
+
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Phone *
+                                            <label className="block text-sm font-medium text-gray-700 mb-3">
+                                                Address Type *
                                             </label>
-                                            <input
-                                                type="text"
-                                                name="phone"
-                                                value={formData.phone}
-                                                onChange={handleInputChange}
-                                                required
-                                                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                                                    errors.phone ? 'border-red-300' : 'border-gray-300'
-                                                }`}
-                                            />
-                                            {errors.phone && (
-                                                <p className="mt-1 text-xs text-red-600">{errors.phone}</p>
+                                            <div className="flex flex-wrap gap-4">
+                                                <label className="flex items-center cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="address_type"
+                                                        value="home"
+                                                        checked={formData.address_type === 'home'}
+                                                        onChange={handleInputChange}
+                                                        className={`h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 ${
+                                                            errors.address_type ? 'border-red-300' : ''
+                                                        }`}
+                                                        required
+                                                    />
+                                                    <span className="ml-2 text-sm text-gray-700">Home</span>
+                                                </label>
+                                                <label className="flex items-center cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="address_type"
+                                                        value="office"
+                                                        checked={formData.address_type === 'office'}
+                                                        onChange={handleInputChange}
+                                                        className={`h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 ${
+                                                            errors.address_type ? 'border-red-300' : ''
+                                                        }`}
+                                                        required
+                                                    />
+                                                    <span className="ml-2 text-sm text-gray-700">Office</span>
+                                                </label>
+                                                <label className="flex items-center cursor-pointer">
+                                                    <input
+                                                        type="radio"
+                                                        name="address_type"
+                                                        value="other"
+                                                        checked={formData.address_type === 'other'}
+                                                        onChange={handleInputChange}
+                                                        className={`h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 ${
+                                                            errors.address_type ? 'border-red-300' : ''
+                                                        }`}
+                                                        required
+                                                    />
+                                                    <span className="ml-2 text-sm text-gray-700">Other</span>
+                                                </label>
+                                            </div>
+                                            {errors.address_type && (
+                                                <p className="mt-1 text-xs text-red-600">{errors.address_type}</p>
                                             )}
                                         </div>
 
@@ -348,12 +457,90 @@ export default function AddressesIndex() {
                                                 onChange={handleInputChange}
                                                 required
                                                 rows={3}
+                                                placeholder="Street address"
                                                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                                                     errors.address ? 'border-red-300' : 'border-gray-300'
                                                 }`}
                                             />
                                             {errors.address && (
                                                 <p className="mt-1 text-xs text-red-600">{errors.address}</p>
+                                            )}
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    House No
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="house_no"
+                                                    value={formData.house_no}
+                                                    onChange={handleInputChange}
+                                                    placeholder="House/Flat number"
+                                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                                        errors.house_no ? 'border-red-300' : 'border-gray-300'
+                                                    }`}
+                                                />
+                                                {errors.house_no && (
+                                                    <p className="mt-1 text-xs text-red-600">{errors.house_no}</p>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Floor No
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    name="floor_no"
+                                                    value={formData.floor_no}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Floor number"
+                                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                                        errors.floor_no ? 'border-red-300' : 'border-gray-300'
+                                                    }`}
+                                                />
+                                                {errors.floor_no && (
+                                                    <p className="mt-1 text-xs text-red-600">{errors.floor_no}</p>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Building/Apartment Name
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="building_name"
+                                                value={formData.building_name}
+                                                onChange={handleInputChange}
+                                                placeholder="Building or apartment name"
+                                                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                                    errors.building_name ? 'border-red-300' : 'border-gray-300'
+                                                }`}
+                                            />
+                                            {errors.building_name && (
+                                                <p className="mt-1 text-xs text-red-600">{errors.building_name}</p>
+                                            )}
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Landmark/Area
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="landmark"
+                                                value={formData.landmark}
+                                                onChange={handleInputChange}
+                                                placeholder="Nearby landmark or area name"
+                                                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                                    errors.landmark ? 'border-red-300' : 'border-gray-300'
+                                                }`}
+                                            />
+                                            {errors.landmark && (
+                                                <p className="mt-1 text-xs text-red-600">{errors.landmark}</p>
                                             )}
                                         </div>
 

@@ -885,13 +885,64 @@ export default function OrderShow() {
                         {/* Shipping Address */}
                         <div className="bg-white shadow rounded-lg p-6">
                             <h2 className="text-lg font-semibold text-gray-900 mb-4">Shipping Address</h2>
-                            <div className="text-sm text-gray-900 space-y-1">
-                                <p>{order.address}</p>
-                                <p>{order.district ? `${order.district}, ` : ''}{order.city}, {order.postal_code}</p>
-                                <p>{order.country}</p>
-                                <p className="mt-3 pt-3 border-t">
-                                    <span className="font-semibold">Payment Method:</span> <span className="capitalize">Cash on Delivery</span>
-                                </p>
+                            <div className="text-sm text-gray-900 space-y-2">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <p><span className="font-semibold">Name:</span> {order.name}</p>
+                                        <p><span className="font-semibold">Email:</span> {order.email}</p>
+                                        {order.receiver_name && (
+                                            <p><span className="font-semibold">Receiver Name:</span> {order.receiver_name}</p>
+                                        )}
+                                        <p><span className="font-semibold">Receiver Number:</span> {order.receiver_number || order.phone}</p>
+                                    </div>
+                                    <div>
+                                        {order.address_type && (
+                                            <p>
+                                                <span className="font-semibold">Address Type:</span>{' '}
+                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 capitalize">
+                                                    {order.address_type === 'home' ? 'Home' : order.address_type === 'office' ? 'Office' : 'Other'}
+                                                </span>
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                
+                                <div className="pt-2 border-t">
+                                    <p className="font-semibold mb-2">Address Details:</p>
+                                    <p>{order.address}</p>
+                                    {order.house_no && (
+                                        <p><span className="font-semibold">House No:</span> {order.house_no}</p>
+                                    )}
+                                    {order.floor_no && (
+                                        <p><span className="font-semibold">Floor No:</span> {order.floor_no}</p>
+                                    )}
+                                    {order.building_name && (
+                                        <p><span className="font-semibold">Building/Apartment:</span> {order.building_name}</p>
+                                    )}
+                                    {order.landmark && (
+                                        <p><span className="font-semibold">Landmark/Area:</span> {order.landmark}</p>
+                                    )}
+                                </div>
+                                
+                                <div className="pt-2 border-t">
+                                    <p className="font-semibold mb-2">Location:</p>
+                                    {order.district && (
+                                        <p><span className="font-semibold">District:</span> {order.district}</p>
+                                    )}
+                                    <p><span className="font-semibold">City:</span> {order.city}</p>
+                                    <p><span className="font-semibold">Postal Code:</span> {order.postal_code}</p>
+                                    {order.state && (
+                                        <p><span className="font-semibold">State:</span> {order.state}</p>
+                                    )}
+                                    <p><span className="font-semibold">Country:</span> {order.country}</p>
+                                </div>
+                                
+                                <div className="mt-3 pt-3 border-t">
+                                    <p>
+                                        <span className="font-semibold">Payment Method:</span>{' '}
+                                        <span className="capitalize">Cash on Delivery</span>
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
