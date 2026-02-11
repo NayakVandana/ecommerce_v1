@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\CartApiController;
 use App\Http\Controllers\Api\OrderApiController;
 use App\Http\Controllers\Api\AuthApiController;
 use App\Http\Controllers\Api\RecentlyViewedProductApiController;
+use App\Http\Controllers\Api\WishlistApiController;
 use App\Http\Controllers\Api\CouponApiController;
 use App\Http\Controllers\Api\AddressApiController;
 use App\Http\Controllers\Api\DeliveryBoyApiController;
@@ -56,6 +57,15 @@ Route::middleware('auth.optional')->group(function () {
         Route::post('/update', [CartApiController::class, 'update']);
         Route::post('/remove', [CartApiController::class, 'remove']);
         Route::post('/clear', [CartApiController::class, 'clear']);
+    });
+    
+    // Wishlist Routes (works with both authenticated users and guest sessions)
+    Route::prefix('wishlist')->group(function () {
+        Route::post('/', [WishlistApiController::class, 'index']);
+        Route::post('/add', [WishlistApiController::class, 'add']);
+        Route::post('/remove', [WishlistApiController::class, 'remove']);
+        Route::post('/clear', [WishlistApiController::class, 'clear']);
+        Route::post('/check', [WishlistApiController::class, 'check']);
     });
 });
 

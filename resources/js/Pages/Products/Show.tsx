@@ -3,9 +3,12 @@ import { Link, usePage } from '@inertiajs/react';
 import { useState, useEffect, useMemo } from 'react';
 import { useProductStore } from './useProductStore';
 import { useCartStore } from '../Cart/useCartStore';
+import { useWishlistStore } from '../Wishlist/useWishlistStore';
 import AlertModal from '../../Components/AlertModal';
 import ImageGallery from 'react-image-gallery';
 import 'react-image-gallery/styles/css/image-gallery.css';
+import { HeartIcon } from '@heroicons/react/24/outline';
+import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 
 export default function Show() {
     const { props } = usePage();
@@ -18,6 +21,8 @@ export default function Show() {
     const [selectedGender, setSelectedGender] = useState<string | null>(null);
     const [loading, setLoading] = useState(true);
     const [addingToCart, setAddingToCart] = useState(false);
+    const [inWishlist, setInWishlist] = useState(false);
+    const [togglingWishlist, setTogglingWishlist] = useState(false);
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
     const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
@@ -25,8 +30,63 @@ export default function Show() {
     useEffect(() => {
         if (productId) {
             fetchProduct();
+            checkWishlistStatus();
         }
     }, [productId]);
+
+    const checkWishlistStatus = async () => {
+        if (!productId) return;
+        try {
+            const response = await useWishlistStore.check({ product_id: productId });
+            if (response.data?.status) {
+                setInWishlist(response.data.data?.in_wishlist || false);
+            }
+        } catch (error) {
+            console.error('Error checking wishlist status:', error);
+        }
+    };
+
+    const toggleWishlist = async () => {
+        if (!productId) return;
+        
+        try {
+            setTogglingWishlist(true);
+            if (inWishlist) {
+                const response = await useWishlistStore.remove({ product_id: productId });
+                if (response.data?.status) {
+                    setInWishlist(false);
+                    setAlertMessage('Removed from wishlist');
+                    setAlertType('success');
+                    setShowAlert(true);
+                    window.dispatchEvent(new Event('wishlistUpdated'));
+                } else {
+                    setAlertMessage(response.data?.message || 'Failed to remove from wishlist');
+                    setAlertType('error');
+                    setShowAlert(true);
+                }
+            } else {
+                const response = await useWishlistStore.add({ product_id: productId });
+                if (response.data?.status) {
+                    setInWishlist(true);
+                    setAlertMessage('Added to wishlist');
+                    setAlertType('success');
+                    setShowAlert(true);
+                    window.dispatchEvent(new Event('wishlistUpdated'));
+                } else {
+                    setAlertMessage(response.data?.message || 'Failed to add to wishlist');
+                    setAlertType('error');
+                    setShowAlert(true);
+                }
+            }
+        } catch (error: any) {
+            console.error('Error toggling wishlist:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to update wishlist');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setTogglingWishlist(false);
+        }
+    };
 
     const fetchProduct = async () => {
         try {
@@ -766,14 +826,34 @@ export default function Show() {
                                 </div>
                             </div>
 
-                            {/* Add to Cart Button */}
-                            <button
-                                onClick={addToCart}
-                                disabled={addingToCart || (selectedVariation ? !selectedVariation.in_stock : (product.total_quantity !== null && product.total_quantity === 0))}
-                                className="w-full bg-indigo-600 text-white px-6 py-4 rounded-lg font-semibold text-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
-                            >
-                                {addingToCart ? 'Adding...' : 'Add to Cart'}
-                            </button>
+                            {/* Add to Cart and Wishlist Buttons */}
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={addToCart}
+                                    disabled={addingToCart || (selectedVariation ? !selectedVariation.in_stock : (product.total_quantity !== null && product.total_quantity === 0))}
+                                    className="flex-1 bg-indigo-600 text-white px-6 py-4 rounded-lg font-semibold text-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                                >
+                                    {addingToCart ? 'Adding...' : 'Add to Cart'}
+                                </button>
+                                <button
+                                    onClick={toggleWishlist}
+                                    disabled={togglingWishlist}
+                                    className={`px-6 py-4 rounded-lg font-semibold text-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg ${
+                                        inWishlist
+                                            ? 'bg-red-600 text-white hover:bg-red-700'
+                                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    }`}
+                                    title={inWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+                                >
+                                    {togglingWishlist ? (
+                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-current"></div>
+                                    ) : inWishlist ? (
+                                        <HeartIconSolid className="h-6 w-6" />
+                                    ) : (
+                                        <HeartIcon className="h-6 w-6" />
+                                    )}
+                                </button>
+                            </div>
                             
                             {/* Hashtags */}
                             {product.hashtags && (

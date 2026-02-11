@@ -12,11 +12,13 @@ import {
     TruckIcon,
     ShoppingBagIcon,
     MapPinIcon,
-    ChevronDownIcon
+    ChevronDownIcon,
+    HeartIcon
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/Pages/Auth/useAuthStore';
 import { useCartStore } from '@/Pages/Cart/useCartStore';
+import { useWishlistStore } from '@/Pages/Wishlist/useWishlistStore';
 import { clearSession } from '@/utils/sessionStorage';
 
 const navigation = [
@@ -31,15 +33,18 @@ export default function Navigation() {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [cartCount, setCartCount] = useState(0);
+    const [wishlistCount, setWishlistCount] = useState(0);
 
     useEffect(() => {
         checkAuth();
         fetchCartCount();
+        fetchWishlistCount();
         
         // Listen for storage changes (when login happens)
         const handleStorageChange = () => {
             checkAuth();
             fetchCartCount();
+            fetchWishlistCount();
         };
         
         window.addEventListener('storage', handleStorageChange);
@@ -47,19 +52,28 @@ export default function Navigation() {
         // Also check on focus (in case login happened in same tab)
         window.addEventListener('focus', checkAuth);
         window.addEventListener('focus', fetchCartCount);
+        window.addEventListener('focus', fetchWishlistCount);
         
         // Listen for cart updates
         const handleCartUpdate = () => {
             fetchCartCount();
         };
         
+        // Listen for wishlist updates
+        const handleWishlistUpdate = () => {
+            fetchWishlistCount();
+        };
+        
         window.addEventListener('cartUpdated', handleCartUpdate);
+        window.addEventListener('wishlistUpdated', handleWishlistUpdate);
         
         return () => {
             window.removeEventListener('storage', handleStorageChange);
             window.removeEventListener('focus', checkAuth);
             window.removeEventListener('focus', fetchCartCount);
+            window.removeEventListener('focus', fetchWishlistCount);
             window.removeEventListener('cartUpdated', handleCartUpdate);
+            window.removeEventListener('wishlistUpdated', handleWishlistUpdate);
         };
     }, []);
 
@@ -119,6 +133,20 @@ export default function Navigation() {
         }
     };
 
+    const fetchWishlistCount = async () => {
+        try {
+            const response = await useWishlistStore.list();
+            if (response.data?.status && response.data?.data?.count !== undefined) {
+                setWishlistCount(response.data.data.count);
+            } else {
+                setWishlistCount(0);
+            }
+        } catch (error) {
+            console.error('Error fetching wishlist count:', error);
+            setWishlistCount(0);
+        }
+    };
+
     const handleLogout = async () => {
         try {
             await useAuthStore.logout();
@@ -175,6 +203,18 @@ export default function Navigation() {
                         </div>
                     </div>
                     <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
+                        <Link
+                            href="/wishlist"
+                            className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
+                            title="Wishlist"
+                        >
+                            <HeartIcon className="h-6 w-6" />
+                            {wishlistCount > 0 && (
+                                <span className="absolute -top-1 -right-1 block min-w-[1rem] h-4 px-1 rounded-full bg-red-600 text-white text-xs flex items-center justify-center">
+                                    {wishlistCount > 99 ? '99+' : wishlistCount}
+                                </span>
+                            )}
+                        </Link>
                         <Link
                             href="/cart"
                             className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
@@ -314,6 +354,19 @@ export default function Navigation() {
                                 </Link>
                             );
                         })}
+                        <Link
+                            href="/wishlist"
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 hover:text-indigo-600"
+                        >
+                            <HeartIcon className="h-5 w-5 mr-3" />
+                            Wishlist
+                            {wishlistCount > 0 && (
+                                <span className="ml-2 inline-flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-red-600 text-white text-xs">
+                                    {wishlistCount > 99 ? '99+' : wishlistCount}
+                                </span>
+                            )}
+                        </Link>
                         <Link
                             href="/cart"
                             onClick={() => setMobileMenuOpen(false)}

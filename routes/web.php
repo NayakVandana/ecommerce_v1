@@ -50,6 +50,11 @@ Route::get('/recently-viewed', function () {
     return Inertia::render('RecentlyViewed/Index');
 })->name('recently-viewed.index');
 
+// Wishlist Route (public - works with both authenticated users and guest sessions)
+Route::get('/wishlist', function () {
+    return Inertia::render('Wishlist/Index');
+})->name('wishlist.index');
+
 // Protected Routes (require authentication)
 Route::middleware('auth')->group(function () {
     // Checkout Routes

@@ -3,8 +3,11 @@ import { Link, usePage } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { useCategoryStore } from './useCategoryStore';
 import { useProductStore } from '../Products/useProductStore';
-import { ShoppingBagIcon, ArrowLeftIcon, TagIcon } from '@heroicons/react/24/outline';
+import { useWishlistStore } from '../Wishlist/useWishlistStore';
+import { ShoppingBagIcon, ArrowLeftIcon, TagIcon, HeartIcon } from '@heroicons/react/24/outline';
+import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import Pagination from '../../Components/Pagination';
+import { useState as useReactState } from 'react';
 
 export default function Show() {
     const { props, url } = usePage();
