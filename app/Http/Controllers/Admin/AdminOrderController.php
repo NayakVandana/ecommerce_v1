@@ -74,9 +74,11 @@ class AdminOrderController extends Controller
                   ->orWhere('order_number', 'like', '%' . $request->search . '%')
                   ->orWhere('email', 'like', '%' . $request->search . '%')
                   ->orWhere('name', 'like', '%' . $request->search . '%')
+                  ->orWhere('phone', 'like', '%' . $request->search . '%')
                   ->orWhereHas('user', function($userQuery) use ($request) {
                       $userQuery->where('name', 'like', '%' . $request->search . '%')
-                                ->orWhere('email', 'like', '%' . $request->search . '%');
+                                ->orWhere('email', 'like', '%' . $request->search . '%')
+                                ->orWhere('phone', 'like', '%' . $request->search . '%');
                   });
             });
         }
