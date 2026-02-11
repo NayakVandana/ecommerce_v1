@@ -55,7 +55,7 @@ class AdminUserController extends Controller
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|max:255|unique:users,email,' . $request->id,
             'password' => 'sometimes|string|min:8',
-            'role' => 'sometimes|in:user,admin',
+            'role' => 'sometimes|in:user,admin,delivery_boy',
         ]);
 
         $user = User::findOrFail($request->id);
