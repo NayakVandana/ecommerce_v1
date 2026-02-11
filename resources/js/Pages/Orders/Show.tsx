@@ -604,6 +604,9 @@ export default function Show() {
                                 <p><span className="font-semibold">Email:</span> {order.email}</p>
                                 <p><span className="font-semibold">Phone:</span> {order.phone}</p>
                                 <p><span className="font-semibold">Address:</span> {order.address}</p>
+                                {order.district && (
+                                    <p><span className="font-semibold">District:</span> {order.district}</p>
+                                )}
                                 <p><span className="font-semibold">City:</span> {order.city}</p>
                                 <p><span className="font-semibold">Postal Code:</span> {order.postal_code}</p>
                                 <p><span className="font-semibold">Country:</span> {order.country}</p>

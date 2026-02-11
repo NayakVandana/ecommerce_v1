@@ -4,13 +4,11 @@ import { useState, useEffect } from 'react';
 import { useCartStore } from '../Cart/useCartStore';
 import { useCheckoutStore } from './useCheckoutStore';
 import { useCouponStore } from '../Products/useCouponStore';
-import { useAddressStore } from './useAddressStore';
 import { isAuthenticated } from '../../utils/sessionStorage';
 import FormInput from '../../Components/FormInput/FormInput';
 import FormTextarea from '../../Components/FormInput/FormTextarea';
 import Button from '../../Components/Button';
 import AlertModal from '../../Components/AlertModal';
-import AddressModal from './AddressModal';
 import { XMarkIcon, TicketIcon, PencilIcon } from '@heroicons/react/24/outline';
 
 export default function Index() {
@@ -27,19 +25,17 @@ export default function Index() {
     const [alertMessage, setAlertMessage] = useState('');
     const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
     const [currentStep, setCurrentStep] = useState(1);
-    const [showAddressModal, setShowAddressModal] = useState(false);
-    const [addresses, setAddresses] = useState<any[]>([]);
-    const [selectedAddress, setSelectedAddress] = useState<any>(null);
-    const [loadingAddresses, setLoadingAddresses] = useState(false);
     
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         phone: '',
         address: '',
-        city: '',
+        district: 'Valsad',
+        city: 'Vapi',
         postal_code: '',
-        country: '',
+        country: 'India',
+        state: 'Gujarat',
         notes: '',
     });
 
@@ -60,48 +56,7 @@ export default function Index() {
                 console.error('Error parsing user data:', e);
             }
         }
-        
-        // Load addresses if user is authenticated
-        if (isAuthenticated()) {
-            loadAddresses();
-        }
     }, []);
-
-    const loadAddresses = async () => {
-        if (!isAuthenticated()) return;
-        
-        try {
-            setLoadingAddresses(true);
-            const response = await useAddressStore.list();
-            if (response.data?.status) {
-                const addressList = response.data.data || [];
-                setAddresses(addressList);
-                
-                // Set default address if available
-                const defaultAddress = addressList.find((a: any) => a.is_default) || addressList[0];
-                if (defaultAddress) {
-                    handleSelectAddress(defaultAddress);
-                }
-            }
-        } catch (error: any) {
-            console.error('Error loading addresses:', error);
-        } finally {
-            setLoadingAddresses(false);
-        }
-    };
-
-    const handleSelectAddress = (address: any) => {
-        setSelectedAddress(address);
-        setFormData(prev => ({
-            ...prev,
-            name: address.name || prev.name,
-            phone: address.phone || prev.phone,
-            address: address.address || prev.address,
-            city: address.city || prev.city,
-            postal_code: address.postal_code || prev.postal_code,
-            country: address.country || prev.country,
-        }));
-    };
 
     const fetchCart = async () => {
         try {
@@ -159,16 +114,21 @@ export default function Index() {
             newErrors.address = 'Address is required';
         }
 
+        if (!formData.district || formData.district.trim() === '') {
+            newErrors.district = 'District is required';
+        }
         if (!formData.city || formData.city.trim() === '') {
             newErrors.city = 'City is required';
+        }
+        if (formData.district !== 'Valsad') {
+            newErrors.district = 'Only Valsad district is allowed for shipping';
+        }
+        if (formData.city !== 'Vapi') {
+            newErrors.city = 'Only Vapi city is allowed for shipping';
         }
 
         if (!formData.postal_code || formData.postal_code.trim() === '') {
             newErrors.postal_code = 'Postal code is required';
-        }
-
-        if (!formData.country || formData.country.trim() === '') {
-            newErrors.country = 'Country is required';
         }
 
         setErrors(newErrors);
@@ -193,20 +153,8 @@ export default function Index() {
             setProcessing(true);
             setErrors({});
 
-            // Use selected address data if available, otherwise use form data
-            const orderData = selectedAddress && isAuthenticated() ? {
-                name: selectedAddress.name,
-                email: formData.email, // Email is not in address, keep from form
-                phone: selectedAddress.phone,
-                address: selectedAddress.address,
-                city: selectedAddress.city,
-                postal_code: selectedAddress.postal_code,
-                country: selectedAddress.country,
-                notes: formData.notes,
-                use_cart: true,
-                coupon_code: appliedCoupon ? appliedCoupon.code : null,
-                payment_method: 'cash_on_delivery',
-            } : {
+            // Use form data for order
+            const orderData = {
                 ...formData,
                 use_cart: true,
                 coupon_code: appliedCoupon ? appliedCoupon.code : null,
@@ -360,78 +308,6 @@ export default function Index() {
                                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                                     <h2 className="text-xl font-bold mb-4">Step 1: Shipping Information</h2>
                                     
-                                    {/* Address Selection for Authenticated Users */}
-                                    {isAuthenticated() && (
-                                        <div className="mb-6">
-                                            <div className="flex items-center justify-between mb-4">
-                                                <h3 className="text-lg font-semibold text-gray-900">Delivery Address</h3>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowAddressModal(true)}
-                                                    className="text-indigo-600 hover:text-indigo-700 font-medium text-sm flex items-center gap-1"
-                                                >
-                                                    <PencilIcon className="h-4 w-4" />
-                                                    Change
-                                                </button>
-                                            </div>
-                                            
-                                            {loadingAddresses ? (
-                                                <div className="border rounded-lg p-4 text-center text-gray-500">
-                                                    Loading addresses...
-                                                </div>
-                                            ) : selectedAddress ? (
-                                                <div className="border rounded-lg p-4 bg-gray-50">
-                                                    <div className="flex items-start justify-between">
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <span className="font-semibold text-gray-900">
-                                                                    {selectedAddress.name}
-                                                                </span>
-                                                                {selectedAddress.address_type && (
-                                                                    <span className={`px-2 py-0.5 rounded text-xs text-white ${
-                                                                        selectedAddress.address_type === 'home' ? 'bg-teal-600' :
-                                                                        selectedAddress.address_type === 'work' ? 'bg-blue-600' :
-                                                                        'bg-gray-600'
-                                                                    }`}>
-                                                                        {selectedAddress.address_type.charAt(0).toUpperCase() + selectedAddress.address_type.slice(1)}
-                                                                    </span>
-                                                                )}
-                                                                {selectedAddress.is_default && (
-                                                                    <span className="px-2 py-0.5 rounded text-xs bg-green-100 text-green-800">
-                                                                        Default
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            <p className="text-sm text-gray-600 mb-1">
-                                                                {selectedAddress.address}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600 mb-1">
-                                                                {selectedAddress.city}, {selectedAddress.postal_code}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600">
-                                                                {selectedAddress.country}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600 mt-1">
-                                                                Phone: {selectedAddress.phone}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ) : (
-                                                <div className="border rounded-lg p-4 text-center">
-                                                    <p className="text-gray-500 mb-3">No saved address</p>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowAddressModal(true)}
-                                                        className="text-indigo-600 hover:text-indigo-700 font-medium"
-                                                    >
-                                                        + Add New Address
-                                                    </button>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                    
                                     <div className="space-y-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <FormInput
@@ -475,15 +351,40 @@ export default function Index() {
                                         />
 
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <FormInput
-                                                label="City"
-                                                name="city"
-                                                type="text"
-                                                value={formData.city}
-                                                onChange={handleInputChange}
-                                                error={errors.city}
-                                                required
-                                            />
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    District <span className="text-red-500">*</span>
+                                                </label>
+                                                <select
+                                                    name="district"
+                                                    value={formData.district}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                    required
+                                                >
+                                                    <option value="Valsad">Valsad</option>
+                                                </select>
+                                                {errors.district && (
+                                                    <p className="mt-1 text-xs text-red-600">{errors.district}</p>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    City <span className="text-red-500">*</span>
+                                                </label>
+                                                <select
+                                                    name="city"
+                                                    value={formData.city}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                    required
+                                                >
+                                                    <option value="Vapi">Vapi</option>
+                                                </select>
+                                                {errors.city && (
+                                                    <p className="mt-1 text-xs text-red-600">{errors.city}</p>
+                                                )}
+                                            </div>
                                             <FormInput
                                                 label="Postal Code"
                                                 name="postal_code"
@@ -493,15 +394,25 @@ export default function Index() {
                                                 error={errors.postal_code}
                                                 required
                                             />
-                                            <FormInput
-                                                label="Country"
-                                                name="country"
-                                                type="text"
-                                                value={formData.country}
-                                                onChange={handleInputChange}
-                                                error={errors.country}
-                                                required
-                                            />
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Country
+                                                </label>
+                                                <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
+                                                    {formData.country}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    State
+                                                </label>
+                                                <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
+                                                    {formData.state}
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <FormTextarea
@@ -599,7 +510,9 @@ export default function Index() {
                                                 <p><span className="font-semibold">Email:</span> {formData.email}</p>
                                                 <p><span className="font-semibold">Phone:</span> {formData.phone}</p>
                                                 <p><span className="font-semibold">Address:</span> {formData.address}</p>
+                                                <p><span className="font-semibold">District:</span> {formData.district}</p>
                                                 <p><span className="font-semibold">City:</span> {formData.city}, {formData.postal_code}</p>
+                                                <p><span className="font-semibold">State:</span> {formData.state}</p>
                                                 <p><span className="font-semibold">Country:</span> {formData.country}</p>
                                                 {formData.notes && (
                                                     <p><span className="font-semibold">Notes:</span> {formData.notes}</p>
@@ -827,18 +740,6 @@ export default function Index() {
                 message={alertMessage}
                 type={alertType}
             />
-            
-            {isAuthenticated() && (
-                <AddressModal
-                    isOpen={showAddressModal}
-                    onClose={() => {
-                        setShowAddressModal(false);
-                        loadAddresses();
-                    }}
-                    onSelect={handleSelectAddress}
-                    selectedAddressId={selectedAddress?.id}
-                />
-            )}
         </AppLayout>
     );
 }

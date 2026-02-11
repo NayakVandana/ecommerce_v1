@@ -19,9 +19,11 @@ export default function AddressesIndex() {
         name: '',
         phone: '',
         address: '',
-        city: '',
+        district: 'Valsad',
+        city: 'Vapi',
         postal_code: '',
-        country: '',
+        country: 'India',
+        state: 'Gujarat',
         address_type: 'home',
         is_default: false,
     });
@@ -69,9 +71,11 @@ export default function AddressesIndex() {
             name: '',
             phone: '',
             address: '',
-            city: '',
+            district: 'Valsad',
+            city: 'Vapi',
             postal_code: '',
-            country: '',
+            country: 'India',
+            state: 'Gujarat',
             address_type: 'home',
             is_default: false,
         });
@@ -85,9 +89,11 @@ export default function AddressesIndex() {
             name: address.name || '',
             phone: address.phone || '',
             address: address.address || '',
-            city: address.city || '',
+            district: address.district || 'Valsad',
+            city: address.city || 'Vapi',
             postal_code: address.postal_code || '',
-            country: address.country || '',
+            country: address.country || 'India',
+            state: 'Gujarat',
             address_type: address.address_type || 'home',
             is_default: address.is_default || false,
         });
@@ -245,9 +251,9 @@ export default function AddressesIndex() {
                                     <p className="text-sm text-gray-600">{address.phone}</p>
                                     <p className="text-sm text-gray-600">{address.address}</p>
                                     <p className="text-sm text-gray-600">
-                                        {address.city}, {address.postal_code}
+                                        {address.district && `${address.district}, `}{address.city}, {address.postal_code}
                                     </p>
-                                    <p className="text-sm text-gray-600">{address.country}</p>
+                                    <p className="text-sm text-gray-600">Gujarat, {address.country}</p>
                                 </div>
 
                                 <div className="flex gap-2 pt-4 border-t">
@@ -354,10 +360,28 @@ export default function AddressesIndex() {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    District *
+                                                </label>
+                                                <select
+                                                    name="district"
+                                                    value={formData.district}
+                                                    onChange={handleInputChange}
+                                                    required
+                                                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                                        errors.district ? 'border-red-300' : 'border-gray-300'
+                                                    }`}
+                                                >
+                                                    <option value="Valsad">Valsad</option>
+                                                </select>
+                                                {errors.district && (
+                                                    <p className="mt-1 text-xs text-red-600">{errors.district}</p>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
                                                     City *
                                                 </label>
-                                                <input
-                                                    type="text"
+                                                <select
                                                     name="city"
                                                     value={formData.city}
                                                     onChange={handleInputChange}
@@ -365,12 +389,16 @@ export default function AddressesIndex() {
                                                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
                                                         errors.city ? 'border-red-300' : 'border-gray-300'
                                                     }`}
-                                                />
+                                                >
+                                                    <option value="Vapi">Vapi</option>
+                                                </select>
                                                 {errors.city && (
                                                     <p className="mt-1 text-xs text-red-600">{errors.city}</p>
                                                 )}
                                             </div>
+                                        </div>
 
+                                        <div className="grid grid-cols-2 gap-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                                     Postal Code *
@@ -391,23 +419,28 @@ export default function AddressesIndex() {
                                             </div>
                                         </div>
 
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Country *
-                                            </label>
-                                            <input
-                                                type="text"
-                                                name="country"
-                                                value={formData.country}
-                                                onChange={handleInputChange}
-                                                required
-                                                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Country
+                                                </label>
+                                                <div className={`w-full px-3 py-2 border rounded-md bg-gray-50 text-gray-700 ${
                                                     errors.country ? 'border-red-300' : 'border-gray-300'
-                                                }`}
-                                            />
-                                            {errors.country && (
-                                                <p className="mt-1 text-xs text-red-600">{errors.country}</p>
-                                            )}
+                                                }`}>
+                                                    {formData.country}
+                                                </div>
+                                                {errors.country && (
+                                                    <p className="mt-1 text-xs text-red-600">{errors.country}</p>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    State
+                                                </label>
+                                                <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
+                                                    {formData.state}
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <div>

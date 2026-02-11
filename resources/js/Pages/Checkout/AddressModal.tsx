@@ -40,9 +40,11 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
         name: '',
         phone: '',
         address: '',
-        city: '',
+        district: 'Valsad',
+        city: 'Vapi',
         postal_code: '',
-        country: '',
+        country: 'India',
+        state: 'Gujarat',
         address_type: 'home',
         is_default: false,
     });
@@ -124,9 +126,11 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
             name: address.name,
             phone: address.phone,
             address: address.address,
-            city: address.city,
+            district: address.district || 'Valsad',
+            city: address.city || 'Vapi',
             postal_code: address.postal_code,
-            country: address.country,
+            country: address.country || 'India',
+            state: 'Gujarat',
             address_type: address.address_type || 'home',
             is_default: address.is_default,
         });
@@ -195,9 +199,11 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
             name: '',
             phone: '',
             address: '',
-            city: '',
+            district: 'Valsad',
+            city: 'Vapi',
             postal_code: '',
-            country: '',
+            country: 'India',
+            state: 'Gujarat',
             address_type: 'home',
             is_default: false,
         });
@@ -358,10 +364,10 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
                                                             {address.address}
                                                         </p>
                                                         <p className="text-sm text-gray-600">
-                                                            {address.city}, {address.postal_code}
+                                                            {address.district && `${address.district}, `}{address.city}, {address.postal_code}
                                                         </p>
                                                         <p className="text-sm text-gray-600">
-                                                            {address.country}
+                                                            Gujarat, {address.country}
                                                         </p>
                                                         <p className="text-sm text-gray-600 mt-2">
                                                             <span className="font-medium">Phone:</span> {address.phone}
@@ -444,13 +450,34 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
                                         />
                                         
                                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                            <FormInput
-                                                label="City"
-                                                name="city"
-                                                value={formData.city}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    District <span className="text-red-500">*</span>
+                                                </label>
+                                                <select
+                                                    name="district"
+                                                    value={formData.district}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                    required
+                                                >
+                                                    <option value="Valsad">Valsad</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    City <span className="text-red-500">*</span>
+                                                </label>
+                                                <select
+                                                    name="city"
+                                                    value={formData.city}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                    required
+                                                >
+                                                    <option value="Vapi">Vapi</option>
+                                                </select>
+                                            </div>
                                             <FormInput
                                                 label="Postal Code"
                                                 name="postal_code"
@@ -458,13 +485,25 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
                                                 onChange={handleInputChange}
                                                 required
                                             />
-                                            <FormInput
-                                                label="Country"
-                                                name="country"
-                                                value={formData.country}
-                                                onChange={handleInputChange}
-                                                required
-                                            />
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    Country
+                                                </label>
+                                                <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
+                                                    {formData.country}
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                    State
+                                                </label>
+                                                <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
+                                                    {formData.state}
+                                                </div>
+                                            </div>
                                         </div>
                                         
                                         <div>

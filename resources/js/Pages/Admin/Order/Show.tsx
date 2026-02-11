@@ -887,7 +887,7 @@ export default function OrderShow() {
                             <h2 className="text-lg font-semibold text-gray-900 mb-4">Shipping Address</h2>
                             <div className="text-sm text-gray-900 space-y-1">
                                 <p>{order.address}</p>
-                                <p>{order.city}, {order.postal_code}</p>
+                                <p>{order.district ? `${order.district}, ` : ''}{order.city}, {order.postal_code}</p>
                                 <p>{order.country}</p>
                                 <p className="mt-3 pt-3 border-t">
                                     <span className="font-semibold">Payment Method:</span> <span className="capitalize">Cash on Delivery</span>

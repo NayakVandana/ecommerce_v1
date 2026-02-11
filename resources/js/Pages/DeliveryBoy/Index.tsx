@@ -406,7 +406,7 @@ export default function DeliveryBoyIndex() {
                                                 <div>
                                                     <p className="text-xs text-gray-500 mb-1">Delivery Address</p>
                                                     <p className="text-sm text-gray-900">{order.address}</p>
-                                                    <p className="text-sm text-gray-600">{order.city}, {order.postal_code}</p>
+                                                    <p className="text-sm text-gray-600">{order.district ? `${order.district}, ` : ''}{order.city}, {order.postal_code}</p>
                                                 </div>
                                             </div>
 
