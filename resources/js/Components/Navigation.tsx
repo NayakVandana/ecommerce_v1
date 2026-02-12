@@ -4,8 +4,6 @@ import {
     UserIcon, 
     Bars3Icon, 
     XMarkIcon,
-    HomeIcon,
-    Squares2X2Icon,
     TagIcon,
     ArrowRightOnRectangleIcon,
     ShieldCheckIcon,
@@ -22,7 +20,6 @@ import { useWishlistStore } from '@/Pages/Wishlist/useWishlistStore';
 import { clearSession } from '@/utils/sessionStorage';
 
 const navigation = [
-    { name: 'Home', href: '/', icon: HomeIcon },
 ];
 
 export default function Navigation() {
