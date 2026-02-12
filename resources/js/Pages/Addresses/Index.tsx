@@ -2,7 +2,7 @@ import AppLayout from '../Layouts/AppLayout';
 import { useState, useEffect } from 'react';
 import { useAddressStore } from '../Checkout/useAddressStore';
 import Button from '../../Components/Button';
-import AlertModal from '../../Components/AlertModal';
+import toast from '../../utils/toast';
 import { PlusIcon, PencilIcon, TrashIcon, MapPinIcon, HomeIcon, BuildingOfficeIcon, StarIcon } from '@heroicons/react/24/outline';
 
 export default function AddressesIndex() {
@@ -10,9 +10,6 @@ export default function AddressesIndex() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingAddress, setEditingAddress] = useState<any>(null);
-    const [showAlert, setShowAlert] = useState(false);
-    const [alertMessage, setAlertMessage] = useState('');
-    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
     const [submitting, setSubmitting] = useState(false);
     
     const [formData, setFormData] = useState({
@@ -128,19 +125,13 @@ export default function AddressesIndex() {
             const response = await useAddressStore.delete({ id });
             if (response.data?.status) {
                 await fetchAddresses();
-                setAlertMessage('Address deleted successfully');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Address deleted successfully' });
             } else {
-                setAlertMessage(response.data?.message || 'Failed to delete address');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to delete address' });
             }
         } catch (error: any) {
             console.error('Error deleting address:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to delete address');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to delete address' });
         }
     };
 
@@ -149,19 +140,13 @@ export default function AddressesIndex() {
             const response = await useAddressStore.setDefault({ id });
             if (response.data?.status) {
                 await fetchAddresses();
-                setAlertMessage('Default address updated successfully');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Default address updated successfully' });
             } else {
-                setAlertMessage(response.data?.message || 'Failed to set default address');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to set default address' });
             }
         } catch (error: any) {
             console.error('Error setting default address:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to set default address');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to set default address' });
         }
     };
 
@@ -178,22 +163,16 @@ export default function AddressesIndex() {
             if (response.data?.status) {
                 setShowModal(false);
                 await fetchAddresses();
-                setAlertMessage(editingAddress ? 'Address updated successfully' : 'Address added successfully');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: editingAddress ? 'Address updated successfully' : 'Address added successfully' });
             } else {
-                setAlertMessage(response.data?.message || 'Failed to save address');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to save address' });
             }
         } catch (error: any) {
             console.error('Error saving address:', error);
             if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
             }
-            setAlertMessage(error.response?.data?.message || 'Failed to save address');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to save address' });
         } finally {
             setSubmitting(false);
         }
@@ -683,14 +662,6 @@ export default function AddressesIndex() {
                         </div>
                     </div>
                 )}
-
-                <AlertModal
-                    isOpen={showAlert}
-                    onClose={() => setShowAlert(false)}
-                    title={alertType === 'success' ? 'Success' : 'Error'}
-                    message={alertMessage}
-                    type={alertType}
-                />
             </div>
         </AppLayout>
     );

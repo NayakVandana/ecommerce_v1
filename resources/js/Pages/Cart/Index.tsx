@@ -2,7 +2,7 @@ import AppLayout from '../Layouts/AppLayout';
 import { Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { useCartStore } from './useCartStore';
-import AlertModal from '../../Components/AlertModal';
+import toast from '../../utils/toast';
 import ConfirmationModal from '../../Components/ConfirmationModal';
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { isAuthenticated } from '../../utils/sessionStorage';
@@ -11,9 +11,6 @@ export default function Index() {
     const [cart, setCart] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState<number | null>(null);
-    const [showAlert, setShowAlert] = useState(false);
-    const [alertMessage, setAlertMessage] = useState('');
-    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
     const [showConfirm, setShowConfirm] = useState(false);
     const [confirmMessage, setConfirmMessage] = useState('');
     const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
@@ -55,9 +52,7 @@ export default function Index() {
             }
         } catch (error) {
             console.error('Error updating cart:', error);
-            setAlertMessage('Failed to update cart');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: 'Failed to update cart' });
         } finally {
             setUpdating(null);
         }
@@ -85,9 +80,7 @@ export default function Index() {
             }
         } catch (error) {
             console.error('Error removing item:', error);
-            setAlertMessage('Failed to remove item');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: 'Failed to remove item' });
         } finally {
             setUpdating(null);
         }
@@ -110,9 +103,7 @@ export default function Index() {
             }
         } catch (error) {
             console.error('Error clearing cart:', error);
-            setAlertMessage('Failed to clear cart');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: 'Failed to clear cart' });
         }
     };
 
@@ -297,13 +288,6 @@ export default function Index() {
                     </div>
                 )}
             </div>
-            
-            <AlertModal
-                isOpen={showAlert}
-                onClose={() => setShowAlert(false)}
-                message={alertMessage}
-                type={alertType}
-            />
             
             <ConfirmationModal
                 isOpen={showConfirm}

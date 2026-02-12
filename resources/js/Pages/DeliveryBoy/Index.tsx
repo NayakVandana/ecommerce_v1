@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDeliveryBoyStore } from './useDeliveryBoyStore';
 import AppLayout from '../Layouts/AppLayout';
-import AlertModal from '../../Components/AlertModal';
+import toast from '../../utils/toast';
 import { TruckIcon, CheckCircleIcon, ClockIcon, PhotoIcon, VideoCameraIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CubeIcon, CameraIcon, FolderOpenIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 export default function DeliveryBoyIndex() {
@@ -11,9 +11,6 @@ export default function DeliveryBoyIndex() {
     const [otpCodes, setOtpCodes] = useState<{[key: number]: string}>({});
     const [verifyingOTP, setVerifyingOTP] = useState<number | null>(null);
     const [generatingOTP, setGeneratingOTP] = useState<number | null>(null);
-    const [showAlert, setShowAlert] = useState(false);
-    const [alertMessage, setAlertMessage] = useState('');
-    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
     const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
     const [mediaViewerIndex, setMediaViewerIndex] = useState<{orderId: number, itemIndex: number, mediaIndex: number} | null>(null);
     const [openBoxOrders, setOpenBoxOrders] = useState<Set<number>>(new Set());
@@ -44,9 +41,7 @@ export default function DeliveryBoyIndex() {
         } catch (error: any) {
             console.error('Error loading orders:', error);
             if (error.response?.status === 403) {
-                setAlertMessage('You do not have permission to access this page');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: 'You do not have permission to access this page' });
             }
         } finally {
             setLoading(false);
@@ -67,9 +62,7 @@ export default function DeliveryBoyIndex() {
     const handleVerifyOTP = async (orderId: number) => {
         const otpCode = otpCodes[orderId] || '';
         if (!otpCode || otpCode.length !== 6) {
-            setAlertMessage('Please enter a valid 6-digit OTP');
-            setAlertType('warning');
-            setShowAlert(true);
+            toast({ type: 'warning', message: 'Please enter a valid 6-digit OTP' });
             return;
         }
 
@@ -91,23 +84,17 @@ export default function DeliveryBoyIndex() {
                     return newCodes;
                 });
                 
-                setAlertMessage('OTP verified successfully! Order marked as delivered.');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'OTP verified successfully! Order marked as delivered.' });
                 
                 // Reload orders and stats
                 await loadOrders();
                 await loadStats();
             } else {
-                setAlertMessage(response.data?.message || 'Invalid OTP code');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Invalid OTP code' });
             }
         } catch (error: any) {
             console.error('Error verifying OTP:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to verify OTP');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to verify OTP' });
         } finally {
             setVerifyingOTP(null);
         }
@@ -128,22 +115,16 @@ export default function DeliveryBoyIndex() {
             });
 
             if (response.data?.status) {
-                setAlertMessage('OTP generated successfully!');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'OTP generated successfully!' });
                 
                 // Reload orders to get the updated OTP
                 await loadOrders();
             } else {
-                setAlertMessage(response.data?.message || 'Failed to generate OTP');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to generate OTP' });
             }
         } catch (error: any) {
             console.error('Error generating OTP:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to generate OTP');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to generate OTP' });
         } finally {
             setGeneratingOTP(null);
         }
@@ -258,21 +239,15 @@ export default function DeliveryBoyIndex() {
 
             const response = await useDeliveryBoyStore.uploadOpenBoxMedia(formData);
             if (response.data?.status) {
-                setAlertMessage('Media uploaded successfully!');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Media uploaded successfully!' });
                 await loadVerificationMedia(orderId);
                 await loadOrders();
             } else {
-                setAlertMessage(response.data?.message || 'Failed to upload media');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to upload media' });
             }
         } catch (error: any) {
             console.error('Error uploading media:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to upload media');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to upload media' });
         } finally {
             setUploadingMedia(null);
         }
@@ -284,20 +259,14 @@ export default function DeliveryBoyIndex() {
         try {
             const response = await useDeliveryBoyStore.deleteOpenBoxMedia({ id: mediaId });
             if (response.data?.status) {
-                setAlertMessage('Media deleted successfully');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Media deleted successfully' });
                 await loadVerificationMedia(orderId);
             } else {
-                setAlertMessage(response.data?.message || 'Failed to delete media');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to delete media' });
             }
         } catch (error: any) {
             console.error('Error deleting media:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to delete media');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to delete media' });
         }
     };
 
@@ -697,13 +666,6 @@ export default function DeliveryBoyIndex() {
                     )}
                 </div>
             </div>
-
-            <AlertModal
-                isOpen={showAlert}
-                onClose={() => setShowAlert(false)}
-                message={alertMessage}
-                type={alertType}
-            />
 
             {/* Media Viewer Modal */}
             {mediaViewerIndex && (() => {

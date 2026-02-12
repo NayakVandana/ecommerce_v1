@@ -3,7 +3,7 @@ import { Link, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { useWishlistStore } from './useWishlistStore';
 import { useCartStore } from '../Cart/useCartStore';
-import AlertModal from '../../Components/AlertModal';
+import toast from '../../utils/toast';
 import ConfirmationModal from '../../Components/ConfirmationModal';
 import { HeartIcon, TrashIcon, ShoppingCartIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
@@ -13,9 +13,6 @@ export default function Index() {
     const [loading, setLoading] = useState(true);
     const [removing, setRemoving] = useState<number | null>(null);
     const [addingToCart, setAddingToCart] = useState<number | null>(null);
-    const [showAlert, setShowAlert] = useState(false);
-    const [alertMessage, setAlertMessage] = useState('');
-    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
     const [showConfirm, setShowConfirm] = useState(false);
     const [confirmMessage, setConfirmMessage] = useState('');
     const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
@@ -46,22 +43,16 @@ export default function Index() {
                 const response = await useWishlistStore.remove({ product_id: productId });
                 
                 if (response.data?.status) {
-                    setAlertMessage('Item removed from wishlist');
-                    setAlertType('success');
-                    setShowAlert(true);
+                    toast({ type: 'success', message: 'Item removed from wishlist' });
                     await fetchWishlist();
                     // Dispatch event to update wishlist count in header
                     window.dispatchEvent(new Event('wishlistUpdated'));
                 } else {
-                    setAlertMessage(response.data?.message || 'Failed to remove item');
-                    setAlertType('error');
-                    setShowAlert(true);
+                    toast({ type: 'error', message: response.data?.message || 'Failed to remove item' });
                 }
             } catch (error: any) {
                 console.error('Error removing from wishlist:', error);
-                setAlertMessage(error.response?.data?.message || 'Failed to remove item');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: error.response?.data?.message || 'Failed to remove item' });
             } finally {
                 setRemoving(null);
                 setShowConfirm(false);
@@ -79,21 +70,15 @@ export default function Index() {
             });
             
             if (response.data?.status) {
-                setAlertMessage('Product added to cart');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Product added to cart' });
                 // Dispatch event to update cart count in header
                 window.dispatchEvent(new Event('cartUpdated'));
             } else {
-                setAlertMessage(response.data?.message || 'Failed to add to cart');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to add to cart' });
             }
         } catch (error: any) {
             console.error('Error adding to cart:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to add to cart');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to add to cart' });
         } finally {
             setAddingToCart(null);
         }
@@ -106,21 +91,15 @@ export default function Index() {
                 const response = await useWishlistStore.clear();
                 
                 if (response.data?.status) {
-                    setAlertMessage('Wishlist cleared');
-                    setAlertType('success');
-                    setShowAlert(true);
+                    toast({ type: 'success', message: 'Wishlist cleared' });
                     await fetchWishlist();
                     window.dispatchEvent(new Event('wishlistUpdated'));
                 } else {
-                    setAlertMessage(response.data?.message || 'Failed to clear wishlist');
-                    setAlertType('error');
-                    setShowAlert(true);
+                    toast({ type: 'error', message: response.data?.message || 'Failed to clear wishlist' });
                 }
             } catch (error: any) {
                 console.error('Error clearing wishlist:', error);
-                setAlertMessage(error.response?.data?.message || 'Failed to clear wishlist');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: error.response?.data?.message || 'Failed to clear wishlist' });
             } finally {
                 setShowConfirm(false);
             }
@@ -261,13 +240,6 @@ export default function Index() {
                         })}
                     </div>
                 )}
-
-                <AlertModal
-                    isOpen={showAlert}
-                    onClose={() => setShowAlert(false)}
-                    message={alertMessage}
-                    type={alertType}
-                />
 
                 <ConfirmationModal
                     isOpen={showConfirm}

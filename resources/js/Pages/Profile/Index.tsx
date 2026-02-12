@@ -2,16 +2,13 @@ import AppLayout from '../Layouts/AppLayout';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '../Auth/useAuthStore';
 import Button from '../../Components/Button';
-import AlertModal from '../../Components/AlertModal';
+import toast from '../../utils/toast';
 import { UserIcon, EnvelopeIcon, LockClosedIcon } from '@heroicons/react/24/outline';
 
 export default function ProfileIndex() {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
-    const [showAlert, setShowAlert] = useState(false);
-    const [alertMessage, setAlertMessage] = useState('');
-    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
     
     const [formData, setFormData] = useState({
         name: '',
@@ -97,27 +94,21 @@ export default function ProfileIndex() {
             
             if (response.data?.status) {
                 await fetchUser();
-                setAlertMessage('Profile updated successfully');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Profile updated successfully' });
                 setFormData(prev => ({
                     ...prev,
                     password: '',
                     password_confirmation: '',
                 }));
             } else {
-                setAlertMessage(response.data?.message || 'Failed to update profile');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to update profile' });
             }
         } catch (error: any) {
             console.error('Error updating profile:', error);
             if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
             }
-            setAlertMessage(error.response?.data?.message || 'Failed to update profile');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to update profile' });
         } finally {
             setUpdating(false);
         }
@@ -249,14 +240,6 @@ export default function ProfileIndex() {
                         </div>
                     </form>
                 </div>
-
-                <AlertModal
-                    isOpen={showAlert}
-                    onClose={() => setShowAlert(false)}
-                    title={alertType === 'success' ? 'Success' : 'Error'}
-                    message={alertMessage}
-                    type={alertType}
-                />
             </div>
         </AppLayout>
     );

@@ -5,7 +5,7 @@ import { useOrderStore } from './useOrderStore';
 import Button from '../../Components/Button';
 import CancellationReasonModal from '../../Components/CancellationReasonModal';
 import ReturnReasonModal from '../../Components/ReturnReasonModal';
-import AlertModal from '../../Components/AlertModal';
+import toast from '../../utils/toast';
 import { 
     CheckCircleIcon, 
     ArrowPathIcon, 
@@ -18,9 +18,6 @@ export default function Show() {
     const orderId = (props as any).id;
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [showAlert, setShowAlert] = useState(false);
-    const [alertMessage, setAlertMessage] = useState('');
-    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelling, setCancelling] = useState(false);
     const [showReturnModal, setShowReturnModal] = useState(false);
@@ -59,15 +56,11 @@ export default function Show() {
             if (response.data?.status) {
                 setShowCancelModal(false);
                 await fetchOrder();
-                setAlertMessage('Order cancelled successfully');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Order cancelled successfully' });
             }
         } catch (error: any) {
             console.error('Error cancelling order:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to cancel order');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to cancel order' });
         } finally {
             setCancelling(false);
         }
@@ -88,15 +81,11 @@ export default function Show() {
             if (response.data?.status) {
                 setShowReturnModal(false);
                 await fetchOrder();
-                setAlertMessage('Return request submitted successfully');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Return request submitted successfully' });
             }
         } catch (error: any) {
             console.error('Error requesting return:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to submit return request');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to submit return request' });
         } finally {
             setRequestingReturn(false);
         }
@@ -518,14 +507,6 @@ export default function Show() {
                     onClose={() => setShowReturnModal(false)}
                     onConfirm={handleReturnConfirm}
                     loading={requestingReturn}
-                />
-
-                <AlertModal
-                    isOpen={showAlert}
-                    onClose={() => setShowAlert(false)}
-                    title={alertType === 'success' ? 'Success' : alertType === 'error' ? 'Error' : 'Information'}
-                    message={alertMessage}
-                    type={alertType}
                 />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

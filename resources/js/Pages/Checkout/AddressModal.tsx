@@ -3,7 +3,7 @@ import { XMarkIcon, PencilIcon, TrashIcon, CheckIcon, MapPinIcon, PlusIcon } fro
 import { useAddressStore } from './useAddressStore';
 import FormInput from '../../Components/FormInput/FormInput';
 import Button from '../../Components/Button';
-import AlertModal from '../../Components/AlertModal';
+import toast from '../../utils/toast';
 import ConfirmationModal from '../../Components/ConfirmationModal';
 
 interface Address {
@@ -38,9 +38,6 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
     const [loading, setLoading] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const [editingAddress, setEditingAddress] = useState<Address | null>(null);
-    const [showAlert, setShowAlert] = useState(false);
-    const [alertMessage, setAlertMessage] = useState('');
-    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [addressToDelete, setAddressToDelete] = useState<number | null>(null);
 
@@ -80,9 +77,7 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
             }
         } catch (error: any) {
             console.error('Error loading addresses:', error);
-            setAlertMessage('Failed to load addresses');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: 'Failed to load addresses' });
         } finally {
             setLoading(false);
         }
@@ -116,19 +111,13 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
                 setShowForm(false);
                 setEditingAddress(null);
                 resetForm();
-                setAlertMessage(editingAddress ? 'Address updated successfully' : 'Address added successfully');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: editingAddress ? 'Address updated successfully' : 'Address added successfully' });
             } else {
-                setAlertMessage(response.data?.message || 'Failed to save address');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to save address' });
             }
         } catch (error: any) {
             console.error('Error saving address:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to save address');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to save address' });
         } finally {
             setLoading(false);
         }
@@ -170,19 +159,13 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
             const response = await useAddressStore.delete({ id: addressToDelete });
             if (response.data?.status) {
                 await loadAddresses();
-                setAlertMessage('Address deleted successfully');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Address deleted successfully' });
             } else {
-                setAlertMessage(response.data?.message || 'Failed to delete address');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to delete address' });
             }
         } catch (error: any) {
             console.error('Error deleting address:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to delete address');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to delete address' });
         } finally {
             setLoading(false);
             setShowDeleteConfirm(false);
@@ -196,19 +179,13 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
             const response = await useAddressStore.setDefault({ id });
             if (response.data?.status) {
                 await loadAddresses();
-                setAlertMessage('Default address updated');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Default address updated' });
             } else {
-                setAlertMessage(response.data?.message || 'Failed to set default address');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to set default address' });
             }
         } catch (error: any) {
             console.error('Error setting default address:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to set default address');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to set default address' });
         } finally {
             setLoading(false);
         }
@@ -685,13 +662,6 @@ export default function AddressModal({ isOpen, onClose, onSelect, selectedAddres
                     </div>
                 </div>
             </div>
-
-            <AlertModal
-                isOpen={showAlert}
-                onClose={() => setShowAlert(false)}
-                message={alertMessage}
-                type={alertType}
-            />
 
             <ConfirmationModal
                 isOpen={showDeleteConfirm}

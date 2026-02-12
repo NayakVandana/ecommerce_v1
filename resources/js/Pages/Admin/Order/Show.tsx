@@ -3,7 +3,7 @@ import { usePage, Link } from '@inertiajs/react';
 import { useOrderStore } from './useOrderStore';
 import { useDeliveryBoyStore } from './useDeliveryBoyStore';
 import AdminLayout from '../Layout';
-import AlertModal from '../../../Components/AlertModal';
+import toast from '../../../utils/toast';
 import ConfirmationModal from '../../../Components/ConfirmationModal';
 import CancellationReasonModal from '../../../Components/CancellationReasonModal';
 import { 
@@ -18,7 +18,9 @@ import {
     PhotoIcon,
     VideoCameraIcon,
     DocumentArrowDownIcon,
-    EyeIcon
+    EyeIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon
 } from '@heroicons/react/24/outline';
 
 export default function OrderShow() {
@@ -34,9 +36,6 @@ export default function OrderShow() {
     
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [showAlert, setShowAlert] = useState(false);
-    const [alertMessage, setAlertMessage] = useState('');
-    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
     const [showConfirm, setShowConfirm] = useState(false);
     const [confirmMessage, setConfirmMessage] = useState('');
     const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
@@ -52,6 +51,7 @@ export default function OrderShow() {
     const [showDeliveryDateModal, setShowDeliveryDateModal] = useState(false);
     const [deliveryDate, setDeliveryDate] = useState('');
     const [updatingDeliveryDate, setUpdatingDeliveryDate] = useState(false);
+    const [mediaViewerIndex, setMediaViewerIndex] = useState<number | null>(null);
 
     useEffect(() => {
         if (orderId) {
@@ -64,6 +64,31 @@ export default function OrderShow() {
             loadDeliveryBoys();
         }
     }, [showDeliveryBoyModal]);
+
+    // Keyboard navigation for media viewer
+    useEffect(() => {
+        if (mediaViewerIndex === null || !order?.delivery_verification_media) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                const newIndex = (mediaViewerIndex - 1 + order.delivery_verification_media.length) % order.delivery_verification_media.length;
+                setMediaViewerIndex(newIndex);
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                const newIndex = (mediaViewerIndex + 1) % order.delivery_verification_media.length;
+                setMediaViewerIndex(newIndex);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                setMediaViewerIndex(null);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [mediaViewerIndex, order?.delivery_verification_media]);
 
     const loadDeliveryBoys = async () => {
         try {
@@ -81,9 +106,7 @@ export default function OrderShow() {
 
     const handleAssignDeliveryBoy = async () => {
         if (!selectedDeliveryBoyId) {
-            setAlertMessage('Please select a delivery boy');
-            setAlertType('warning');
-            setShowAlert(true);
+            toast({ type: 'warning', message: 'Please select a delivery boy' });
             return;
         }
 
@@ -99,19 +122,13 @@ export default function OrderShow() {
                 setShowDeliveryBoyModal(false);
                 setSelectedDeliveryBoyId(null);
                 
-                setAlertMessage('Delivery boy assigned successfully. Delivery boy can generate OTP from their dashboard.');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Delivery boy assigned successfully. Delivery boy can generate OTP from their dashboard.' });
             } else {
-                setAlertMessage(response.data?.message || 'Failed to assign delivery boy');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to assign delivery boy' });
             }
         } catch (error: any) {
             console.error('Error assigning delivery boy:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to assign delivery boy');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to assign delivery boy' });
         } finally {
             setAssigningDeliveryBoy(false);
         }
@@ -141,19 +158,13 @@ export default function OrderShow() {
             
             if (response.data?.status) {
                 await fetchOrder();
-                setAlertMessage('Order status updated successfully');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Order status updated successfully' });
             } else {
-                setAlertMessage(response.data?.message || 'Failed to update order status');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to update order status' });
             }
         } catch (error: any) {
             console.error('Error updating order status:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to update order status');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to update order status' });
         } finally {
             setUpdatingStatus(false);
         }
@@ -267,19 +278,13 @@ export default function OrderShow() {
             const response = await useOrderStore.approveReturn({ id: orderId });
             if (response.data?.status) {
                 await fetchOrder();
-                setAlertMessage('Return approved and refund processed successfully');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Return approved and refund processed successfully' });
             } else {
-                setAlertMessage(response.data?.message || 'Failed to approve return');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to approve return' });
             }
         } catch (error: any) {
             console.error('Error approving return:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to approve return');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to approve return' });
         } finally {
             setUpdatingStatus(false);
         }
@@ -295,19 +300,13 @@ export default function OrderShow() {
             });
             if (response.data?.status) {
                 await fetchOrder();
-                setAlertMessage('Return request rejected');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Return request rejected' });
             } else {
-                setAlertMessage(response.data?.message || 'Failed to reject return');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to reject return' });
             }
         } catch (error: any) {
             console.error('Error rejecting return:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to reject return');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to reject return' });
         } finally {
             setUpdatingStatus(false);
         }
@@ -319,19 +318,13 @@ export default function OrderShow() {
             const response = await useOrderStore.processRefund({ id: orderId });
             if (response.data?.status) {
                 await fetchOrder();
-                setAlertMessage('Refund processed successfully');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Refund processed successfully' });
             } else {
-                setAlertMessage(response.data?.message || 'Failed to process refund');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to process refund' });
             }
         } catch (error: any) {
             console.error('Error processing refund:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to process refund');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to process refund' });
         } finally {
             setUpdatingStatus(false);
         }
@@ -352,9 +345,7 @@ export default function OrderShow() {
 
     const handleUpdateDeliveryDate = async () => {
         if (!deliveryDate) {
-            setAlertMessage('Please select a delivery date');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: 'Please select a delivery date' });
             return;
         }
 
@@ -364,9 +355,7 @@ export default function OrderShow() {
         selectedDate.setHours(0, 0, 0, 0);
 
         if (selectedDate < today) {
-            setAlertMessage('Delivery date cannot be in the past');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: 'Delivery date cannot be in the past' });
             return;
         }
 
@@ -379,19 +368,13 @@ export default function OrderShow() {
             if (response.data?.status) {
                 await fetchOrder();
                 setShowDeliveryDateModal(false);
-                setAlertMessage('Delivery date updated successfully');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Delivery date updated successfully' });
             } else {
-                setAlertMessage(response.data?.message || 'Failed to update delivery date');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to update delivery date' });
             }
         } catch (error: any) {
             console.error('Error updating delivery date:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to update delivery date');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to update delivery date' });
         } finally {
             setUpdatingDeliveryDate(false);
         }
@@ -409,19 +392,13 @@ export default function OrderShow() {
             if (response.data?.status) {
                 await fetchOrder();
                 setShowCancelModal(false);
-                setAlertMessage('Order cancelled successfully');
-                setAlertType('success');
-                setShowAlert(true);
+                toast({ type: 'success', message: 'Order cancelled successfully' });
             } else {
-                setAlertMessage(response.data?.message || 'Failed to cancel order');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to cancel order' });
             }
         } catch (error: any) {
             console.error('Error cancelling order:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to cancel order');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to cancel order' });
         } finally {
             setCancelling(false);
         }
@@ -1079,8 +1056,13 @@ export default function OrderShow() {
                                                         <div className="relative">
                                                             <video
                                                                 src={mediaUrl}
-                                                                className="w-full h-40 object-cover rounded-lg border border-gray-300"
-                                                                controls
+                                                                className="w-full h-40 object-cover rounded-lg border border-gray-300 cursor-pointer hover:opacity-90 transition-opacity"
+                                                                onClick={() => {
+                                                                    if (mediaUrl) {
+                                                                        const index = order.delivery_verification_media.findIndex((m: any) => m.id === media.id);
+                                                                        setMediaViewerIndex(index >= 0 ? index : 0);
+                                                                    }
+                                                                }}
                                                             />
                                                             <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
                                                                 <VideoCameraIcon className="h-3 w-3" />
@@ -1098,7 +1080,8 @@ export default function OrderShow() {
                                                                 }}
                                                                 onClick={() => {
                                                                     if (mediaUrl) {
-                                                                        window.open(mediaUrl, '_blank');
+                                                                        const index = order.delivery_verification_media.findIndex((m: any) => m.id === media.id);
+                                                                        setMediaViewerIndex(index >= 0 ? index : 0);
                                                                     }
                                                                 }}
                                                             />
@@ -1185,13 +1168,6 @@ export default function OrderShow() {
                     </div>
                 </div>
             </div>
-            
-            <AlertModal
-                isOpen={showAlert}
-                onClose={() => setShowAlert(false)}
-                message={alertMessage}
-                type={alertType}
-            />
             
             <ConfirmationModal
                 isOpen={showConfirm}
@@ -1356,6 +1332,165 @@ export default function OrderShow() {
                     </div>
                 </div>
             )}
+
+            {/* Fullscreen Media Gallery Viewer */}
+            {mediaViewerIndex !== null && order.delivery_verification_media && order.delivery_verification_media.length > 0 && (() => {
+                const currentMedia = order.delivery_verification_media[mediaViewerIndex];
+                if (!currentMedia) return null;
+                
+                const mediaUrl = currentMedia.url || (currentMedia.file_path ? `/storage/${currentMedia.file_path}` : '');
+                const isVideo = currentMedia.type === 'video';
+                const totalMedia = order.delivery_verification_media.length;
+                
+                const navigateMedia = (direction: 'prev' | 'next') => {
+                    if (mediaViewerIndex === null) return;
+                    
+                    let newIndex = mediaViewerIndex;
+                    if (direction === 'next') {
+                        newIndex = (newIndex + 1) % totalMedia;
+                    } else {
+                        newIndex = (newIndex - 1 + totalMedia) % totalMedia;
+                    }
+                    setMediaViewerIndex(newIndex);
+                };
+
+                return (
+                    <div 
+                        className="fixed inset-0 z-[10000] bg-black bg-opacity-100 flex items-center justify-center"
+                        onClick={() => setMediaViewerIndex(null)}
+                        tabIndex={-1}
+                    >
+                        {/* Close Button */}
+                        <button
+                            onClick={() => setMediaViewerIndex(null)}
+                            className="absolute top-4 right-4 z-10 text-white hover:text-gray-300 bg-black bg-opacity-50 rounded-full p-3 transition-colors"
+                            aria-label="Close"
+                        >
+                            <XMarkIcon className="h-6 w-6" />
+                        </button>
+
+                        {/* Media Counter */}
+                        <div className="absolute top-4 left-4 z-10 bg-black bg-opacity-50 text-white px-4 py-2 rounded-lg">
+                            <span className="text-sm font-medium">
+                                {mediaViewerIndex + 1} / {totalMedia}
+                            </span>
+                        </div>
+
+                        {/* Main Media Display */}
+                        <div 
+                            className="relative w-full h-full flex items-center justify-center p-4"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {isVideo ? (
+                                <video
+                                    src={mediaUrl}
+                                    controls
+                                    autoPlay
+                                    className="max-w-full max-h-full object-contain"
+                                    style={{ maxHeight: '90vh' }}
+                                />
+                            ) : (
+                                <img
+                                    src={mediaUrl || '/placeholder-image.png'}
+                                    alt="Verification media"
+                                    className="max-w-full max-h-full object-contain"
+                                    style={{ maxHeight: '90vh' }}
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).src = '/placeholder-image.png';
+                                    }}
+                                />
+                            )}
+
+                            {/* Navigation Arrows */}
+                            {totalMedia > 1 && (
+                                <>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigateMedia('prev');
+                                        }}
+                                        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-full p-3 transition-all backdrop-blur-sm"
+                                        aria-label="Previous"
+                                    >
+                                        <ChevronLeftIcon className="h-8 w-8" />
+                                    </button>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            navigateMedia('next');
+                                        }}
+                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-full p-3 transition-all backdrop-blur-sm"
+                                        aria-label="Next"
+                                    >
+                                        <ChevronRightIcon className="h-8 w-8" />
+                                    </button>
+                                </>
+                            )}
+                        </div>
+
+                        {/* Media Info */}
+                        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10 bg-black bg-opacity-70 text-white px-6 py-3 rounded-lg max-w-2xl w-full mx-4">
+                            <div className="text-center">
+                                {currentMedia.description && (
+                                    <p className="text-sm mb-1">
+                                        <span className="font-semibold">Description:</span> {currentMedia.description}
+                                    </p>
+                                )}
+                                {currentMedia.order_item && (
+                                    <p className="text-xs text-gray-300 mb-1">
+                                        <span className="font-semibold">Item:</span> {currentMedia.order_item.product_name || 'N/A'}
+                                    </p>
+                                )}
+                                <p className="text-xs text-gray-400">
+                                    {new Date(currentMedia.created_at).toLocaleString()}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Thumbnail Strip */}
+                        {totalMedia > 1 && (
+                            <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 z-10 flex gap-2 overflow-x-auto px-4 pb-2 max-w-4xl">
+                                {order.delivery_verification_media.map((m: any, idx: number) => {
+                                    const thumbUrl = m.url || (m.file_path ? `/storage/${m.file_path}` : '/placeholder-image.png');
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setMediaViewerIndex(idx);
+                                            }}
+                                            className={`flex-shrink-0 w-16 h-16 rounded-md overflow-hidden border-2 transition-all ${
+                                                idx === mediaViewerIndex 
+                                                    ? 'border-white scale-110' 
+                                                    : 'border-gray-600 opacity-60 hover:opacity-100'
+                                            }`}
+                                        >
+                                            {m.type === 'video' ? (
+                                                <div className="relative w-full h-full bg-gray-800 flex items-center justify-center">
+                                                    <video
+                                                        src={thumbUrl}
+                                                        className="w-full h-full object-cover opacity-50"
+                                                    />
+                                                    <VideoCameraIcon className="absolute h-4 w-4 text-white" />
+                                                </div>
+                                            ) : (
+                                                <img
+                                                    src={thumbUrl}
+                                                    alt={`Thumbnail ${idx + 1}`}
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        (e.target as HTMLImageElement).src = '/placeholder-image.png';
+                                                    }}
+                                                />
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                );
+            })()}
         </AdminLayout>
     );
 }

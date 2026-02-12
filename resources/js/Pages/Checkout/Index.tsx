@@ -8,7 +8,7 @@ import { isAuthenticated } from '../../utils/sessionStorage';
 import FormInput from '../../Components/FormInput/FormInput';
 import FormTextarea from '../../Components/FormInput/FormTextarea';
 import Button from '../../Components/Button';
-import AlertModal from '../../Components/AlertModal';
+import toast from '../../utils/toast';
 import { XMarkIcon, TicketIcon, PencilIcon } from '@heroicons/react/24/outline';
 
 export default function Index() {
@@ -21,9 +21,6 @@ export default function Index() {
     const [couponDiscount, setCouponDiscount] = useState(0);
     const [validatingCoupon, setValidatingCoupon] = useState(false);
     const [couponError, setCouponError] = useState('');
-    const [showAlert, setShowAlert] = useState(false);
-    const [alertMessage, setAlertMessage] = useState('');
-    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
     const [currentStep, setCurrentStep] = useState(1);
     
     const [formData, setFormData] = useState({
@@ -150,12 +147,10 @@ export default function Index() {
         }
 
         if (!cart || !cart.items || cart.items.length === 0) {
-            setAlertMessage('Your cart is empty');
-            setAlertType('warning');
-            setShowAlert(true);
+            toast({ type: 'warning', message: 'Your cart is empty' });
             return;
         }
-
+        
         try {
             setProcessing(true);
             setErrors({});
@@ -179,23 +174,17 @@ export default function Index() {
                     data: { order: response.data.data },
                 });
             } else {
-                setAlertMessage(response.data?.message || 'Failed to place order');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: response.data?.message || 'Failed to place order' });
             }
         } catch (error: any) {
             console.error('Error placing order:', error);
             
             if (error.response?.data?.message) {
-                setAlertMessage(error.response.data.message);
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: error.response.data.message });
             } else if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
             } else {
-                setAlertMessage('Failed to place order. Please try again.');
-                setAlertType('error');
-                setShowAlert(true);
+                toast({ type: 'error', message: 'Failed to place order. Please try again.' });
             }
         } finally {
             setProcessing(false);
@@ -857,13 +846,6 @@ export default function Index() {
                     </form>
                 )}
             </div>
-            
-            <AlertModal
-                isOpen={showAlert}
-                onClose={() => setShowAlert(false)}
-                message={alertMessage}
-                type={alertType}
-            />
         </AppLayout>
     );
 }

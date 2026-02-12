@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useProductStore } from './useProductStore';
 import { useCartStore } from '../Cart/useCartStore';
 import { useWishlistStore } from '../Wishlist/useWishlistStore';
-import AlertModal from '../../Components/AlertModal';
+import toast from '../../utils/toast';
 import ImageGallery from 'react-image-gallery';
 import 'react-image-gallery/styles/css/image-gallery.css';
 import { HeartIcon } from '@heroicons/react/24/outline';
@@ -23,9 +23,6 @@ export default function Show() {
     const [addingToCart, setAddingToCart] = useState(false);
     const [inWishlist, setInWishlist] = useState(false);
     const [togglingWishlist, setTogglingWishlist] = useState(false);
-    const [showAlert, setShowAlert] = useState(false);
-    const [alertMessage, setAlertMessage] = useState('');
-    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
 
     useEffect(() => {
         if (productId) {
@@ -55,34 +52,24 @@ export default function Show() {
                 const response = await useWishlistStore.remove({ product_id: productId });
                 if (response.data?.status) {
                     setInWishlist(false);
-                    setAlertMessage('Removed from wishlist');
-                    setAlertType('success');
-                    setShowAlert(true);
+                    toast({ type: 'success', message: 'Removed from wishlist' });
                     window.dispatchEvent(new Event('wishlistUpdated'));
                 } else {
-                    setAlertMessage(response.data?.message || 'Failed to remove from wishlist');
-                    setAlertType('error');
-                    setShowAlert(true);
+                    toast({ type: 'error', message: response.data?.message || 'Failed to remove from wishlist' });
                 }
             } else {
                 const response = await useWishlistStore.add({ product_id: productId });
                 if (response.data?.status) {
                     setInWishlist(true);
-                    setAlertMessage('Added to wishlist');
-                    setAlertType('success');
-                    setShowAlert(true);
+                    toast({ type: 'success', message: 'Added to wishlist' });
                     window.dispatchEvent(new Event('wishlistUpdated'));
                 } else {
-                    setAlertMessage(response.data?.message || 'Failed to add to wishlist');
-                    setAlertType('error');
-                    setShowAlert(true);
+                    toast({ type: 'error', message: response.data?.message || 'Failed to add to wishlist' });
                 }
             }
         } catch (error: any) {
             console.error('Error toggling wishlist:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to update wishlist');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to update wishlist' });
         } finally {
             setTogglingWishlist(false);
         }
@@ -122,9 +109,7 @@ export default function Show() {
         }
         
         if (!selectedVariation && product.total_quantity !== null && product.total_quantity < quantity) {
-            setAlertMessage(`Only ${product.total_quantity} items available in stock`);
-            setAlertType('warning');
-            setShowAlert(true);
+            toast({ type: 'warning', message: `Only ${product.total_quantity} items available in stock` });
             return;
         }
         
@@ -146,9 +131,7 @@ export default function Show() {
             }
         } catch (error) {
             console.error('Error adding to cart:', error);
-            setAlertMessage('Failed to add product to cart');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: 'Failed to add product to cart' });
         } finally {
             setAddingToCart(false);
         }
@@ -867,13 +850,6 @@ export default function Show() {
                     </div>
                 </div>
             </div>
-            
-            <AlertModal
-                isOpen={showAlert}
-                onClose={() => setShowAlert(false)}
-                message={alertMessage}
-                type={alertType}
-            />
         </AppLayout>
     );
 }

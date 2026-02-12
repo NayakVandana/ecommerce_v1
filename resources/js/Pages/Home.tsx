@@ -8,7 +8,7 @@ import { useProductStore } from './Products/useProductStore';
 import { useCategoryStore } from './Categories/useCategoryStore';
 import { useCartStore } from './Cart/useCartStore';
 import { useWishlistStore } from './Wishlist/useWishlistStore';
-import AlertModal from '../Components/AlertModal';
+import toast from '../utils/toast';
 import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import RecentlyViewedProducts from '../Components/RecentlyViewedProducts';
@@ -27,9 +27,6 @@ export default function Home() {
     const [addingToCart, setAddingToCart] = useState<{ [key: number]: boolean }>({});
     const [wishlistStatus, setWishlistStatus] = useState<{ [key: number]: boolean }>({});
     const [togglingWishlist, setTogglingWishlist] = useState<{ [key: number]: boolean }>({});
-    const [showAlert, setShowAlert] = useState(false);
-    const [alertMessage, setAlertMessage] = useState('');
-    const [alertType, setAlertType] = useState<'success' | 'error' | 'info' | 'warning'>('error');
 
     useEffect(() => {
         fetchData();
@@ -70,26 +67,20 @@ export default function Home() {
                 const response = await useWishlistStore.remove({ product_id: productId });
                 if (response.data?.status) {
                     setWishlistStatus(prev => ({ ...prev, [productId]: false }));
-                    setAlertMessage('Removed from wishlist');
-                    setAlertType('success');
-                    setShowAlert(true);
+                    toast({ type: 'success', message: 'Removed from wishlist' });
                     window.dispatchEvent(new Event('wishlistUpdated'));
                 }
             } else {
                 const response = await useWishlistStore.add({ product_id: productId });
                 if (response.data?.status) {
                     setWishlistStatus(prev => ({ ...prev, [productId]: true }));
-                    setAlertMessage('Added to wishlist');
-                    setAlertType('success');
-                    setShowAlert(true);
+                    toast({ type: 'success', message: 'Added to wishlist' });
                     window.dispatchEvent(new Event('wishlistUpdated'));
                 }
             }
         } catch (error: any) {
             console.error('Error toggling wishlist:', error);
-            setAlertMessage(error.response?.data?.message || 'Failed to update wishlist');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to update wishlist' });
         } finally {
             setTogglingWishlist(prev => ({ ...prev, [productId]: false }));
         }
@@ -111,9 +102,7 @@ export default function Home() {
         
         // Check stock availability
         if (product.total_quantity !== null && product.total_quantity < quantity) {
-            setAlertMessage(`Only ${product.total_quantity} items available in stock`);
-            setAlertType('warning');
-            setShowAlert(true);
+            toast({ type: 'warning', message: `Only ${product.total_quantity} items available in stock` });
             return;
         }
         
@@ -132,9 +121,7 @@ export default function Home() {
             }
         } catch (error) {
             console.error('Error adding to cart:', error);
-            setAlertMessage('Failed to add product to cart');
-            setAlertType('error');
-            setShowAlert(true);
+            toast({ type: 'error', message: 'Failed to add product to cart' });
         } finally {
             setAddingToCart(prev => ({ ...prev, [product.id]: false }));
         }
@@ -368,13 +355,6 @@ export default function Home() {
                     </>
                 )}
             </Container>
-            
-            <AlertModal
-                isOpen={showAlert}
-                onClose={() => setShowAlert(false)}
-                message={alertMessage}
-                type={alertType}
-            />
         </AppLayout>
     );
 }
