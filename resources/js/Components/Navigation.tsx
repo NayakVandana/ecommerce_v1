@@ -23,7 +23,6 @@ import { clearSession } from '@/utils/sessionStorage';
 
 const navigation = [
     { name: 'Home', href: '/', icon: HomeIcon },
-    { name: 'Products', href: '/products', icon: Squares2X2Icon },
 ];
 
 export default function Navigation() {

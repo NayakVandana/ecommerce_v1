@@ -140,7 +140,7 @@ export default function Index() {
                         <h2 className="text-xl font-semibold text-gray-900 mb-2">Your wishlist is empty</h2>
                         <p className="text-gray-500 mb-6">Start adding products you love to your wishlist!</p>
                         <Link
-                            href="/products"
+                            href="/categories"
                             className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
                         >
                             Browse Products

@@ -25,148 +25,151 @@ class CategorySeeder extends Seeder
         // Ensure we have a clean state - check for any orphaned categories first
         $this->fixOrphanedCategories();
         
-        // Define hierarchical category structure
+        // Define hierarchical category structure based on the e-commerce platform
         $categoryStructure = [
-            // Main Categories
             [
-                'name' => 'Mobiles & Tablets',
-                'description' => 'Smartphones, tablets, and accessories',
+                'name' => 'Fashion',
+                'description' => 'Clothing and accessories for all',
                 'is_featured' => true,
-                'icon' => 'fa-mobile-alt',
+                'icon' => 'fa-tshirt',
                 'sort_order' => 1,
                 'children' => [
-                    ['name' => 'Smartphones', 'description' => 'Latest smartphones', 'sort_order' => 1],
-                    ['name' => 'Tablets', 'description' => 'Tablets and e-readers', 'sort_order' => 2],
-                    ['name' => 'Mobile Accessories', 'description' => 'Cases, chargers, and more', 'sort_order' => 3],
+                    [
+                        'name' => 'Men',
+                        'description' => 'Men\'s fashion and accessories',
+                        'icon' => 'fa-user',
+                        'sort_order' => 1,
+                        'children' => [
+                            ['name' => 'Western Wear', 'description' => 'Western clothing for men', 'icon' => 'fa-tshirt', 'sort_order' => 1],
+                            ['name' => 'Inner Wear', 'description' => 'Men\'s innerwear', 'icon' => 'fa-vest', 'sort_order' => 2],
+                            ['name' => 'Ethnic Wear', 'description' => 'Traditional ethnic wear for men', 'icon' => 'fa-tshirt', 'sort_order' => 3],
+                            ['name' => 'Footwear', 'description' => 'Men\'s shoes and footwear', 'icon' => 'fa-shoe-prints', 'sort_order' => 4],
+                            ['name' => 'Night & Loungewear', 'description' => 'Nightwear and loungewear', 'icon' => 'fa-bed', 'sort_order' => 5],
+                            ['name' => 'Clothing Accessories', 'description' => 'Caps, sunglasses, and accessories', 'icon' => 'fa-hat-cowboy', 'sort_order' => 6],
+                            ['name' => 'Watches', 'description' => 'Men\'s watches', 'icon' => 'fa-clock', 'sort_order' => 7],
+                            ['name' => 'Eyewear', 'description' => 'Sunglasses and eyewear', 'icon' => 'fa-glasses', 'sort_order' => 8],
+                            ['name' => 'Bags, Belts & Wallets', 'description' => 'Bags, belts, and wallets', 'icon' => 'fa-briefcase', 'sort_order' => 9],
+                            ['name' => 'Gemstones Coins & Precious', 'description' => 'Gemstones and precious items', 'icon' => 'fa-gem', 'sort_order' => 10],
+                            ['name' => 'Fashion Jewellery', 'description' => 'Fashion jewelry for men', 'icon' => 'fa-ring', 'sort_order' => 11],
+                            ['name' => 'Silver Jewellery', 'description' => 'Silver jewelry', 'icon' => 'fa-ring', 'sort_order' => 12],
+                            ['name' => 'Accessories', 'description' => 'Various accessories', 'icon' => 'fa-bag-shopping', 'sort_order' => 13],
+                            ['name' => 'Timewear', 'description' => 'Timepieces and watches', 'icon' => 'fa-clock', 'sort_order' => 14],
+                            ['name' => 'Watch Accessories', 'description' => 'Watch straps and accessories', 'icon' => 'fa-clock', 'sort_order' => 15],
+                        ]
+                    ],
+                    [
+                        'name' => 'Women',
+                        'description' => 'Women\'s fashion and accessories',
+                        'icon' => 'fa-user',
+                        'sort_order' => 2,
+                        'children' => [
+                            ['name' => 'Ethnic Wear', 'description' => 'Traditional ethnic wear for women', 'icon' => 'fa-tshirt', 'sort_order' => 1],
+                            ['name' => 'Western Wear', 'description' => 'Western clothing for women', 'icon' => 'fa-tshirt', 'sort_order' => 2],
+                            ['name' => 'Footwear', 'description' => 'Women\'s shoes and footwear', 'icon' => 'fa-shoe-prints', 'sort_order' => 3],
+                            ['name' => 'Bags, Belts & Wallets', 'description' => 'Handbags, belts, and wallets', 'icon' => 'fa-handbag', 'sort_order' => 4],
+                            ['name' => 'Watches', 'description' => 'Women\'s watches', 'icon' => 'fa-clock', 'sort_order' => 5],
+                            ['name' => 'Eyewear', 'description' => 'Sunglasses and eyewear', 'icon' => 'fa-glasses', 'sort_order' => 6],
+                            ['name' => 'Lingerie & Innerwear', 'description' => 'Lingerie and innerwear', 'icon' => 'fa-vest', 'sort_order' => 7],
+                            ['name' => 'Night & Loungewear', 'description' => 'Nightwear and loungewear', 'icon' => 'fa-bed', 'sort_order' => 8],
+                            ['name' => 'Clothing Accessories', 'description' => 'Scarves, accessories', 'icon' => 'fa-scarf', 'sort_order' => 9],
+                            ['name' => 'Gemstones Coins & Precious', 'description' => 'Gemstones and precious items', 'icon' => 'fa-gem', 'sort_order' => 10],
+                            ['name' => 'Silver Jewellery', 'description' => 'Silver jewelry', 'icon' => 'fa-ring', 'sort_order' => 11],
+                            ['name' => 'Fusion Wear', 'description' => 'Fusion fashion', 'icon' => 'fa-tshirt', 'sort_order' => 12],
+                            ['name' => 'Accessories', 'description' => 'Various accessories', 'icon' => 'fa-bag-shopping', 'sort_order' => 13],
+                            ['name' => 'Maternity', 'description' => 'Maternity wear', 'icon' => 'fa-tshirt', 'sort_order' => 14],
+                            ['name' => 'Fashion Jewellery', 'description' => 'Fashion jewelry', 'icon' => 'fa-ring', 'sort_order' => 15],
+                            ['name' => 'Watch Accessories', 'description' => 'Watch straps and accessories', 'icon' => 'fa-clock', 'sort_order' => 16],
+                            ['name' => 'Timewear', 'description' => 'Timepieces and watches', 'icon' => 'fa-clock', 'sort_order' => 17],
+                            ['name' => 'Precious Articles', 'description' => 'Precious jewelry', 'icon' => 'fa-gem', 'sort_order' => 18],
+                            ['name' => 'Handloom & Handicraft', 'description' => 'Handloom and handicraft items', 'icon' => 'fa-hands', 'sort_order' => 19],
+                        ]
+                    ],
+                    [
+                        'name' => 'Boys',
+                        'description' => 'Boys\' fashion and accessories',
+                        'icon' => 'fa-child',
+                        'sort_order' => 3,
+                        'children' => [
+                            ['name' => 'Western Wear', 'description' => 'Western clothing for boys', 'icon' => 'fa-tshirt', 'sort_order' => 1],
+                            ['name' => 'Ethnic Wear', 'description' => 'Traditional ethnic wear for boys', 'icon' => 'fa-tshirt', 'sort_order' => 2],
+                            ['name' => 'Footwear', 'description' => 'Boys\' shoes and footwear', 'icon' => 'fa-shoe-prints', 'sort_order' => 3],
+                            ['name' => 'Night & Loungewear', 'description' => 'Nightwear and loungewear', 'icon' => 'fa-bed', 'sort_order' => 4],
+                            ['name' => 'Inner Wear', 'description' => 'Boys\' innerwear', 'icon' => 'fa-vest', 'sort_order' => 5],
+                            ['name' => 'Clothing Accessories', 'description' => 'Caps, accessories', 'icon' => 'fa-hat-cowboy', 'sort_order' => 6],
+                            ['name' => 'Bags, Belts & Wallets', 'description' => 'Bags, belts, and wallets', 'icon' => 'fa-briefcase', 'sort_order' => 7],
+                            ['name' => 'Watches', 'description' => 'Boys\' watches', 'icon' => 'fa-clock', 'sort_order' => 8],
+                            ['name' => 'Eyewear', 'description' => 'Sunglasses and eyewear', 'icon' => 'fa-glasses', 'sort_order' => 9],
+                            ['name' => 'Watch Accessories', 'description' => 'Watch straps and accessories', 'icon' => 'fa-clock', 'sort_order' => 10],
+                            ['name' => 'Accessories', 'description' => 'Various accessories', 'icon' => 'fa-bag-shopping', 'sort_order' => 11],
+                            ['name' => 'Inner & Nightwear', 'description' => 'Innerwear and nightwear', 'icon' => 'fa-bed', 'sort_order' => 12],
+                        ]
+                    ],
+                    [
+                        'name' => 'Girls',
+                        'description' => 'Girls\' fashion and accessories',
+                        'icon' => 'fa-child',
+                        'sort_order' => 4,
+                        'children' => [
+                            ['name' => 'Western Wear', 'description' => 'Western clothing for girls', 'icon' => 'fa-tshirt', 'sort_order' => 1],
+                            ['name' => 'Ethnic Wear', 'description' => 'Traditional ethnic wear for girls', 'icon' => 'fa-tshirt', 'sort_order' => 2],
+                            ['name' => 'Footwear', 'description' => 'Girls\' shoes and footwear', 'icon' => 'fa-shoe-prints', 'sort_order' => 3],
+                            ['name' => 'Night & Loungewear', 'description' => 'Nightwear and loungewear', 'icon' => 'fa-bed', 'sort_order' => 4],
+                            ['name' => 'Inner Wear', 'description' => 'Girls\' innerwear', 'icon' => 'fa-vest', 'sort_order' => 5],
+                            ['name' => 'Clothing Accessories', 'description' => 'Hair accessories, accessories', 'icon' => 'fa-scarf', 'sort_order' => 6],
+                            ['name' => 'Bags, Belts & Wallets', 'description' => 'Bags, belts, and wallets', 'icon' => 'fa-handbag', 'sort_order' => 7],
+                            ['name' => 'Watches', 'description' => 'Girls\' watches', 'icon' => 'fa-clock', 'sort_order' => 8],
+                            ['name' => 'Eyewear', 'description' => 'Sunglasses and eyewear', 'icon' => 'fa-glasses', 'sort_order' => 9],
+                            ['name' => 'Watch Accessories', 'description' => 'Watch straps and accessories', 'icon' => 'fa-clock', 'sort_order' => 10],
+                            ['name' => 'Inner & Nightwear', 'description' => 'Innerwear and nightwear', 'icon' => 'fa-bed', 'sort_order' => 11],
+                            ['name' => 'Accessories', 'description' => 'Various accessories', 'icon' => 'fa-bag-shopping', 'sort_order' => 12],
+                        ]
+                    ],
+                    [
+                        'name' => 'Infants',
+                        'description' => 'Infant clothing and accessories',
+                        'icon' => 'fa-baby',
+                        'sort_order' => 5,
+                        'children' => [
+                            ['name' => 'Western Wear', 'description' => 'Western clothing for infants', 'icon' => 'fa-tshirt', 'sort_order' => 1],
+                            ['name' => 'Clothing Accessories', 'description' => 'Hats, accessories', 'icon' => 'fa-hat-cowboy', 'sort_order' => 2],
+                            ['name' => 'Footwear', 'description' => 'Infant shoes', 'icon' => 'fa-shoe-prints', 'sort_order' => 3],
+                            ['name' => 'Ethnic Wear', 'description' => 'Traditional ethnic wear for infants', 'icon' => 'fa-tshirt', 'sort_order' => 4],
+                            ['name' => 'Night & Loungewear', 'description' => 'Nightwear and loungewear', 'icon' => 'fa-bed', 'sort_order' => 5],
+                        ]
+                    ],
                 ]
             ],
             [
-                'name' => 'Fashion',
-                'description' => 'Clothing and accessories for men, women, and kids',
+                'name' => 'Tech',
+                'description' => 'Technology and smart devices',
                 'is_featured' => true,
-                'icon' => 'fa-tshirt',
+                'icon' => 'fa-laptop',
                 'sort_order' => 2,
-                'children' => [
-                    [
-                        'name' => "Men's Top Wear",
-                        'description' => 'Shirts, t-shirts, and tops for men',
-                        'sort_order' => 1,
                         'children' => [
-                            ['name' => "Men's T-Shirts", 'description' => 'Casual t-shirts', 'sort_order' => 1],
-                            ['name' => "Men's Casual Shirts", 'description' => 'Casual shirts', 'sort_order' => 2],
-                            ['name' => "Men's Formal Shirts", 'description' => 'Formal dress shirts', 'sort_order' => 3],
-                            ['name' => "Men's Kurtas", 'description' => 'Traditional kurtas', 'sort_order' => 4],
-                            ['name' => "Men's Ethnic Sets", 'description' => 'Ethnic wear sets', 'sort_order' => 5],
-                            ['name' => "Men's Blazers", 'description' => 'Blazers and jackets', 'sort_order' => 6],
-                            ['name' => "Men's Raincoat", 'description' => 'Raincoats and outerwear', 'sort_order' => 7],
-                            ['name' => "Men's Windcheaters", 'description' => 'Windcheaters and hoodies', 'sort_order' => 8],
-                            ['name' => "Men's Suit", 'description' => 'Formal suits', 'sort_order' => 9],
-                            ['name' => "Men's Fabrics", 'description' => 'Fabric materials', 'sort_order' => 10],
-                        ]
-                    ],
-                    [
-                        'name' => "Men's Bottom Wear",
-                        'description' => 'Pants, jeans, and bottoms for men',
-                        'sort_order' => 2,
+                    ['name' => 'Smart Wearables', 'description' => 'Smartwatches and fitness trackers', 'icon' => 'fa-smartwatch', 'sort_order' => 1],
+                ]
+            ],
+            [
+                'name' => 'Crafts of India',
+                'description' => 'Traditional Indian crafts and handicrafts',
+                'is_featured' => true,
+                'icon' => 'fa-hands',
+                'sort_order' => 3,
                         'children' => [
-                            ['name' => "Men's Jeans", 'description' => 'Denim jeans', 'sort_order' => 1],
-                            ['name' => "Men's Trousers", 'description' => 'Formal trousers', 'sort_order' => 2],
-                            ['name' => "Men's Shorts", 'description' => 'Casual shorts', 'sort_order' => 3],
-                            ['name' => "Men's Track Pants", 'description' => 'Sports and track pants', 'sort_order' => 4],
-                        ]
-                    ],
-                    [
-                        'name' => 'Women Ethnic',
-                        'description' => 'Traditional ethnic wear for women',
-                        'sort_order' => 3,
+                    ['name' => 'Footwear', 'description' => 'Traditional Indian footwear', 'icon' => 'fa-shoe-prints', 'sort_order' => 1],
+                    ['name' => 'Women', 'description' => 'Traditional crafts for women', 'icon' => 'fa-user', 'sort_order' => 2],
+                ]
+            ],
+            [
+                'name' => 'Mobiles & Tablets',
+                'description' => 'Smartphones, tablets, and mobile accessories',
+                'is_featured' => true,
+                'icon' => 'fa-mobile-alt',
+                'sort_order' => 4,
                         'children' => [
-                            ['name' => "Women's Sarees", 'description' => 'Traditional sarees', 'sort_order' => 1],
-                            ['name' => "Women's Kurtis", 'description' => 'Kurtis and kurtas', 'sort_order' => 2],
-                            ['name' => "Women's Lehengas", 'description' => 'Lehengas and skirts', 'sort_order' => 3],
-                            ['name' => "Women's Salwar Suits", 'description' => 'Salwar kameez', 'sort_order' => 4],
-                        ]
-                    ],
-                    [
-                        'name' => 'Women Western',
-                        'description' => 'Western wear for women',
-                        'sort_order' => 4,
-                        'children' => [
-                            ['name' => "Women's Tops", 'description' => 'Tops and blouses', 'sort_order' => 1],
-                            ['name' => "Women's Dresses", 'description' => 'Dresses and gowns', 'sort_order' => 2],
-                            ['name' => "Women's Jeans", 'description' => 'Denim jeans', 'sort_order' => 3],
-                            ['name' => "Women's Skirts", 'description' => 'Skirts and shorts', 'sort_order' => 4],
-                        ]
-                    ],
-                    [
-                        'name' => "Men Footwear",
-                        'description' => 'Shoes and footwear for men',
-                        'sort_order' => 5,
-                        'children' => [
-                            ['name' => "Men's Casual Shoes", 'description' => 'Casual footwear', 'sort_order' => 1],
-                            ['name' => "Men's Formal Shoes", 'description' => 'Formal dress shoes', 'sort_order' => 2],
-                            ['name' => "Men's Sports Shoes", 'description' => 'Athletic footwear', 'sort_order' => 3],
-                            ['name' => "Men's Sandals", 'description' => 'Sandals and flip-flops', 'sort_order' => 4],
-                        ]
-                    ],
-                    [
-                        'name' => "Women Footwear",
-                        'description' => 'Shoes and footwear for women',
-                        'sort_order' => 6,
-                        'children' => [
-                            ['name' => "Women's Heels", 'description' => 'High heels and pumps', 'sort_order' => 1],
-                            ['name' => "Women's Flats", 'description' => 'Flat shoes and ballerinas', 'sort_order' => 2],
-                            ['name' => "Women's Sports Shoes", 'description' => 'Athletic footwear', 'sort_order' => 3],
-                            ['name' => "Women's Sandals", 'description' => 'Sandals and flip-flops', 'sort_order' => 4],
-                        ]
-                    ],
-                    [
-                        'name' => 'Watches and Accessories',
-                        'description' => 'Watches, jewelry, and accessories',
-                        'sort_order' => 7,
-                        'children' => [
-                            ['name' => "Men's Watches", 'description' => 'Watches for men', 'sort_order' => 1],
-                            ['name' => "Women's Watches", 'description' => 'Watches for women', 'sort_order' => 2],
-                            ['name' => 'Jewelry', 'description' => 'Rings, necklaces, and more', 'sort_order' => 3],
-                            ['name' => 'Belts', 'description' => 'Belts and buckles', 'sort_order' => 4],
-                        ]
-                    ],
-                    [
-                        'name' => 'Bags, Suitcases & Luggage',
-                        'description' => 'Bags, luggage, and travel accessories',
-                        'sort_order' => 8,
-                        'children' => [
-                            ['name' => "Men's Bags", 'description' => 'Bags for men', 'sort_order' => 1],
-                            ['name' => "Women's Handbags", 'description' => 'Handbags and purses', 'sort_order' => 2],
-                            ['name' => 'Backpacks', 'description' => 'Backpacks and rucksacks', 'sort_order' => 3],
-                            ['name' => 'Luggage', 'description' => 'Suitcases and travel bags', 'sort_order' => 4],
-                        ]
-                    ],
-                    [
-                        'name' => 'Kids',
-                        'description' => 'Clothing and accessories for kids',
-                        'sort_order' => 9,
-                        'children' => [
-                            ['name' => "Boys' Clothing", 'description' => 'Clothing for boys', 'sort_order' => 1],
-                            ['name' => "Girls' Clothing", 'description' => 'Clothing for girls', 'sort_order' => 2],
-                            ['name' => "Kids' Footwear", 'description' => 'Shoes for kids', 'sort_order' => 3],
-                            ['name' => "Kids' Accessories", 'description' => 'Accessories for kids', 'sort_order' => 4],
-                        ]
-                    ],
-                    [
-                        'name' => 'Essentials',
-                        'description' => 'Essential fashion items',
-                        'sort_order' => 10,
-                    ],
-                    [
-                        'name' => 'Winter',
-                        'description' => 'Winter clothing and accessories',
-                        'sort_order' => 11,
-                        'children' => [
-                            ['name' => "Men's Winter Wear", 'description' => 'Winter clothing for men', 'sort_order' => 1],
-                            ['name' => "Women's Winter Wear", 'description' => 'Winter clothing for women', 'sort_order' => 2],
-                            ['name' => "Kids' Winter Wear", 'description' => 'Winter clothing for kids', 'sort_order' => 3],
-                        ]
-                    ],
+                    ['name' => 'Smartphones', 'description' => 'Latest smartphones', 'icon' => 'fa-mobile-alt', 'sort_order' => 1],
+                    ['name' => 'Tablets', 'description' => 'Tablets and e-readers', 'icon' => 'fa-tablet-alt', 'sort_order' => 2],
+                    ['name' => 'Mobile Accessories', 'description' => 'Cases, chargers, and more', 'icon' => 'fa-headphones', 'sort_order' => 3],
                 ]
             ],
             [
@@ -174,13 +177,13 @@ class CategorySeeder extends Seeder
                 'description' => 'Electronics, gadgets, and tech accessories',
                 'is_featured' => true,
                 'icon' => 'fa-laptop',
-                'sort_order' => 3,
+                'sort_order' => 5,
                 'children' => [
-                    ['name' => 'Laptops', 'description' => 'Laptops and notebooks', 'sort_order' => 1],
-                    ['name' => 'Computers', 'description' => 'Desktops and components', 'sort_order' => 2],
-                    ['name' => 'Audio', 'description' => 'Headphones, speakers, and audio devices', 'sort_order' => 3],
-                    ['name' => 'Cameras', 'description' => 'Cameras and photography equipment', 'sort_order' => 4],
-                    ['name' => 'Gaming', 'description' => 'Gaming consoles and accessories', 'sort_order' => 5],
+                    ['name' => 'Laptops', 'description' => 'Laptops and notebooks', 'icon' => 'fa-laptop', 'sort_order' => 1],
+                    ['name' => 'Computers', 'description' => 'Desktops and components', 'icon' => 'fa-desktop', 'sort_order' => 2],
+                    ['name' => 'Audio', 'description' => 'Headphones, speakers, and audio devices', 'icon' => 'fa-headphones', 'sort_order' => 3],
+                    ['name' => 'Cameras', 'description' => 'Cameras and photography equipment', 'icon' => 'fa-camera', 'sort_order' => 4],
+                    ['name' => 'Gaming', 'description' => 'Gaming consoles and accessories', 'icon' => 'fa-gamepad', 'sort_order' => 5],
                 ]
             ],
             [
@@ -188,11 +191,11 @@ class CategorySeeder extends Seeder
                 'description' => 'Televisions and home appliances',
                 'is_featured' => true,
                 'icon' => 'fa-tv',
-                'sort_order' => 4,
+                'sort_order' => 6,
                 'children' => [
-                    ['name' => 'Televisions', 'description' => 'Smart TVs and displays', 'sort_order' => 1],
-                    ['name' => 'Home Appliances', 'description' => 'Kitchen and home appliances', 'sort_order' => 2],
-                    ['name' => 'Air Conditioners', 'description' => 'ACs and cooling systems', 'sort_order' => 3],
+                    ['name' => 'Televisions', 'description' => 'Smart TVs and displays', 'icon' => 'fa-tv', 'sort_order' => 1],
+                    ['name' => 'Home Appliances', 'description' => 'Kitchen and home appliances', 'icon' => 'fa-blender', 'sort_order' => 2],
+                    ['name' => 'Air Conditioners', 'description' => 'ACs and cooling systems', 'icon' => 'fa-wind', 'sort_order' => 3],
                 ]
             ],
             [
@@ -200,36 +203,220 @@ class CategorySeeder extends Seeder
                 'description' => 'Furniture, decor, and kitchen items',
                 'is_featured' => true,
                 'icon' => 'fa-home',
-                'sort_order' => 5,
+                'sort_order' => 7,
                 'children' => [
-                    ['name' => 'Furniture', 'description' => 'Home and office furniture', 'sort_order' => 1],
-                    ['name' => 'Kitchen & Dining', 'description' => 'Kitchenware and dining sets', 'sort_order' => 2],
-                    ['name' => 'Home Decor', 'description' => 'Decorative items and accessories', 'sort_order' => 3],
+                    ['name' => 'Furniture', 'description' => 'Home and office furniture', 'icon' => 'fa-couch', 'sort_order' => 1],
+                    ['name' => 'Kitchen & Dining', 'description' => 'Kitchenware and dining sets', 'icon' => 'fa-utensils', 'sort_order' => 2],
+                    ['name' => 'Home Decor', 'description' => 'Decorative items and accessories', 'icon' => 'fa-palette', 'sort_order' => 3],
                 ]
             ],
             [
                 'name' => 'Beauty',
                 'description' => 'Skincare, makeup, and personal care',
-                'is_featured' => false,
+                'is_featured' => true,
                 'icon' => 'fa-spa',
-                'sort_order' => 6,
+                'sort_order' => 8,
                 'children' => [
-                    ['name' => 'Skincare', 'description' => 'Face and body care products', 'sort_order' => 1],
-                    ['name' => 'Makeup', 'description' => 'Cosmetics and makeup products', 'sort_order' => 2],
-                    ['name' => 'Hair Care', 'description' => 'Hair care products', 'sort_order' => 3],
-                    ['name' => 'Fragrances', 'description' => 'Perfumes and colognes', 'sort_order' => 4],
+                    [
+                        'name' => 'Skincare',
+                        'description' => 'Face and body care products',
+                        'icon' => 'fa-spa',
+                        'sort_order' => 1,
+                        'children' => [
+                            ['name' => 'Cleansers', 'description' => 'Face wash and cleansers', 'icon' => 'fa-spa', 'sort_order' => 1],
+                            ['name' => 'Toners', 'description' => 'Alcohol-free and herbal toners', 'icon' => 'fa-spa', 'sort_order' => 2],
+                            ['name' => 'Moisturizers', 'description' => 'Day and night creams', 'icon' => 'fa-spa', 'sort_order' => 3],
+                            ['name' => 'Serums', 'description' => 'Vitamin C and hyaluronic acid serums', 'icon' => 'fa-spa', 'sort_order' => 4],
+                            ['name' => 'Sunscreen', 'description' => 'SPF 30 and SPF 50 sunscreens', 'icon' => 'fa-spa', 'sort_order' => 5],
+                            ['name' => 'Masks & Packs', 'description' => 'Sheet masks and clay masks', 'icon' => 'fa-spa', 'sort_order' => 6],
+                            ['name' => 'Scrubs & Exfoliators', 'description' => 'Face scrubs and chemical peels', 'icon' => 'fa-spa', 'sort_order' => 7],
+                            ['name' => 'Eye Care', 'description' => 'Eye creams and eye gels', 'icon' => 'fa-spa', 'sort_order' => 8],
+                            ['name' => 'Lip Care', 'description' => 'Lip balms and lip scrubs', 'icon' => 'fa-spa', 'sort_order' => 9],
+                        ]
+                    ],
+                    [
+                        'name' => 'Makeup',
+                        'description' => 'Cosmetics and makeup products',
+                        'icon' => 'fa-palette',
+                        'sort_order' => 2,
+                        'children' => [
+                            [
+                                'name' => 'Face Makeup',
+                                'description' => 'Foundation, concealer, and face products',
+                                'icon' => 'fa-palette',
+                                'sort_order' => 1,
+                                'children' => [
+                                    ['name' => 'Foundation', 'description' => 'Liquid, stick, and powder foundation', 'icon' => 'fa-palette', 'sort_order' => 1],
+                                    ['name' => 'Concealer', 'description' => 'Cream and liquid concealer', 'icon' => 'fa-palette', 'sort_order' => 2],
+                                    ['name' => 'Primer', 'description' => 'Matte and hydrating primer', 'icon' => 'fa-palette', 'sort_order' => 3],
+                                    ['name' => 'Compact / Setting Powder', 'description' => 'Setting and compact powders', 'icon' => 'fa-palette', 'sort_order' => 4],
+                                    ['name' => 'Blush', 'description' => 'Cream and powder blush', 'icon' => 'fa-palette', 'sort_order' => 5],
+                                    ['name' => 'Bronzer', 'description' => 'Bronzing powders and creams', 'icon' => 'fa-palette', 'sort_order' => 6],
+                                    ['name' => 'Highlighter', 'description' => 'Highlighting products', 'icon' => 'fa-palette', 'sort_order' => 7],
+                                    ['name' => 'BB / CC Cream', 'description' => 'BB and CC creams', 'icon' => 'fa-palette', 'sort_order' => 8],
+                                ]
+                            ],
+                            [
+                                'name' => 'Eye Makeup',
+                                'description' => 'Eye cosmetics and products',
+                                'icon' => 'fa-palette',
+                                'sort_order' => 2,
+                                'children' => [
+                                    ['name' => 'Kajal', 'description' => 'Kajal pencils and liners', 'icon' => 'fa-palette', 'sort_order' => 1],
+                                    ['name' => 'Eyeliner', 'description' => 'Pen, gel, and liquid eyeliners', 'icon' => 'fa-palette', 'sort_order' => 2],
+                                    ['name' => 'Mascara', 'description' => 'Waterproof and volumizing mascara', 'icon' => 'fa-palette', 'sort_order' => 3],
+                                    ['name' => 'Eyeshadow', 'description' => 'Eyeshadow palettes and singles', 'icon' => 'fa-palette', 'sort_order' => 4],
+                                    ['name' => 'Eyebrow', 'description' => 'Eyebrow pencils and gels', 'icon' => 'fa-palette', 'sort_order' => 5],
+                                    ['name' => 'False Lashes', 'description' => 'False eyelashes and accessories', 'icon' => 'fa-palette', 'sort_order' => 6],
+                                ]
+                            ],
+                            [
+                                'name' => 'Lip Makeup',
+                                'description' => 'Lip cosmetics and products',
+                                'icon' => 'fa-palette',
+                                'sort_order' => 3,
+                                'children' => [
+                                    ['name' => 'Lipstick', 'description' => 'Matte, glossy, and liquid lipsticks', 'icon' => 'fa-palette', 'sort_order' => 1],
+                                    ['name' => 'Lip Gloss', 'description' => 'Lip gloss products', 'icon' => 'fa-palette', 'sort_order' => 2],
+                                    ['name' => 'Lip Liner', 'description' => 'Lip liner pencils', 'icon' => 'fa-palette', 'sort_order' => 3],
+                                    ['name' => 'Lip Tint', 'description' => 'Lip tint products', 'icon' => 'fa-palette', 'sort_order' => 4],
+                                ]
+                            ],
+                            [
+                                'name' => 'Nail Makeup',
+                                'description' => 'Nail care and polish',
+                                'icon' => 'fa-palette',
+                                'sort_order' => 4,
+                                'children' => [
+                                    ['name' => 'Nail Polish', 'description' => 'Nail polish colors', 'icon' => 'fa-palette', 'sort_order' => 1],
+                                    ['name' => 'Nail Art', 'description' => 'Nail art accessories', 'icon' => 'fa-palette', 'sort_order' => 2],
+                                    ['name' => 'Nail Remover', 'description' => 'Nail polish removers', 'icon' => 'fa-palette', 'sort_order' => 3],
+                                ]
+                            ],
+                        ]
+                    ],
+                    [
+                        'name' => 'Hair Care',
+                        'description' => 'Hair care products',
+                        'icon' => 'fa-spa',
+                        'sort_order' => 3,
+                        'children' => [
+                            ['name' => 'Shampoo', 'description' => 'Anti-dandruff and herbal shampoos', 'icon' => 'fa-spa', 'sort_order' => 1],
+                            ['name' => 'Conditioner', 'description' => 'Smoothening and repair conditioners', 'icon' => 'fa-spa', 'sort_order' => 2],
+                            ['name' => 'Hair Oil', 'description' => 'Coconut and argan hair oils', 'icon' => 'fa-spa', 'sort_order' => 3],
+                            ['name' => 'Hair Serum', 'description' => 'Hair serums and treatments', 'icon' => 'fa-spa', 'sort_order' => 4],
+                            ['name' => 'Hair Mask', 'description' => 'Hair masks and deep conditioners', 'icon' => 'fa-spa', 'sort_order' => 5],
+                            ['name' => 'Hair Cream', 'description' => 'Hair creams and styling products', 'icon' => 'fa-spa', 'sort_order' => 6],
+                            ['name' => 'Hair Color / Dye', 'description' => 'Hair coloring products', 'icon' => 'fa-spa', 'sort_order' => 7],
+                            ['name' => 'Styling Products', 'description' => 'Gel, wax, and spray styling products', 'icon' => 'fa-spa', 'sort_order' => 8],
+                        ]
+                    ],
+                    [
+                        'name' => 'Bath & Body',
+                        'description' => 'Body care and bath products',
+                        'icon' => 'fa-spa',
+                        'sort_order' => 4,
+                        'children' => [
+                            ['name' => 'Body Wash / Shower Gel', 'description' => 'Body washes and shower gels', 'icon' => 'fa-spa', 'sort_order' => 1],
+                            ['name' => 'Soap', 'description' => 'Bath soaps', 'icon' => 'fa-spa', 'sort_order' => 2],
+                            ['name' => 'Body Scrub', 'description' => 'Body scrubs and exfoliators', 'icon' => 'fa-spa', 'sort_order' => 3],
+                            ['name' => 'Body Lotion', 'description' => 'Body lotions and moisturizers', 'icon' => 'fa-spa', 'sort_order' => 4],
+                            ['name' => 'Body Butter', 'description' => 'Body butters and creams', 'icon' => 'fa-spa', 'sort_order' => 5],
+                            ['name' => 'Body Mist', 'description' => 'Body mists and sprays', 'icon' => 'fa-spa', 'sort_order' => 6],
+                            ['name' => 'Bath Salt', 'description' => 'Bath salts and bath products', 'icon' => 'fa-spa', 'sort_order' => 7],
+                        ]
+                    ],
+                    [
+                        'name' => 'Personal Care',
+                        'description' => 'Personal hygiene and care products',
+                        'icon' => 'fa-spa',
+                        'sort_order' => 5,
+                        'children' => [
+                            ['name' => 'Deodorant', 'description' => 'Deodorants and antiperspirants', 'icon' => 'fa-spa', 'sort_order' => 1],
+                            ['name' => 'Perfume', 'description' => 'Perfumes and fragrances', 'icon' => 'fa-spa', 'sort_order' => 2],
+                            ['name' => 'Feminine Hygiene', 'description' => 'Feminine care products', 'icon' => 'fa-spa', 'sort_order' => 3],
+                            ['name' => 'Oral Care', 'description' => 'Toothpaste and mouthwash', 'icon' => 'fa-spa', 'sort_order' => 4],
+                            ['name' => 'Hand & Foot Care', 'description' => 'Hand and foot care products', 'icon' => 'fa-spa', 'sort_order' => 5],
+                            ['name' => 'Intimate Care', 'description' => 'Intimate hygiene products', 'icon' => 'fa-spa', 'sort_order' => 6],
+                        ]
+                    ],
+                    [
+                        'name' => 'Men\'s Grooming',
+                        'description' => 'Men\'s grooming and care products',
+                        'icon' => 'fa-user',
+                        'sort_order' => 6,
+                        'children' => [
+                            ['name' => 'Beard Care', 'description' => 'Beard oil and beard balm', 'icon' => 'fa-user', 'sort_order' => 1],
+                            ['name' => 'Face Care', 'description' => 'Face wash and moisturizer for men', 'icon' => 'fa-user', 'sort_order' => 2],
+                            ['name' => 'Shaving', 'description' => 'Shaving cream, razor, and after shave', 'icon' => 'fa-user', 'sort_order' => 3],
+                            ['name' => 'Hair Styling', 'description' => 'Hair gel and wax for men', 'icon' => 'fa-user', 'sort_order' => 4],
+                        ]
+                    ],
+                    [
+                        'name' => 'Fragrance',
+                        'description' => 'Perfumes and fragrances',
+                        'icon' => 'fa-spray-can',
+                        'sort_order' => 7,
+                        'children' => [
+                            ['name' => 'Perfume', 'description' => 'Men, women, and unisex perfumes', 'icon' => 'fa-spray-can', 'sort_order' => 1],
+                            ['name' => 'Body Spray', 'description' => 'Body sprays and mists', 'icon' => 'fa-spray-can', 'sort_order' => 2],
+                            ['name' => 'Roll-on', 'description' => 'Roll-on deodorants and perfumes', 'icon' => 'fa-spray-can', 'sort_order' => 3],
+                            ['name' => 'Attar', 'description' => 'Traditional attars and perfumes', 'icon' => 'fa-spray-can', 'sort_order' => 4],
+                        ]
+                    ],
+                    [
+                        'name' => 'Beauty Tools & Accessories',
+                        'description' => 'Beauty tools and accessories',
+                        'icon' => 'fa-spa',
+                        'sort_order' => 8,
+                        'children' => [
+                            ['name' => 'Makeup Brushes', 'description' => 'Makeup brushes and tools', 'icon' => 'fa-spa', 'sort_order' => 1],
+                            ['name' => 'Beauty Sponge', 'description' => 'Beauty sponges and blenders', 'icon' => 'fa-spa', 'sort_order' => 2],
+                            ['name' => 'Hair Dryer', 'description' => 'Hair dryers and styling tools', 'icon' => 'fa-spa', 'sort_order' => 3],
+                            ['name' => 'Straightener / Curler', 'description' => 'Hair straighteners and curlers', 'icon' => 'fa-spa', 'sort_order' => 4],
+                            ['name' => 'Trimmer', 'description' => 'Hair trimmers and clippers', 'icon' => 'fa-spa', 'sort_order' => 5],
+                            ['name' => 'Facial Roller', 'description' => 'Facial rollers and gua sha tools', 'icon' => 'fa-spa', 'sort_order' => 6],
+                            ['name' => 'Mirrors', 'description' => 'Beauty mirrors and accessories', 'icon' => 'fa-spa', 'sort_order' => 7],
+                        ]
+                    ],
+                    [
+                        'name' => 'Herbal / Organic',
+                        'description' => 'Herbal and organic beauty products',
+                        'icon' => 'fa-spa',
+                        'sort_order' => 9,
+                        'children' => [
+                            ['name' => 'Ayurvedic Skincare', 'description' => 'Ayurvedic skincare products', 'icon' => 'fa-spa', 'sort_order' => 1],
+                            ['name' => 'Herbal Hair Care', 'description' => 'Herbal hair care products', 'icon' => 'fa-spa', 'sort_order' => 2],
+                            ['name' => 'Natural Soaps', 'description' => 'Natural and organic soaps', 'icon' => 'fa-spa', 'sort_order' => 3],
+                            ['name' => 'Essential Oils', 'description' => 'Essential oils and aromatherapy', 'icon' => 'fa-spa', 'sort_order' => 4],
+                        ]
+                    ],
+                    [
+                        'name' => 'Baby Care',
+                        'description' => 'Baby care and hygiene products',
+                        'icon' => 'fa-spa',
+                        'sort_order' => 10,
+                        'children' => [
+                            ['name' => 'Baby Shampoo', 'description' => 'Baby shampoos', 'icon' => 'fa-spa', 'sort_order' => 1],
+                            ['name' => 'Baby Lotion', 'description' => 'Baby lotions and moisturizers', 'icon' => 'fa-spa', 'sort_order' => 2],
+                            ['name' => 'Baby Soap', 'description' => 'Baby soaps', 'icon' => 'fa-spa', 'sort_order' => 3],
+                            ['name' => 'Baby Oil', 'description' => 'Baby oils', 'icon' => 'fa-spa', 'sort_order' => 4],
+                            ['name' => 'Diapers', 'description' => 'Baby diapers', 'icon' => 'fa-spa', 'sort_order' => 5],
+                            ['name' => 'Baby Cream', 'description' => 'Baby creams and skincare', 'icon' => 'fa-spa', 'sort_order' => 6],
+                        ]
+                    ],
                 ]
             ],
             [
                 'name' => 'Sports',
                 'description' => 'Fitness and outdoor gear',
-                'is_featured' => false,
+                'is_featured' => true,
                 'icon' => 'fa-dumbbell',
-                'sort_order' => 7,
+                'sort_order' => 9,
                 'children' => [
-                    ['name' => 'Fitness Equipment', 'description' => 'Gym and fitness equipment', 'sort_order' => 1],
-                    ['name' => 'Outdoor Sports', 'description' => 'Outdoor and adventure gear', 'sort_order' => 2],
-                    ['name' => 'Sports Apparel', 'description' => 'Activewear and sports clothing', 'sort_order' => 3],
+                    ['name' => 'Fitness Equipment', 'description' => 'Gym and fitness equipment', 'icon' => 'fa-dumbbell', 'sort_order' => 1],
+                    ['name' => 'Outdoor Sports', 'description' => 'Outdoor and adventure gear', 'icon' => 'fa-mountain', 'sort_order' => 2],
+                    ['name' => 'Sports Apparel', 'description' => 'Activewear and sports clothing', 'icon' => 'fa-tshirt', 'sort_order' => 3],
                 ]
             ],
             [
@@ -237,11 +424,23 @@ class CategorySeeder extends Seeder
                 'description' => 'Fiction, non-fiction, and educational books',
                 'is_featured' => false,
                 'icon' => 'fa-book',
-                'sort_order' => 8,
+                'sort_order' => 10,
                 'children' => [
-                    ['name' => 'Fiction', 'description' => 'Fiction books and novels', 'sort_order' => 1],
-                    ['name' => 'Non-Fiction', 'description' => 'Non-fiction and educational books', 'sort_order' => 2],
-                    ['name' => 'Academic', 'description' => 'Textbooks and academic materials', 'sort_order' => 3],
+                    ['name' => 'Fiction', 'description' => 'Fiction books and novels', 'icon' => 'fa-book', 'sort_order' => 1],
+                    ['name' => 'Non-Fiction', 'description' => 'Non-fiction and educational books', 'icon' => 'fa-book', 'sort_order' => 2],
+                    ['name' => 'Academic', 'description' => 'Textbooks and academic materials', 'icon' => 'fa-graduation-cap', 'sort_order' => 3],
+                ]
+            ],
+            [
+                'name' => 'Groceries',
+                'description' => 'Food items and daily essentials',
+                'is_featured' => true,
+                'icon' => 'fa-shopping-cart',
+                'sort_order' => 11,
+                'children' => [
+                    ['name' => 'Food & Beverages', 'description' => 'Food and drinks', 'icon' => 'fa-utensils', 'sort_order' => 1],
+                    ['name' => 'Snacks', 'description' => 'Snacks and munchies', 'icon' => 'fa-cookie', 'sort_order' => 2],
+                    ['name' => 'Dairy Products', 'description' => 'Milk, cheese, and dairy', 'icon' => 'fa-milk', 'sort_order' => 3],
                 ]
             ],
         ];
@@ -361,8 +560,6 @@ class CategorySeeder extends Seeder
     private function createOrUpdateCategory(array $categoryData, ?int $parentId = null): ?Category
     {
         try {
-            $slug = Str::slug($categoryData['name']);
-            
             // Check if parent exists (if parent_id is provided)
             if ($parentId !== null) {
                 $parent = Category::find($parentId);
@@ -372,25 +569,41 @@ class CategorySeeder extends Seeder
                 }
             }
             
-            // Try to find existing category by name first (most reliable)
-            $existing = Category::where('name', $categoryData['name'])->first();
+            // Try to find existing category by name AND parent_id (to handle duplicate names in different branches)
+            $existing = Category::where('name', $categoryData['name'])
+                ->where('parent_id', $parentId)
+                ->first();
             
-            // If not found by name, try by slug
-            if (!$existing) {
-                $existing = Category::where('slug', $slug)->first();
-            }
+            // Generate base slug
+            $baseSlug = Str::slug($categoryData['name']);
+            $slug = $baseSlug;
             
-            // Handle duplicate slug case for new categories - append number if needed
-            if (!$existing) {
-                $originalSlug = $slug;
+            if ($existing) {
+                // Category exists with same name and parent_id - update it
+                $data = [
+                    'name' => $categoryData['name'],
+                    'slug' => $existing->slug, // Keep existing slug
+                    'description' => $categoryData['description'] ?? null,
+                    'is_featured' => $categoryData['is_featured'] ?? false,
+                    'parent_id' => $parentId,
+                    'icon' => $categoryData['icon'] ?? null,
+                    'sort_order' => $categoryData['sort_order'] ?? 0,
+                ];
+                $existing->update($data);
+                $this->command->info("Updated category: {$categoryData['name']}");
+                return $existing;
+            } else {
+                // Category doesn't exist with this name+parent combination
+                // Check if slug already exists - if so, make it unique
                 $slugCounter = 1;
                 while (Category::where('slug', $slug)->exists()) {
-                    $slug = $originalSlug . '-' . $slugCounter;
+                    $slug = $baseSlug . '-' . $slugCounter;
                     $slugCounter++;
-                }
             }
             
+                // Create new category
             $data = [
+                    'uuid' => Str::uuid()->toString(),
                 'name' => $categoryData['name'],
                 'slug' => $slug,
                 'description' => $categoryData['description'] ?? null,
@@ -400,16 +613,8 @@ class CategorySeeder extends Seeder
                 'sort_order' => $categoryData['sort_order'] ?? 0,
             ];
             
-            if ($existing) {
-                // Update existing category
-                $existing->update($data);
-                $this->command->info("Updated category: {$categoryData['name']}");
-                return $existing;
-            } else {
-                // Create new category
-                $data['uuid'] = Str::uuid()->toString();
                 $category = Category::create($data);
-                $this->command->info("Created category: {$categoryData['name']}" . ($parentId ? " (under parent ID: {$parentId})" : " (main category)"));
+                $this->command->info("Created category: {$categoryData['name']}" . ($parentId ? " (under parent ID: {$parentId})" : " (main category)") . " with slug: {$slug}");
                 return $category;
             }
         } catch (\Exception $e) {
@@ -418,4 +623,3 @@ class CategorySeeder extends Seeder
         }
     }
 }
-

@@ -13,6 +13,7 @@ import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import RecentlyViewedProducts from '../Components/RecentlyViewedProducts';
 import Pagination from '../Components/Pagination';
+import CategoryIcon from '../Components/CategoryIcon';
 
 export default function Home() {
     const { url } = usePage();
@@ -132,7 +133,7 @@ export default function Home() {
             setLoading(true);
             const [productsRes, categoriesRes] = await Promise.all([
                 useProductStore.list({ page: currentPage, per_page: 8 }),
-                useCategoryStore.list(),
+                useCategoryStore.home(), // Use home API for minimal data
             ]);
 
             if (productsRes.data?.status && productsRes.data?.data) {
@@ -141,17 +142,15 @@ export default function Home() {
             }
 
             if (categoriesRes.data?.status && categoriesRes.data?.data) {
-                // Handle new API response structure: { flat: [...], hierarchical: [...] }
+                // Home API returns array directly (only main categories with minimal fields)
                 let categoriesArray = [];
-                if (categoriesRes.data.data.flat && Array.isArray(categoriesRes.data.data.flat)) {
-                    categoriesArray = categoriesRes.data.data.flat;
-                } else if (Array.isArray(categoriesRes.data.data)) {
+                if (Array.isArray(categoriesRes.data.data)) {
                     categoriesArray = categoriesRes.data.data;
                 }
                 
                 if (categoriesArray.length > 0) {
-                    const featured = categoriesArray.filter((cat: any) => cat.is_featured);
-                    setFeaturedCategories(featured.slice(0, 6));
+                    // Show all categories, not just featured
+                    setFeaturedCategories(categoriesArray);
                 }
             }
         } catch (error) {
@@ -301,7 +300,7 @@ export default function Home() {
                     <div className="text-center">
                         <h1 className="text-4xl md:text-5xl font-bold mb-4">Welcome to Our Ecommerce Store</h1>
                         <p className="text-xl mb-6">Discover amazing products at great prices</p>
-                        <Button as="link" href="/products" variant="secondary" size="lg">
+                        <Button as="link" href="/categories" variant="secondary" size="lg">
                             Shop Now
                         </Button>
                     </div>
@@ -315,12 +314,20 @@ export default function Home() {
                         {featuredCategories.length > 0 && (
                             <div className="mb-12">
                                 <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
                                     {featuredCategories.map((category) => (
                                         <Link key={category.id} href={`/categories/${category.slug}`}>
-                                            <Card hover>
-                                                <h3 className="text-xl font-semibold mb-2">{category.name}</h3>
-                                                <p className="text-gray-600">{category.description}</p>
+                                            <Card hover className="text-center p-6 flex flex-col items-center justify-center h-full">
+                                                <div className="mb-4 flex items-center justify-center">
+                                                    <CategoryIcon 
+                                                        icon={category.icon} 
+                                                        className="h-12 w-12 text-indigo-600"
+                                                    />
+                                                </div>
+                                                <h3 className="text-lg font-semibold mb-1">{category.name}</h3>
+                                                {category.description && (
+                                                    <p className="text-gray-600 text-sm line-clamp-2">{category.description}</p>
+                                                )}                                              
                                             </Card>
                                         </Link>
                                     ))}

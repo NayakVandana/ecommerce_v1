@@ -76,7 +76,7 @@ export default function Index() {
                     <div className="bg-white rounded-lg shadow-md p-12 text-center">
                         <p className="text-gray-500 text-lg mb-4">You have no orders yet</p>
                         <Link
-                            href="/products"
+                            href="/categories"
                             className="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
                         >
                             Start Shopping

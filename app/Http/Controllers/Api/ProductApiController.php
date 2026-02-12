@@ -52,8 +52,71 @@ class ProductApiController extends Controller
             });
         }
 
-        if ($request->has('brand') && $request->brand) {
+        // Filter by brands (supports multiple brands)
+        if ($request->has('brands') && $request->brands) {
+            $brands = is_array($request->brands) ? $request->brands : explode(',', $request->brands);
+            $query->whereIn('brand', $brands);
+        } elseif ($request->has('brand') && $request->brand) {
+            // Backward compatibility for single brand
             $query->where('brand', $request->brand);
+        }
+
+        // Filter by price range
+        if ($request->has('min_price') && $request->min_price) {
+            $query->where('final_price', '>=', $request->min_price);
+        }
+        if ($request->has('max_price') && $request->max_price) {
+            $query->where('final_price', '<=', $request->max_price);
+        }
+
+        // Filter by discount range
+        if ($request->has('min_discount') && $request->min_discount) {
+            $query->where('discount_percent', '>=', $request->min_discount);
+        }
+        if ($request->has('max_discount') && $request->max_discount) {
+            $query->where('discount_percent', '<=', $request->max_discount);
+        }
+
+        // Filter by availability (include out of stock)
+        if ($request->has('include_out_of_stock') && !$request->include_out_of_stock) {
+            $query->where(function($q) {
+                $q->whereNull('total_quantity')
+                  ->orWhere('total_quantity', '>', 0);
+            });
+        }
+
+        // Filter by multiple categories (supports array of category IDs)
+        if ($request->has('categories') && $request->categories) {
+            $categoryIds = is_array($request->categories) ? $request->categories : explode(',', $request->categories);
+            $allCategoryIds = [];
+            foreach ($categoryIds as $catId) {
+                $allCategoryIds = array_merge($allCategoryIds, $this->getCategoryIdsWithChildren($catId));
+            }
+            $query->whereIn('category', array_unique($allCategoryIds));
+        }
+
+        // Sort options
+        $sortBy = $request->input('sort_by', 'popularity');
+        switch ($sortBy) {
+            case 'price_low':
+                $query->orderBy('final_price', 'asc');
+                break;
+            case 'price_high':
+                $query->orderBy('final_price', 'desc');
+                break;
+            case 'newest':
+                $query->orderBy('created_at', 'desc');
+                break;
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'discount':
+                $query->orderBy('discount_percent', 'desc');
+                break;
+            case 'popularity':
+            default:
+                $query->orderBy('created_at', 'desc');
+                break;
         }
 
         $perPage = $request->input('per_page', 12);
@@ -289,6 +352,111 @@ class ProductApiController extends Controller
             $categoryIds[] = $child->id;
             // Recursively get grandchildren
             $this->getChildrenIds($child, $categoryIds, $depth + 1);
+        }
+    }
+
+    /**
+     * Get filter options for products (brands, categories, price ranges, etc.)
+     */
+    public function getFilterOptions(Request $request)
+    {
+        try {
+            $baseQuery = Product::where('is_approve', 1);
+            
+            // Apply category filter if provided
+            if ($request->has('category') && $request->category) {
+                $categoryIds = $this->getCategoryIdsWithChildren($request->category);
+                $baseQuery->whereIn('category', $categoryIds);
+            }
+
+            // Get all unique brands
+            $brands = (clone $baseQuery)
+                ->select('brand')
+                ->whereNotNull('brand')
+                ->distinct()
+                ->orderBy('brand')
+                ->pluck('brand')
+                ->filter()
+                ->values();
+
+            // Get all subcategories for the current category (with nested children)
+            $categories = [];
+            if ($request->has('category') && $request->category) {
+                $category = Category::find($request->category);
+                if ($category) {
+                    // Use direct query to ensure we get all children
+                    $children = Category::where('parent_id', $category->id)
+                        ->orderBy('sort_order')
+                        ->orderBy('name')
+                        ->get();
+                    
+                    $categories = $children->map(function($cat) use ($baseQuery) {
+                        // Get all category IDs including this category and all its subcategories
+                        $categoryIds = $this->getCategoryIdsWithChildren($cat->id);
+                        
+                        // Count products in this category and all its subcategories
+                        $productsCount = (clone $baseQuery)
+                            ->whereIn('category', $categoryIds)
+                            ->count();
+                        
+                        // Get children of this category - use direct query to ensure we get ALL children
+                        // Always return children even if they have 0 products
+                        $subChildren = Category::where('parent_id', $cat->id)
+                            ->orderBy('sort_order')
+                            ->orderBy('name')
+                            ->get()
+                            ->map(function($subCat) use ($baseQuery) {
+                                $subCategoryIds = $this->getCategoryIdsWithChildren($subCat->id);
+                                $subProductsCount = (clone $baseQuery)
+                                    ->whereIn('category', $subCategoryIds)
+                                    ->count();
+                                
+                                return [
+                                    'id' => $subCat->id,
+                                    'name' => $subCat->name,
+                                    'slug' => $subCat->slug,
+                                    'icon' => $subCat->icon,
+                                    'products_count' => $subProductsCount,
+                                    'children' => [], // Can be extended for deeper nesting if needed
+                                ];
+                            });
+                        
+                        return [
+                            'id' => $cat->id,
+                            'name' => $cat->name,
+                            'slug' => $cat->slug,
+                            'icon' => $cat->icon,
+                            'products_count' => $productsCount,
+                            'children' => $subChildren->toArray(), // Always return children array, even if empty
+                        ];
+                    })->values(); // Ensure we return all categories, not filtered
+                }
+            }
+
+            // Get price range
+            $priceStats = (clone $baseQuery)
+                ->selectRaw('MIN(final_price) as min_price, MAX(final_price) as max_price')
+                ->first();
+
+            // Get discount range
+            $discountStats = (clone $baseQuery)
+                ->selectRaw('MIN(discount_percent) as min_discount, MAX(discount_percent) as max_discount')
+                ->first();
+
+            return $this->sendJsonResponse(true, 'Filter options fetched successfully', [
+                'brands' => $brands,
+                'categories' => $categories,
+                'price_range' => [
+                    'min' => $priceStats->min_price ?? 0,
+                    'max' => $priceStats->max_price ?? 10000,
+                ],
+                'discount_range' => [
+                    'min' => $discountStats->min_discount ?? 0,
+                    'max' => $discountStats->max_discount ?? 100,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return $this->sendJsonResponse(false, 'Failed to fetch filter options: ' . $e->getMessage(), null, 500);
         }
     }
 

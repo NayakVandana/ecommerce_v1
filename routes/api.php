@@ -34,10 +34,12 @@ Route::post('/login', [AuthApiController::class, 'login']);
 Route::post('/products', [ProductApiController::class, 'index']);
 Route::post('/products/show', [ProductApiController::class, 'show']);
 Route::post('/products/search', [ProductApiController::class, 'search']);
+Route::post('/products/filter-options', [ProductApiController::class, 'getFilterOptions']);
 
 // Public Category Routes
 Route::post('/categories', [CategoryApiController::class, 'index']);
 Route::post('/categories/show', [CategoryApiController::class, 'show']);
+Route::post('/categories/home', [CategoryApiController::class, 'home']);
 
 // Routes with optional auth (work for both authenticated users and guest sessions)
 // Uses optional auth middleware to set user if token is provided, but allows guests

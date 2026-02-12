@@ -404,7 +404,7 @@ export default function Show() {
     return (
         <AppLayout>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <Link href="/products" className="text-indigo-600 hover:text-indigo-800 mb-4 inline-block">
+                <Link href="/categories" className="text-indigo-600 hover:text-indigo-800 mb-4 inline-block">
                     ← Back to Products
                 </Link>
 

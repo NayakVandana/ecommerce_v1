@@ -18,7 +18,7 @@ import {
     PhotoIcon,
     VideoCameraIcon,
     DocumentArrowDownIcon,
-    EyeIcon,
+    EyeIcon, 
     ChevronLeftIcon,
     ChevronRightIcon
 } from '@heroicons/react/24/outline';
@@ -1378,7 +1378,8 @@ export default function OrderShow() {
 
                         {/* Main Media Display */}
                         <div 
-                            className="relative w-full h-full flex items-center justify-center p-4"
+                            className="relative w-full h-full flex items-center justify-center"
+                            style={{ padding: '80px 16px' }}
                             onClick={(e) => e.stopPropagation()}
                         >
                             {isVideo ? (
@@ -1386,15 +1387,27 @@ export default function OrderShow() {
                                     src={mediaUrl}
                                     controls
                                     autoPlay
-                                    className="max-w-full max-h-full object-contain"
-                                    style={{ maxHeight: '90vh' }}
+                                    className="fullscreen-media-viewer"
+                                    style={{ 
+                                        maxHeight: 'calc(100vh - 80px)', 
+                                        maxWidth: '100%',
+                                        width: 'auto', 
+                                        height: 'auto',
+                                        objectFit: 'contain'
+                                    }}
                                 />
                             ) : (
                                 <img
                                     src={mediaUrl || '/placeholder-image.png'}
                                     alt="Verification media"
-                                    className="max-w-full max-h-full object-contain"
-                                    style={{ maxHeight: '90vh' }}
+                                    className="fullscreen-media-viewer"
+                                    style={{ 
+                                        maxHeight: 'calc(100vh - 80px)', 
+                                        maxWidth: '100%',
+                                        width: 'auto', 
+                                        height: 'auto',
+                                        objectFit: 'contain'
+                                    }}
                                     onError={(e) => {
                                         (e.target as HTMLImageElement).src = '/placeholder-image.png';
                                     }}

@@ -11,6 +11,7 @@ import {
     SparklesIcon,
     ShoppingBagIcon
 } from '@heroicons/react/24/outline';
+import CategoryIcon from '../../Components/CategoryIcon';
 
 export default function Index() {
     const [categories, setCategories] = useState<any>([]);
@@ -290,7 +291,7 @@ export default function Index() {
                                         ? 'bg-indigo-600 text-white' 
                                         : 'bg-indigo-100 text-indigo-600 group-hover:bg-indigo-200'
                                 }`}>
-                                    <TagIcon className="h-4 w-4" />
+                                    <CategoryIcon icon={category.icon} className="h-4 w-4" />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <h3 className={`font-semibold truncate ${
@@ -500,9 +501,12 @@ export default function Index() {
                                                                 ? 'bg-gradient-to-br from-indigo-500 to-purple-600'
                                                                 : 'bg-gradient-to-br from-indigo-100 to-purple-100 group-hover:from-indigo-200 group-hover:to-purple-200'
                                                         }`}>
-                                                            <TagIcon className={`h-6 w-6 ${
-                                                                selectedCategory?.id === category.id ? 'text-white' : 'text-indigo-600'
-                                                            }`} />
+                                                            <CategoryIcon 
+                                                                icon={category.icon} 
+                                                                className={`h-6 w-6 ${
+                                                                    selectedCategory?.id === category.id ? 'text-white' : 'text-indigo-600'
+                                                                }`} 
+                                                            />
                                                         </div>
                                                         <div className="flex-1">
                                                             <h3 className={`font-bold text-lg mb-1 ${
@@ -573,7 +577,7 @@ export default function Index() {
                                     {products.last_page > 1 && (
                                         <div className="mt-10 text-center">
                                             <Link
-                                                href={selectedCategory ? `/categories/${selectedCategory.slug}` : '/products'}
+                                                href={selectedCategory ? `/categories/${selectedCategory.slug}` : '/categories'}
                                                 className="group inline-flex items-center gap-3 px-10 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-2xl hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 transition-all duration-300 shadow-2xl hover:shadow-3xl font-bold text-lg transform hover:scale-105"
                                             >
                                                 <span>View All Products ({products.total} total)</span>
