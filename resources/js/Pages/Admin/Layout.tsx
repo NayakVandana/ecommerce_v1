@@ -42,6 +42,7 @@ const orderManagementItems = [
     { name: 'Shipped Orders', href: '/admin/orders/shipped' },
     { name: 'Out for Delivery', href: '/admin/orders/out-for-delivery' },
     { name: 'Return & Refund', href: '/admin/orders/return-refund' },
+    { name: 'Replacement', href: '/admin/orders/replacement' },
     { name: 'Delivered Orders', href: '/admin/orders/delivered' },
     { name: 'Failed Delivery', href: '/admin/orders/failed-delivery' },
     { name: 'Picked Up', href: '/admin/orders/picked-up' },

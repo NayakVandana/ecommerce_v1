@@ -6,5 +6,6 @@ export const useOrderStore = {
     show: (data: any) => api.post('/auth/orders/show', data),
     cancel: (data: any) => api.post('/auth/orders/cancel', data),
     requestReturn: (data: any) => api.post('/auth/orders/request-return', data),
+    requestReplacement: (data: any) => api.post('/auth/orders/request-replacement', data),
 };
 

@@ -5,6 +5,7 @@ import { useOrderStore } from './useOrderStore';
 import Button from '../../Components/Button';
 import CancellationReasonModal from '../../Components/CancellationReasonModal';
 import ReturnReasonModal from '../../Components/ReturnReasonModal';
+import ReplacementReasonModal from '../../Components/ReplacementReasonModal';
 import toast from '../../utils/toast';
 import { 
     CheckCircleIcon, 
@@ -22,6 +23,8 @@ export default function Show() {
     const [cancelling, setCancelling] = useState(false);
     const [showReturnModal, setShowReturnModal] = useState(false);
     const [requestingReturn, setRequestingReturn] = useState(false);
+    const [showReplacementModal, setShowReplacementModal] = useState(false);
+    const [requestingReplacement, setRequestingReplacement] = useState(false);
 
     useEffect(() => {
         fetchOrder();
@@ -70,13 +73,42 @@ export default function Show() {
         setShowReturnModal(true);
     };
 
-    const handleReturnConfirm = async (returnData: { return_reason: string; return_notes: string | null }) => {
+    const handleReplacementRequest = () => {
+        setShowReplacementModal(true);
+    };
+
+    const handleReplacementConfirm = async (replacementData: { replacement_reason: string; replacement_notes: string | null; item_ids?: number[] }) => {
+        try {
+            setRequestingReplacement(true);
+            const response = await useOrderStore.requestReplacement({
+                id: orderId,
+                replacement_reason: replacementData.replacement_reason,
+                replacement_notes: replacementData.replacement_notes,
+                item_ids: replacementData.item_ids,
+            });
+            if (response.data?.status) {
+                setShowReplacementModal(false);
+                await fetchOrder();
+                toast({ type: 'success', message: 'Replacement request submitted successfully' });
+            } else {
+                toast({ type: 'error', message: response.data?.message || 'Failed to submit replacement request' });
+            }
+        } catch (error: any) {
+            console.error('Error requesting replacement:', error);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to submit replacement request' });
+        } finally {
+            setRequestingReplacement(false);
+        }
+    };
+
+    const handleReturnConfirm = async (returnData: { return_reason: string; return_notes: string | null; item_ids?: number[] }) => {
         try {
             setRequestingReturn(true);
             const response = await useOrderStore.requestReturn({
                 id: orderId,
                 return_reason: returnData.return_reason,
                 return_notes: returnData.return_notes,
+                item_ids: returnData.item_ids,
             });
             if (response.data?.status) {
                 setShowReturnModal(false);
@@ -239,28 +271,99 @@ export default function Show() {
                         <div className="mt-4">
                             {/* Check if all products are returnable */}
                             {order.items && order.items.some((item: any) => !(item.is_returnable ?? false)) ? (
-                                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md mb-3">
-                                    <p className="text-sm font-semibold text-yellow-900 mb-2">⚠️ Return Not Available</p>
-                                    <p className="text-xs text-yellow-800 mb-2">
-                                        Some products in this order are not returnable:
-                                    </p>
-                                    <ul className="text-xs text-yellow-700 list-disc list-inside">
-                                        {order.items
-                                            .filter((item: any) => !(item.is_returnable ?? false))
-                                            .map((item: any, index: number) => (
-                                                <li key={index}>{item.product_name}</li>
-                                            ))
-                                        }
-                                    </ul>
+                                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+                                    <div className="flex items-start gap-3">
+                                        <div className="flex-shrink-0">
+                                            <svg className="h-5 w-5 text-yellow-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm font-semibold text-yellow-900 mb-2">Return Not Available</p>
+                                            <p className="text-xs text-yellow-800 mb-2">
+                                                Some products in this order are not returnable:
+                                            </p>
+                                            <ul className="text-xs text-yellow-700 list-disc list-inside space-y-1">
+                                                {order.items
+                                                    .filter((item: any) => !(item.is_returnable ?? false))
+                                                    .map((item: any, index: number) => (
+                                                        <li key={index}>{item.product_name}</li>
+                                                    ))
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
                             ) : (
-                                <Button
-                                    variant="warning"
+                                <button
                                     onClick={handleReturnRequest}
                                     disabled={requestingReturn}
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-lg shadow-md hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
                                 >
-                                    {requestingReturn ? 'Submitting...' : 'Request Return/Refund'}
-                                </Button>
+                                    <ArrowPathIcon className="h-5 w-5" />
+                                    {requestingReturn ? (
+                                        <>
+                                            <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <span>Submitting...</span>
+                                        </>
+                                    ) : (
+                                        <span>Request Return/Refund</span>
+                                    )}
+                                </button>
+                            )}
+                        </div>
+                    )}
+
+                    {(order.status === 'shipped' || order.status === 'delivered' || order.status === 'completed') && 
+                     !order.replacement_status && (
+                        <div className="mt-4">
+                            {/* Check if all products are replaceable */}
+                            {order.items && order.items.some((item: any) => !(item.is_replaceable ?? false)) ? (
+                                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
+                                    <div className="flex items-start gap-3">
+                                        <div className="flex-shrink-0">
+                                            <svg className="h-5 w-5 text-yellow-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        </div>
+                                        <div className="flex-1">
+                                            <p className="text-sm font-semibold text-yellow-900 mb-2">Replacement Not Available</p>
+                                            <p className="text-xs text-yellow-800 mb-2">
+                                                Some products in this order are not replaceable:
+                                            </p>
+                                            <ul className="text-xs text-yellow-700 list-disc list-inside space-y-1">
+                                                {order.items
+                                                    .filter((item: any) => !(item.is_replaceable ?? false))
+                                                    .map((item: any, index: number) => (
+                                                        <li key={index}>{item.product_name}</li>
+                                                    ))
+                                                }
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <button
+                                    onClick={handleReplacementRequest}
+                                    disabled={requestingReplacement}
+                                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg shadow-md hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
+                                >
+                                    <ArrowPathIcon className="h-5 w-5" />
+                                    {requestingReplacement ? (
+                                        <>
+                                            <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
+                                            <span>Submitting...</span>
+                                        </>
+                                    ) : (
+                                        <span>Request Replacement</span>
+                                    )}
+                                </button>
                             )}
                         </div>
                     )}
@@ -292,6 +395,42 @@ export default function Show() {
                                 <p className="text-sm font-semibold text-orange-900 mt-2">
                                     Refund Amount: ${Number(order.refund_amount).toFixed(2)}
                                 </p>
+                            )}
+                        </div>
+                    )}
+
+                    {order.replacement_status && (
+                        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                            <p className="text-sm font-semibold text-blue-900 mb-1">Replacement Status:</p>
+                            <p className="text-sm text-blue-800 capitalize mb-2">
+                                {order.replacement_status === 'pending' && '⏳ Replacement Request Pending'}
+                                {order.replacement_status === 'approved' && '✅ Replacement Approved - New Order Created'}
+                                {order.replacement_status === 'rejected' && '❌ Replacement Request Rejected'}
+                                {order.replacement_status === 'processed' && '✅ Replacement Processed'}
+                            </p>
+                            {order.replacement_reason && (
+                                <p className="text-sm text-blue-700">
+                                    <span className="font-semibold">Reason:</span> 
+                                    {order.replacement_reason === 'defective_item' && ' Defective Item'}
+                                    {order.replacement_reason === 'wrong_item' && ' Wrong Item Received'}
+                                    {order.replacement_reason === 'not_as_described' && ' Not as Described'}
+                                    {order.replacement_reason === 'damaged_during_delivery' && ' Damaged During Delivery'}
+                                    {order.replacement_reason === 'other' && ' Other'}
+                                </p>
+                            )}
+                            {order.replacement_notes && (
+                                <p className="text-sm text-blue-700 mt-1 italic">"{order.replacement_notes}"</p>
+                            )}
+                            {order.replacement_order_id && order.replacement_order && (
+                                <div className="mt-2 pt-2 border-t border-blue-200">
+                                    <p className="text-sm font-semibold text-blue-900 mb-1">Replacement Order:</p>
+                                    <Link
+                                        href={`/orders/${order.replacement_order.id}`}
+                                        className="text-sm text-blue-600 hover:text-blue-800 underline"
+                                    >
+                                        Order #{order.replacement_order.order_number || order.replacement_order.id}
+                                    </Link>
+                                </div>
                             )}
                         </div>
                     )}
@@ -408,16 +547,22 @@ export default function Show() {
                             </div>
 
                             {/* Out for Delivery */}
-                            {order.out_for_delivery_at && (
-                                <div className="relative flex items-start">
-                                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 bg-indigo-500">
-                                        <TruckIcon className="h-5 w-5 text-white" />
-                                    </div>
-                                    <div className="ml-4 flex-1">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-sm font-semibold text-gray-900">
-                                                Out for Delivery
-                                            </h3>
+                            <div className="relative flex items-start">
+                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 ${
+                                    order.out_for_delivery_at ? 'bg-indigo-500' : 'bg-gray-300'
+                                }`}>
+                                    <TruckIcon className={`h-5 w-5 ${
+                                        order.out_for_delivery_at ? 'text-white' : 'text-gray-500'
+                                    }`} />
+                                </div>
+                                <div className="ml-4 flex-1">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className={`text-sm font-semibold ${
+                                            order.out_for_delivery_at ? 'text-gray-900' : 'text-gray-400'
+                                        }`}>
+                                            Out for Delivery
+                                        </h3>
+                                        {order.out_for_delivery_at && (
                                             <span className="text-xs text-gray-500">
                                                 {new Date(order.out_for_delivery_at).toLocaleString('en-US', {
                                                     year: 'numeric',
@@ -427,13 +572,13 @@ export default function Show() {
                                                     minute: '2-digit'
                                                 })}
                                             </span>
-                                        </div>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            Order is out for delivery
-                                        </p>
+                                        )}
                                     </div>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Order is out for delivery
+                                    </p>
                                 </div>
-                            )}
+                            </div>
 
                             {/* Delivered */}
                             {order.delivered_at && (
@@ -507,6 +652,15 @@ export default function Show() {
                     onClose={() => setShowReturnModal(false)}
                     onConfirm={handleReturnConfirm}
                     loading={requestingReturn}
+                    orderItems={order?.items || []}
+                />
+
+                <ReplacementReasonModal
+                    isOpen={showReplacementModal}
+                    onClose={() => setShowReplacementModal(false)}
+                    onConfirm={handleReplacementConfirm}
+                    loading={requestingReplacement}
+                    orderItems={order?.items || []}
                 />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -519,6 +673,10 @@ export default function Show() {
                                 {items.map((item: any) => {
                                     const product = item.product;
                                     const primaryImage = product?.media?.find((m: any) => m.is_primary) || product?.media?.[0];
+                                    
+                                    // Item-level return/replacement status
+                                    const hasReturnStatus = item.return_status;
+                                    const hasReplacementStatus = item.replacement_status;
                                     const imageUrl = primaryImage?.url || primaryImage?.file_path || '';
                                     
                                     return (
@@ -553,16 +711,59 @@ export default function Show() {
                                                 <p className="text-sm text-gray-600 mt-1">
                                                     Quantity: {item.quantity} × ${Number(item.price || 0).toFixed(2)}
                                                 </p>
-                                                {/* Return Eligibility Badge */}
-                                                {item.is_returnable !== false ? (
-                                                    <span className="inline-flex items-center mt-2 px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                        ✓ Returnable
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center mt-2 px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
-                                                        ✗ Not Returnable
-                                                    </span>
-                                                )}
+                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                    {/* Return Eligibility Badge */}
+                                                    {item.is_returnable !== false ? (
+                                                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                            ✓ Returnable
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                            ✗ Not Returnable
+                                                        </span>
+                                                    )}
+                                                    
+                                                    {/* Replacement Eligibility Badge */}
+                                                    {item.is_replaceable !== false ? (
+                                                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                            🔄 Replaceable
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                            ✗ Not Replaceable
+                                                        </span>
+                                                    )}
+                                                    
+                                                    {/* Item Return Status */}
+                                                    {item.return_status && (
+                                                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                                            item.return_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                            item.return_status === 'approved' ? 'bg-green-100 text-green-800' :
+                                                            item.return_status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                            'bg-blue-100 text-blue-800'
+                                                        }`}>
+                                                            {item.return_status === 'pending' && '⏳ Return Pending'}
+                                                            {item.return_status === 'approved' && '✅ Return Approved'}
+                                                            {item.return_status === 'rejected' && '❌ Return Rejected'}
+                                                            {item.return_status === 'refunded' && '💰 Refunded'}
+                                                        </span>
+                                                    )}
+                                                    
+                                                    {/* Item Replacement Status */}
+                                                    {item.replacement_status && (
+                                                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                                            item.replacement_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                            item.replacement_status === 'approved' ? 'bg-green-100 text-green-800' :
+                                                            item.replacement_status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                            'bg-blue-100 text-blue-800'
+                                                        }`}>
+                                                            {item.replacement_status === 'pending' && '⏳ Replacement Pending'}
+                                                            {item.replacement_status === 'approved' && '✅ Replacement Approved'}
+                                                            {item.replacement_status === 'rejected' && '❌ Replacement Rejected'}
+                                                            {item.replacement_status === 'processed' && '✅ Replacement Processed'}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                             
                                             <div className="text-right">

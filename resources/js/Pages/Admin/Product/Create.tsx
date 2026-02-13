@@ -29,6 +29,7 @@ export default function ProductCreate() {
         total_quantity: '',
         is_approve: 0,
         is_returnable: false,
+        is_replaceable: false,
         return_policy_note: '',
     });
     const [errors, setErrors] = useState<any>({});
@@ -68,6 +69,7 @@ export default function ProductCreate() {
                 total_quantity: product.total_quantity || '',
                 is_approve: product.is_approve || 0,
                 is_returnable: product.is_returnable !== undefined ? product.is_returnable : false,
+                is_replaceable: product.is_replaceable !== undefined ? product.is_replaceable : false,
                 return_policy_note: product.return_policy_note || '',
             });
             
@@ -924,6 +926,7 @@ export default function ProductCreate() {
                 total_quantity: parseInt(formData.total_quantity),
                 is_approve: formData.is_approve,
                 is_returnable: formData.is_returnable !== undefined ? formData.is_returnable : false,
+                is_replaceable: formData.is_replaceable !== undefined ? formData.is_replaceable : false,
                 return_policy_note: formData.return_policy_note || null,
                 variations: variations.map((v: any) => ({
                     size: v.size || null,
@@ -1391,6 +1394,26 @@ export default function ProductCreate() {
                                         </div>
                                         <p className="mt-1 text-xs text-gray-500">
                                             Uncheck if this product cannot be returned or refunded
+                                        </p>
+                                    </div>
+
+                                    {/* Is Replaceable */}
+                                    <div>
+                                        <div className="flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                name="is_replaceable"
+                                                id="is_replaceable"
+                                                checked={formData.is_replaceable === true}
+                                                onChange={(e) => setFormData({ ...formData, is_replaceable: e.target.checked })}
+                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                            />
+                                            <label htmlFor="is_replaceable" className="ml-2 block text-sm text-gray-900">
+                                                Product is Replaceable
+                                            </label>
+                                        </div>
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            Uncheck if this product cannot be replaced (only return/refund allowed)
                                         </p>
                                     </div>
 

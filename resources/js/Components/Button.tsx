@@ -4,6 +4,8 @@ const variantClasses = {
     primary: 'bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500',
     secondary: 'bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500',
     danger: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+    warning: 'bg-orange-600 text-white hover:bg-orange-700 focus:ring-orange-500',
+    success: 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500',
     outline: 'border border-indigo-600 text-indigo-600 hover:bg-indigo-50 focus:ring-indigo-500',
     ghost: 'text-indigo-600 hover:bg-indigo-50 focus:ring-indigo-500',
 };

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { XMarkIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 
-export default function ReturnReasonModal({
+export default function ReplacementReasonModal({
     isOpen,
     onClose,
     onConfirm,
@@ -32,12 +32,12 @@ export default function ReturnReasonModal({
         }
     }, [isOpen]);
 
-    // Filter returnable items
-    const returnableItems = orderItems.filter((item: any) => 
-        item.is_returnable && 
-        !item.return_status && 
-        item.return_status !== 'pending' && 
-        item.return_status !== 'approved'
+    // Filter replaceable items
+    const replaceableItems = orderItems.filter((item: any) => 
+        item.is_replaceable && 
+        !item.replacement_status && 
+        item.replacement_status !== 'pending' && 
+        item.replacement_status !== 'approved'
     );
 
     const handleItemToggle = (itemId: number) => {
@@ -49,20 +49,19 @@ export default function ReturnReasonModal({
     };
 
     const handleSelectAll = () => {
-        if (selectedItems.length === returnableItems.length) {
+        if (selectedItems.length === replaceableItems.length) {
             setSelectedItems([]);
         } else {
-            setSelectedItems(returnableItems.map((item: any) => item.id));
+            setSelectedItems(replaceableItems.map((item: any) => item.id));
         }
     };
 
     if (!isOpen) return null;
 
-    const returnReasons = [
+    const replacementReasons = [
         { value: 'defective_item', label: 'Defective Item' },
         { value: 'wrong_item', label: 'Wrong Item Received' },
         { value: 'not_as_described', label: 'Not as Described' },
-        { value: 'changed_mind', label: 'Changed My Mind' },
         { value: 'damaged_during_delivery', label: 'Damaged During Delivery' },
         { value: 'other', label: 'Other' },
     ];
@@ -77,20 +76,20 @@ export default function ReturnReasonModal({
         }
 
         // If items available and none selected, require selection
-        if (returnableItems.length > 0 && selectedItems.length === 0) {
+        if (replaceableItems.length > 0 && selectedItems.length === 0) {
             return;
         }
 
         onConfirm({
-            return_reason: selectedReason,
-            return_notes: selectedReason === 'other' ? customReason.trim() : null,
+            replacement_reason: selectedReason,
+            replacement_notes: selectedReason === 'other' ? customReason.trim() : null,
             item_ids: selectedItems.length > 0 ? selectedItems : undefined,
         });
     };
 
     const canConfirm = selectedReason && 
         (selectedReason !== 'other' || customReason.trim()) &&
-        (returnableItems.length === 0 || selectedItems.length > 0);
+        (replaceableItems.length === 0 || selectedItems.length > 0);
 
     return (
         <div className="fixed inset-0 z-[9999] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -103,30 +102,30 @@ export default function ReturnReasonModal({
                 <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
                     <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <div className="sm:flex sm:items-start">
-                            <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-orange-100 sm:mx-0 sm:h-10 sm:w-10">
-                                <ArrowPathIcon className="h-6 w-6 text-orange-600" aria-hidden="true" />
+                            <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <ArrowPathIcon className="h-6 w-6 text-blue-600" aria-hidden="true" />
                             </div>
                             <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left flex-1">
                                 <h3 className="text-lg font-medium leading-6 text-gray-900" id="modal-title">
-                                    Request Return/Refund
+                                    Request Replacement
                                 </h3>
                                 <div className="mt-4">
-                                    {returnableItems.length > 0 && (
+                                    {replaceableItems.length > 0 && (
                                         <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-md">
                                             <div className="flex items-center justify-between mb-2">
                                                 <p className="text-sm font-medium text-gray-700">
-                                                    Select items to return ({selectedItems.length} selected)
+                                                    Select items to replace ({selectedItems.length} selected)
                                                 </p>
                                                 <button
                                                     type="button"
                                                     onClick={handleSelectAll}
                                                     className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
                                                 >
-                                                    {selectedItems.length === returnableItems.length ? 'Deselect All' : 'Select All'}
+                                                    {selectedItems.length === replaceableItems.length ? 'Deselect All' : 'Select All'}
                                                 </button>
                                             </div>
                                             <div className="space-y-2 max-h-40 overflow-y-auto">
-                                                {returnableItems.map((item: any) => (
+                                                {replaceableItems.map((item: any) => (
                                                     <label
                                                         key={item.id}
                                                         className="flex items-center p-2 border border-gray-200 rounded hover:bg-white cursor-pointer"
@@ -135,7 +134,7 @@ export default function ReturnReasonModal({
                                                             type="checkbox"
                                                             checked={selectedItems.includes(item.id)}
                                                             onChange={() => handleItemToggle(item.id)}
-                                                            className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                                                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                                                         />
                                                         <span className="ml-2 text-xs text-gray-700 flex-1">
                                                             {item.product_name}
@@ -150,22 +149,22 @@ export default function ReturnReasonModal({
                                     )}
                                     
                                     <p className="text-sm text-gray-500 mb-4">
-                                        Please select a reason for return/refund:
+                                        Please select a reason for replacement:
                                     </p>
                                     
                                     <div className="space-y-2">
-                                        {returnReasons.map((reason) => (
+                                        {replacementReasons.map((reason) => (
                                             <label
                                                 key={reason.value}
                                                 className="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer"
                                             >
                                                 <input
                                                     type="radio"
-                                                    name="return_reason"
+                                                    name="replacement_reason"
                                                     value={reason.value}
                                                     checked={selectedReason === reason.value}
                                                     onChange={(e) => setSelectedReason(e.target.value)}
-                                                    className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300"
+                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                                                 />
                                                 <span className="ml-3 text-sm text-gray-700">{reason.label}</span>
                                             </label>
@@ -180,9 +179,9 @@ export default function ReturnReasonModal({
                                             <textarea
                                                 value={customReason}
                                                 onChange={(e) => setCustomReason(e.target.value)}
-                                                placeholder="Enter return reason..."
+                                                placeholder="Enter replacement reason..."
                                                 rows={3}
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                                                 maxLength={500}
                                             />
                                             <p className="mt-1 text-xs text-gray-500">
@@ -199,9 +198,9 @@ export default function ReturnReasonModal({
                             type="button"
                             onClick={handleConfirm}
                             disabled={!canConfirm || loading}
-                            className="inline-flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="inline-flex w-full justify-center rounded-md border border-transparent px-4 py-2 text-base font-medium text-white shadow-sm bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? 'Submitting...' : 'Submit Return Request'}
+                            {loading ? 'Submitting...' : 'Submit Replacement Request'}
                         </button>
                         <button
                             type="button"

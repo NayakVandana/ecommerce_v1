@@ -55,6 +55,7 @@ class AdminProductController extends Controller
             'total_quantity' => 'required|integer|min:0',
             'is_approve' => 'sometimes|integer|in:0,1',
             'is_returnable' => 'sometimes|boolean',
+            'is_replaceable' => 'sometimes|boolean',
             'return_policy_note' => 'nullable|string|max:500',
         ]);
 
@@ -113,6 +114,7 @@ class AdminProductController extends Controller
             'total_quantity' => 'sometimes|integer|min:0',
             'is_approve' => 'sometimes|integer|in:0,1',
             'is_returnable' => 'sometimes|boolean',
+            'is_replaceable' => 'sometimes|boolean',
             'return_policy_note' => 'nullable|string|max:500',
         ]);
 

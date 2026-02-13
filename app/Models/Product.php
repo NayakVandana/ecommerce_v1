@@ -39,6 +39,7 @@ class Product extends Model
         'is_approve',
         'total_quantity',
         'is_returnable',
+        'is_replaceable',
         'return_policy_note',
     ];
 
@@ -55,6 +56,7 @@ class Product extends Model
         'is_approve' => 'integer',
         'total_quantity' => 'integer',
         'is_returnable' => 'boolean',
+        'is_replaceable' => 'boolean',
         'category' => 'integer',
         'subcategory_1' => 'integer',
         'subcategory_2' => 'integer',

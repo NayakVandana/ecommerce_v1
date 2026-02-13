@@ -227,6 +227,12 @@ Route::prefix('admin')->group(function () {
         ]);
     })->name('admin.orders.return-refund');
     
+    Route::get('/orders/replacement', function () {
+        return Inertia::render('Admin/Order/index', [
+            'section' => 'replacement'
+        ]);
+    })->name('admin.orders.replacement');
+    
     Route::get('/orders/processed', function () {
         return Inertia::render('Admin/Order/index', [
             'section' => 'processed'

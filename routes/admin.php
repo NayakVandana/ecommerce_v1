@@ -62,6 +62,9 @@ Route::prefix('admin')->middleware(['auth.token', 'admin'])->group(function () {
         Route::post('/approve-return', [AdminOrderController::class, 'approveReturn']);
         Route::post('/reject-return', [AdminOrderController::class, 'rejectReturn']);
         Route::post('/process-refund', [AdminOrderController::class, 'processRefund']);
+        Route::post('/approve-replacement', [AdminOrderController::class, 'approveReplacement']);
+        Route::post('/reject-replacement', [AdminOrderController::class, 'rejectReplacement']);
+        Route::post('/process-replacement', [AdminOrderController::class, 'processReplacement']);
         Route::post('/update-delivery-date', [AdminOrderController::class, 'updateDeliveryDate']);
     });
     

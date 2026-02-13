@@ -39,7 +39,6 @@ export default function OrderShow() {
     const [showConfirm, setShowConfirm] = useState(false);
     const [confirmMessage, setConfirmMessage] = useState('');
     const [confirmAction, setConfirmAction] = useState<(() => void) | null>(null);
-    const [newStatus, setNewStatus] = useState<string | null>(null);
     const [updatingStatus, setUpdatingStatus] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelling, setCancelling] = useState(false);
@@ -255,6 +254,30 @@ export default function OrderShow() {
                 break;
         }
 
+        // Add return actions if return is pending
+        if (order.return_status === 'pending') {
+            actions.push(
+                { label: 'Approve Return', status: 'approve_return', color: 'green', icon: CheckCircleIcon },
+                { label: 'Reject Return', status: 'reject_return', color: 'red', icon: XCircleIcon }
+            );
+        } else if (order.return_status === 'approved') {
+            actions.push(
+                { label: 'Process Refund', status: 'process_refund', color: 'green', icon: CheckCircleIcon }
+            );
+        }
+
+        // Add replacement actions if replacement is pending
+        if (order.replacement_status === 'pending') {
+            actions.push(
+                { label: 'Approve Replacement', status: 'approve_replacement', color: 'blue', icon: CheckCircleIcon },
+                { label: 'Reject Replacement', status: 'reject_replacement', color: 'red', icon: XCircleIcon }
+            );
+        } else if (order.replacement_status === 'approved') {
+            actions.push(
+                { label: 'Process Replacement', status: 'process_replacement', color: 'blue', icon: ArrowPathIcon }
+            );
+        }
+
         return actions;
     };
 
@@ -267,18 +290,27 @@ export default function OrderShow() {
             await handleRejectReturn();
         } else if (newStatus === 'process_refund') {
             await handleProcessRefund();
+        } else if (newStatus === 'approve_replacement') {
+            await handleApproveReplacement();
+        } else if (newStatus === 'reject_replacement') {
+            await handleRejectReplacement();
+        } else if (newStatus === 'process_replacement') {
+            await handleProcessReplacement();
         } else {
             await handleStatusUpdate(newStatus);
         }
     };
 
-    const handleApproveReturn = async () => {
+    const handleApproveReturn = async (itemId?: number) => {
         try {
             setUpdatingStatus(true);
-            const response = await useOrderStore.approveReturn({ id: orderId });
+            const response = await useOrderStore.approveReturn({ 
+                id: orderId,
+                item_id: itemId
+            });
             if (response.data?.status) {
                 await fetchOrder();
-                toast({ type: 'success', message: 'Return approved and refund processed successfully' });
+                toast({ type: 'success', message: itemId ? 'Item return approved successfully' : 'Return approved and refund processed successfully' });
             } else {
                 toast({ type: 'error', message: response.data?.message || 'Failed to approve return' });
             }
@@ -290,17 +322,18 @@ export default function OrderShow() {
         }
     };
 
-    const handleRejectReturn = async () => {
+    const handleRejectReturn = async (itemId?: number) => {
         const rejectionReason = prompt('Please enter rejection reason (optional):');
         try {
             setUpdatingStatus(true);
             const response = await useOrderStore.rejectReturn({ 
                 id: orderId,
+                item_id: itemId,
                 rejection_reason: rejectionReason || null
             });
             if (response.data?.status) {
                 await fetchOrder();
-                toast({ type: 'success', message: 'Return request rejected' });
+                toast({ type: 'success', message: itemId ? 'Item return request rejected' : 'Return request rejected' });
             } else {
                 toast({ type: 'error', message: response.data?.message || 'Failed to reject return' });
             }
@@ -312,19 +345,87 @@ export default function OrderShow() {
         }
     };
 
-    const handleProcessRefund = async () => {
+    const handleProcessRefund = async (itemId?: number) => {
         try {
             setUpdatingStatus(true);
-            const response = await useOrderStore.processRefund({ id: orderId });
+            const response = await useOrderStore.processRefund({ 
+                id: orderId,
+                item_id: itemId
+            });
             if (response.data?.status) {
                 await fetchOrder();
-                toast({ type: 'success', message: 'Refund processed successfully' });
+                toast({ type: 'success', message: itemId ? 'Item refund processed successfully' : 'Refund processed successfully' });
             } else {
                 toast({ type: 'error', message: response.data?.message || 'Failed to process refund' });
             }
         } catch (error: any) {
             console.error('Error processing refund:', error);
             toast({ type: 'error', message: error.response?.data?.message || 'Failed to process refund' });
+        } finally {
+            setUpdatingStatus(false);
+        }
+    };
+
+    const handleApproveReplacement = async (itemId?: number) => {
+        try {
+            setUpdatingStatus(true);
+            const response = await useOrderStore.approveReplacement({ 
+                id: orderId,
+                item_id: itemId
+            });
+            if (response.data?.status) {
+                await fetchOrder();
+                toast({ type: 'success', message: itemId ? 'Item replacement approved and new order created successfully' : 'Replacement approved and new order created successfully' });
+            } else {
+                toast({ type: 'error', message: response.data?.message || 'Failed to approve replacement' });
+            }
+        } catch (error: any) {
+            console.error('Error approving replacement:', error);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to approve replacement' });
+        } finally {
+            setUpdatingStatus(false);
+        }
+    };
+
+    const handleRejectReplacement = async (itemId?: number) => {
+        const rejectionReason = prompt('Please enter rejection reason (optional):');
+        try {
+            setUpdatingStatus(true);
+            const response = await useOrderStore.rejectReplacement({ 
+                id: orderId,
+                item_id: itemId,
+                rejection_reason: rejectionReason || null
+            });
+            if (response.data?.status) {
+                await fetchOrder();
+                toast({ type: 'success', message: itemId ? 'Item replacement request rejected' : 'Replacement request rejected' });
+            } else {
+                toast({ type: 'error', message: response.data?.message || 'Failed to reject replacement' });
+            }
+        } catch (error: any) {
+            console.error('Error rejecting replacement:', error);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to reject replacement' });
+        } finally {
+            setUpdatingStatus(false);
+        }
+    };
+
+    const handleProcessReplacement = async (itemId?: number) => {
+        try {
+            setUpdatingStatus(true);
+            const response = await useOrderStore.processReplacement({ 
+                id: orderId,
+                item_id: itemId
+            });
+            if (response.data?.status) {
+                await fetchOrder();
+                toast({ type: 'success', message: itemId ? 'Item replacement processed successfully' : 'Replacement processed successfully' });
+            } else {
+                toast({ type: 'error', message: response.data?.message || 'Failed to process replacement' });
+            }
+        } catch (error: any) {
+            console.error('Error processing replacement:', error);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to process replacement' });
         } finally {
             setUpdatingStatus(false);
         }
@@ -479,47 +580,6 @@ export default function OrderShow() {
                                     </p>
                                     {order.cancellation_notes && (
                                         <p className="text-sm text-red-700 mt-2 italic">"{order.cancellation_notes}"</p>
-                                    )}
-                                </div>
-                            )}
-
-                            {order.return_status && (
-                                <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-md max-w-2xl">
-                                    <p className="text-sm font-semibold text-orange-900 mb-1">Return/Refund Status:</p>
-                                    <p className="text-sm text-orange-800 capitalize mb-2">
-                                        {order.return_status === 'pending' && '⏳ Return Request Pending'}
-                                        {order.return_status === 'approved' && '✅ Return Approved - Refund Processing'}
-                                        {order.return_status === 'rejected' && '❌ Return Request Rejected'}
-                                        {order.return_status === 'refunded' && '💰 Refund Processed'}
-                                    </p>
-                                    {order.return_reason && (
-                                        <p className="text-sm text-orange-700 mb-1">
-                                            <span className="font-semibold">Reason:</span> 
-                                            {order.return_reason === 'defective_item' && ' Defective Item'}
-                                            {order.return_reason === 'wrong_item' && ' Wrong Item Received'}
-                                            {order.return_reason === 'not_as_described' && ' Not as Described'}
-                                            {order.return_reason === 'changed_mind' && ' Changed My Mind'}
-                                            {order.return_reason === 'damaged_during_delivery' && ' Damaged During Delivery'}
-                                            {order.return_reason === 'other' && ' Other'}
-                                        </p>
-                                    )}
-                                    {order.return_notes && (
-                                        <p className="text-sm text-orange-700 mt-1 italic">"{order.return_notes}"</p>
-                                    )}
-                                    {order.refund_amount && (
-                                        <p className="text-sm font-semibold text-orange-900 mt-2">
-                                            Refund Amount: ${Number(order.refund_amount).toFixed(2)}
-                                        </p>
-                                    )}
-                                    {order.return_requested_at && (
-                                        <p className="text-xs text-orange-600 mt-1">
-                                            Requested: {new Date(order.return_requested_at).toLocaleString()}
-                                        </p>
-                                    )}
-                                    {order.return_processed_at && (
-                                        <p className="text-xs text-orange-600 mt-1">
-                                            Processed: {new Date(order.return_processed_at).toLocaleString()}
-                                        </p>
                                     )}
                                 </div>
                             )}
@@ -686,16 +746,22 @@ export default function OrderShow() {
                             </div>
 
                             {/* Out for Delivery */}
-                            {order.out_for_delivery_at && (
-                                <div className="relative flex items-start">
-                                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 bg-indigo-500">
-                                        <TruckIcon className="h-5 w-5 text-white" />
-                                    </div>
-                                    <div className="ml-4 flex-1">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-sm font-semibold text-gray-900">
-                                                Out for Delivery
-                                            </h3>
+                            <div className="relative flex items-start">
+                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 ${
+                                    order.out_for_delivery_at ? 'bg-indigo-500' : 'bg-gray-300'
+                                }`}>
+                                    <TruckIcon className={`h-5 w-5 ${
+                                        order.out_for_delivery_at ? 'text-white' : 'text-gray-500'
+                                    }`} />
+                                </div>
+                                <div className="ml-4 flex-1">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className={`text-sm font-semibold ${
+                                            order.out_for_delivery_at ? 'text-gray-900' : 'text-gray-400'
+                                        }`}>
+                                            Out for Delivery
+                                        </h3>
+                                        {order.out_for_delivery_at && (
                                             <span className="text-xs text-gray-500">
                                                 {new Date(order.out_for_delivery_at).toLocaleString('en-US', {
                                                     year: 'numeric',
@@ -705,13 +771,13 @@ export default function OrderShow() {
                                                     minute: '2-digit'
                                                 })}
                                             </span>
-                                        </div>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            Order is out for delivery
-                                        </p>
+                                        )}
                                     </div>
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        Order is out for delivery
+                                    </p>
                                 </div>
-                            )}
+                            </div>
 
                             {/* Delivered */}
                             {order.delivered_at && (
@@ -775,57 +841,383 @@ export default function OrderShow() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Order Information */}
+                        {/* Order Status Overview */}
                         <div className="bg-white shadow rounded-lg p-6">
-                            <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Information</h2>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p className="text-xs text-gray-500">Order Date</p>
-                                    <p className="text-sm font-medium text-gray-900">
-                                        {new Date(order.created_at).toLocaleString()}
-                                    </p>
-                                </div>
-                                <div>
-                                    <p className="text-xs text-gray-500">Status</p>
-                                    <div className="mt-1">
+                            <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Status Overview</h2>
+                            <div className="space-y-4">
+                                {/* Main Order Status */}
+                                <div className="pb-4 border-b border-gray-200">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <p className="text-sm font-semibold text-gray-700">Order Status</p>
                                         {getStatusBadge(order.status)}
                                     </div>
+                                    <div className="grid grid-cols-2 gap-4 mt-3">
+                                        <div>
+                                            <p className="text-xs text-gray-500">Order Date</p>
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {new Date(order.created_at).toLocaleString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'short',
+                                                    day: 'numeric',
+                                                    hour: '2-digit',
+                                                    minute: '2-digit'
+                                                })}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500">Order Number</p>
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {order.order_number || `#${order.id}`}
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="col-span-2">
-                                    <p className="text-xs text-gray-500 mb-1">Expected Delivery Date</p>
-                                    <div className="flex items-center gap-2">
-                                        {order.delivery_date ? (
-                                            <>
-                                                <p className="text-sm font-medium text-gray-900">
-                                                    {new Date(order.delivery_date).toLocaleDateString('en-US', { 
-                                                        weekday: 'long', 
-                                                        year: 'numeric', 
-                                                        month: 'long', 
-                                                        day: 'numeric' 
+
+                                {/* Delivery Status */}
+                                <div className="pb-4 border-b border-gray-200">
+                                    <p className="text-sm font-semibold text-gray-700 mb-3">Delivery Information</p>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-xs text-gray-500">Expected Delivery Date</p>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                {order.delivery_date ? (
+                                                    <>
+                                                        <p className="text-sm font-medium text-gray-900">
+                                                            {new Date(order.delivery_date).toLocaleDateString('en-US', { 
+                                                                weekday: 'long', 
+                                                                year: 'numeric', 
+                                                                month: 'long', 
+                                                                day: 'numeric' 
+                                                            })}
+                                                        </p>
+                                                        {order.status !== 'shipped' && order.status !== 'delivered' && order.status !== 'completed' && (
+                                                            <button
+                                                                onClick={() => handleEditDeliveryDate()}
+                                                                className="px-2 py-1 text-xs font-medium text-white bg-purple-600 rounded hover:bg-purple-700 flex items-center gap-1"
+                                                                title="Change Delivery Date"
+                                                            >
+                                                                <TruckIcon className="h-3 w-3" />
+                                                                Edit
+                                                            </button>
+                                                        )}
+                                                    </>
+                                                ) : (
+                                                    order.status !== 'shipped' && order.status !== 'delivered' && order.status !== 'completed' && (
+                                                        <button
+                                                            onClick={() => handleEditDeliveryDate()}
+                                                            className="px-2 py-1 text-xs font-medium text-white bg-purple-600 rounded hover:bg-purple-700 flex items-center gap-1"
+                                                            title="Set Delivery Date"
+                                                        >
+                                                            <TruckIcon className="h-3 w-3" />
+                                                            Set Date
+                                                        </button>
+                                                    )
+                                                )}
+                                            </div>
+                                        </div>
+                                        {order.delivered_at && (
+                                            <div>
+                                                <p className="text-xs text-gray-500">Delivered Date</p>
+                                                <p className="text-sm font-medium text-green-600">
+                                                    {new Date(order.delivered_at).toLocaleString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
                                                     })}
                                                 </p>
-                                                {order.status !== 'shipped' && (
-                                                    <button
-                                                        onClick={() => handleEditDeliveryDate()}
-                                                        className="px-3 py-1 text-xs font-medium text-white bg-purple-600 rounded hover:bg-purple-700 flex items-center gap-1"
-                                                        title="Change Delivery Date"
-                                                    >
-                                                        <TruckIcon className="h-3 w-3" />
-                                                        Change Date
-                                                    </button>
+                                            </div>
+                                        )}
+                                        {order.shipped_at && (
+                                            <div>
+                                                <p className="text-xs text-gray-500">Shipped Date</p>
+                                                <p className="text-sm font-medium text-gray-900">
+                                                    {new Date(order.shipped_at).toLocaleString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {order.out_for_delivery_at && (
+                                            <div>
+                                                <p className="text-xs text-gray-500">Out for Delivery</p>
+                                                <p className="text-sm font-medium text-indigo-600">
+                                                    {new Date(order.out_for_delivery_at).toLocaleString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Cancellation Status */}
+                                {order.status === 'cancelled' && order.cancellation_reason && (
+                                    <div className="pb-4 border-b border-gray-200">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <XCircleIcon className="h-5 w-5 text-red-600" />
+                                            <p className="text-sm font-semibold text-gray-700">Cancellation Information</p>
+                                        </div>
+                                        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                                            <p className="text-sm font-semibold text-red-900 mb-2">Order Cancelled</p>
+                                            <p className="text-sm text-red-800 mb-2">
+                                                {order.cancellation_reason === 'changed_mind' && 'Changed My Mind'}
+                                                {order.cancellation_reason === 'found_better_price' && 'Found Better Price Elsewhere'}
+                                                {order.cancellation_reason === 'wrong_item' && 'Wrong Item Ordered'}
+                                                {order.cancellation_reason === 'delivery_address_incorrect' && 'Delivery Address Incorrect'}
+                                                {order.cancellation_reason === 'delayed_delivery' && 'Delivery Taking Too Long'}
+                                                {order.cancellation_reason === 'customer_request' && 'Customer Request'}
+                                                {order.cancellation_reason === 'out_of_stock' && 'Out of Stock'}
+                                                {order.cancellation_reason === 'payment_failed' && 'Payment Failed'}
+                                                {order.cancellation_reason === 'delivery_issue' && 'Delivery Issue'}
+                                                {order.cancellation_reason === 'other' && 'Other'}
+                                            </p>
+                                            {order.cancellation_notes && (
+                                                <p className="text-sm text-red-700 mb-2 italic">"{order.cancellation_notes}"</p>
+                                            )}
+                                            {order.cancelled_at && (
+                                                <div className="mt-2 pt-2 border-t border-red-200">
+                                                    <p className="text-xs text-red-600 font-semibold">Cancelled On</p>
+                                                    <p className="text-xs text-red-700">
+                                                        {new Date(order.cancelled_at).toLocaleString('en-US', {
+                                                            year: 'numeric',
+                                                            month: 'short',
+                                                            day: 'numeric',
+                                                            hour: '2-digit',
+                                                            minute: '2-digit'
+                                                        })}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Return/Refund Status */}
+                                {order.return_status && (
+                                    <div className="pb-4 border-b border-gray-200">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <ArrowPathIcon className="h-5 w-5 text-orange-600" />
+                                            <p className="text-sm font-semibold text-gray-700">Return/Refund Status</p>
+                                        </div>
+                                        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <p className="text-sm font-semibold text-orange-900">
+                                                    {order.return_status === 'pending' && '⏳ Return Request Pending'}
+                                                    {order.return_status === 'approved' && '✅ Return Approved - Refund Processing'}
+                                                    {order.return_status === 'rejected' && '❌ Return Request Rejected'}
+                                                    {order.return_status === 'refunded' && '💰 Refund Processed'}
+                                                </p>
+                                            </div>
+                                            {order.return_reason && (
+                                                <p className="text-sm text-orange-700 mb-2">
+                                                    <span className="font-semibold">Reason:</span> 
+                                                    {order.return_reason === 'defective_item' && ' Defective Item'}
+                                                    {order.return_reason === 'wrong_item' && ' Wrong Item Received'}
+                                                    {order.return_reason === 'not_as_described' && ' Not as Described'}
+                                                    {order.return_reason === 'changed_mind' && ' Changed My Mind'}
+                                                    {order.return_reason === 'damaged_during_delivery' && ' Damaged During Delivery'}
+                                                    {order.return_reason === 'other' && ' Other'}
+                                                </p>
+                                            )}
+                                            {order.return_notes && (
+                                                <p className="text-sm text-orange-700 mb-2 italic">"{order.return_notes}"</p>
+                                            )}
+                                            {order.refund_amount && (
+                                                <p className="text-sm font-semibold text-orange-900 mb-2">
+                                                    Refund Amount: ${Number(order.refund_amount).toFixed(2)}
+                                                </p>
+                                            )}
+                                            <div className="flex flex-wrap gap-4 mt-2 pt-2 border-t border-orange-200">
+                                                {order.return_requested_at && (
+                                                    <div>
+                                                        <p className="text-xs text-orange-600 font-semibold">Requested</p>
+                                                        <p className="text-xs text-orange-700">
+                                                            {new Date(order.return_requested_at).toLocaleString('en-US', {
+                                                                year: 'numeric',
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })}
+                                                        </p>
+                                                    </div>
                                                 )}
-                                            </>
-                                        ) : (
-                                            order.status !== 'shipped' && (
-                                                <button
-                                                    onClick={() => handleEditDeliveryDate()}
-                                                    className="px-3 py-1 text-xs font-medium text-white bg-purple-600 rounded hover:bg-purple-700 flex items-center gap-1"
-                                                    title="Set Delivery Date"
-                                                >
-                                                    <TruckIcon className="h-3 w-3" />
-                                                    Set Delivery Date
-                                                </button>
-                                            )
+                                                {order.return_processed_at && (
+                                                    <div>
+                                                        <p className="text-xs text-orange-600 font-semibold">Processed</p>
+                                                        <p className="text-xs text-orange-700">
+                                                            {new Date(order.return_processed_at).toLocaleString('en-US', {
+                                                                year: 'numeric',
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Replacement Status */}
+                                {order.replacement_status && (
+                                    <div className="pb-4 border-b border-gray-200">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <ArrowPathIcon className="h-5 w-5 text-blue-600" />
+                                            <p className="text-sm font-semibold text-gray-700">Replacement Status</p>
+                                        </div>
+                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <p className="text-sm font-semibold text-blue-900">
+                                                    {order.replacement_status === 'pending' && '⏳ Replacement Request Pending'}
+                                                    {order.replacement_status === 'approved' && '✅ Replacement Approved - New Order Created'}
+                                                    {order.replacement_status === 'rejected' && '❌ Replacement Request Rejected'}
+                                                    {order.replacement_status === 'processed' && '✅ Replacement Processed'}
+                                                </p>
+                                            </div>
+                                            {order.replacement_reason && (
+                                                <p className="text-sm text-blue-700 mb-2">
+                                                    <span className="font-semibold">Reason:</span> 
+                                                    {order.replacement_reason === 'defective_item' && ' Defective Item'}
+                                                    {order.replacement_reason === 'wrong_item' && ' Wrong Item Received'}
+                                                    {order.replacement_reason === 'not_as_described' && ' Not as Described'}
+                                                    {order.replacement_reason === 'damaged_during_delivery' && ' Damaged During Delivery'}
+                                                    {order.replacement_reason === 'other' && ' Other'}
+                                                </p>
+                                            )}
+                                            {order.replacement_notes && (
+                                                <p className="text-sm text-blue-700 mb-2 italic">"{order.replacement_notes}"</p>
+                                            )}
+                                            {order.replacement_order_id && order.replacement_order && (
+                                                <div className="mb-2">
+                                                    <p className="text-sm font-semibold text-blue-900 mb-1">Replacement Order:</p>
+                                                    <Link
+                                                        href={`/admin/orders/${order.replacement_order.id}/show`}
+                                                        className="text-sm text-blue-600 hover:text-blue-800 underline font-medium"
+                                                    >
+                                                        Order #{order.replacement_order.order_number || order.replacement_order.id}
+                                                    </Link>
+                                                </div>
+                                            )}
+                                            <div className="flex flex-wrap gap-4 mt-2 pt-2 border-t border-blue-200">
+                                                {order.replacement_requested_at && (
+                                                    <div>
+                                                        <p className="text-xs text-blue-600 font-semibold">Requested</p>
+                                                        <p className="text-xs text-blue-700">
+                                                            {new Date(order.replacement_requested_at).toLocaleString('en-US', {
+                                                                year: 'numeric',
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                                {order.replacement_processed_at && (
+                                                    <div>
+                                                        <p className="text-xs text-blue-600 font-semibold">Processed</p>
+                                                        <p className="text-xs text-blue-700">
+                                                            {new Date(order.replacement_processed_at).toLocaleString('en-US', {
+                                                                year: 'numeric',
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })}
+                                                        </p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Processing Timeline */}
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-700 mb-3">Processing Timeline</p>
+                                    <div className="space-y-2">
+                                        {order.processing_at && (
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-gray-600">Processing Started</span>
+                                                <span className="text-gray-900 font-medium">
+                                                    {new Date(order.processing_at).toLocaleString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {order.shipped_at && (
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-gray-600">Shipped</span>
+                                                <span className="text-gray-900 font-medium">
+                                                    {new Date(order.shipped_at).toLocaleString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {order.out_for_delivery_at && (
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-gray-600">Out for Delivery</span>
+                                                <span className="text-gray-900 font-medium">
+                                                    {new Date(order.out_for_delivery_at).toLocaleString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {order.delivered_at && (
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-gray-600">Delivered</span>
+                                                <span className="text-green-600 font-medium">
+                                                    {new Date(order.delivered_at).toLocaleString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {order.cancelled_at && (
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-gray-600">Cancelled</span>
+                                                <span className="text-red-600 font-medium">
+                                                    {new Date(order.cancelled_at).toLocaleString('en-US', {
+                                                        year: 'numeric',
+                                                        month: 'short',
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                    })}
+                                                </span>
+                                            </div>
                                         )}
                                     </div>
                                 </div>
@@ -979,6 +1371,10 @@ export default function OrderShow() {
                                     const primaryImage = product?.media?.find((m: any) => m.is_primary) || product?.media?.[0];
                                     const imageUrl = primaryImage?.url || primaryImage?.file_path || '';
                                     
+                                    // Item-level return/replacement status
+                                    const hasReturnStatus = item.return_status;
+                                    const hasReplacementStatus = item.replacement_status;
+                                    
                                     return (
                                         <div key={item.id} className="flex gap-4 pb-4 border-b last:border-b-0">
                                             <div className="flex-shrink-0">
@@ -1011,15 +1407,159 @@ export default function OrderShow() {
                                                 <p className="text-xs text-gray-600 mt-1">
                                                     Quantity: {item.quantity} × ${Number(item.price || 0).toFixed(2)}
                                                 </p>
-                                                {/* Return Eligibility Badge */}
-                                                {item.is_returnable !== false ? (
-                                                    <span className="inline-flex items-center mt-2 px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                        ✓ Returnable
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center mt-2 px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
-                                                        ✗ Not Returnable
-                                                    </span>
+                                                {/* Return/Replace Eligibility Badges */}
+                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                    {item.is_returnable !== false ? (
+                                                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                            ✓ Returnable
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                            ✗ Not Returnable
+                                                        </span>
+                                                    )}
+                                                    {item.is_replaceable !== false ? (
+                                                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                            🔄 Replaceable
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                            ✗ Not Replaceable
+                                                        </span>
+                                                    )}
+                                                    
+                                                    {/* Item Return Status */}
+                                                    {item.return_status && (
+                                                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                                            item.return_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                            item.return_status === 'approved' ? 'bg-green-100 text-green-800' :
+                                                            item.return_status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                            'bg-blue-100 text-blue-800'
+                                                        }`}>
+                                                            {item.return_status === 'pending' && '⏳ Return Pending'}
+                                                            {item.return_status === 'approved' && '✅ Return Approved'}
+                                                            {item.return_status === 'rejected' && '❌ Return Rejected'}
+                                                            {item.return_status === 'refunded' && '💰 Refunded'}
+                                                        </span>
+                                                    )}
+                                                    
+                                                    {/* Item Replacement Status */}
+                                                    {item.replacement_status && (
+                                                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                                            item.replacement_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                            item.replacement_status === 'approved' ? 'bg-green-100 text-green-800' :
+                                                            item.replacement_status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                            'bg-blue-100 text-blue-800'
+                                                        }`}>
+                                                            {item.replacement_status === 'pending' && '⏳ Replacement Pending'}
+                                                            {item.replacement_status === 'approved' && '✅ Replacement Approved'}
+                                                            {item.replacement_status === 'rejected' && '❌ Replacement Rejected'}
+                                                            {item.replacement_status === 'processed' && '✅ Replacement Processed'}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                
+                                                {/* Item Return/Replacement Details */}
+                                                {(hasReturnStatus || hasReplacementStatus) && (
+                                                    <div className="mt-2 pt-2 border-t border-gray-200 space-y-2">
+                                                        {item.return_status && (
+                                                            <div className="text-xs">
+                                                                <span className="font-semibold text-orange-700">Return:</span>
+                                                                <span className="text-gray-600 ml-1">
+                                                                    {item.return_reason && (
+                                                                        item.return_reason === 'defective_item' ? 'Defective Item' :
+                                                                        item.return_reason === 'wrong_item' ? 'Wrong Item' :
+                                                                        item.return_reason === 'not_as_described' ? 'Not as Described' :
+                                                                        item.return_reason === 'changed_mind' ? 'Changed Mind' :
+                                                                        item.return_reason === 'damaged_during_delivery' ? 'Damaged' :
+                                                                        'Other'
+                                                                    )}
+                                                                </span>
+                                                                {item.return_requested_at && (
+                                                                    <span className="text-gray-500 ml-2">
+                                                                        ({new Date(item.return_requested_at).toLocaleDateString()})
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                        {item.replacement_status && (
+                                                            <div className="text-xs">
+                                                                <span className="font-semibold text-blue-700">Replacement:</span>
+                                                                <span className="text-gray-600 ml-1">
+                                                                    {item.replacement_reason && (
+                                                                        item.replacement_reason === 'defective_item' ? 'Defective Item' :
+                                                                        item.replacement_reason === 'wrong_item' ? 'Wrong Item' :
+                                                                        item.replacement_reason === 'not_as_described' ? 'Not as Described' :
+                                                                        item.replacement_reason === 'damaged_during_delivery' ? 'Damaged' :
+                                                                        'Other'
+                                                                    )}
+                                                                </span>
+                                                                {item.replacement_requested_at && (
+                                                                    <span className="text-gray-500 ml-2">
+                                                                        ({new Date(item.replacement_requested_at).toLocaleDateString()})
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                        
+                                                        {/* Item-level Action Buttons */}
+                                                        <div className="flex flex-wrap gap-2 mt-2">
+                                                            {item.return_status === 'pending' && (
+                                                                <>
+                                                                    <button
+                                                                        onClick={() => handleApproveReturn(item.id)}
+                                                                        disabled={updatingStatus}
+                                                                        className="px-2 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700 disabled:opacity-50"
+                                                                    >
+                                                                        Approve Return
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleRejectReturn(item.id)}
+                                                                        disabled={updatingStatus}
+                                                                        className="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 disabled:opacity-50"
+                                                                    >
+                                                                        Reject Return
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                            {item.return_status === 'approved' && (
+                                                                <button
+                                                                    onClick={() => handleProcessRefund(item.id)}
+                                                                    disabled={updatingStatus}
+                                                                    className="px-2 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+                                                                >
+                                                                    Process Refund
+                                                                </button>
+                                                            )}
+                                                            {item.replacement_status === 'pending' && (
+                                                                <>
+                                                                    <button
+                                                                        onClick={() => handleApproveReplacement(item.id)}
+                                                                        disabled={updatingStatus}
+                                                                        className="px-2 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700 disabled:opacity-50"
+                                                                    >
+                                                                        Approve Replacement
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleRejectReplacement(item.id)}
+                                                                        disabled={updatingStatus}
+                                                                        className="px-2 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 disabled:opacity-50"
+                                                                    >
+                                                                        Reject Replacement
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                            {item.replacement_status === 'approved' && (
+                                                                <button
+                                                                    onClick={() => handleProcessReplacement(item.id)}
+                                                                    disabled={updatingStatus}
+                                                                    className="px-2 py-1 text-xs font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50"
+                                                                >
+                                                                    Process Replacement
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 )}
                                             </div>
                                             

@@ -19,7 +19,8 @@ class OrderApiController extends Controller
 {
     public function index(Request $request)
     {
-        $orders = Order::where('user_id', $request->user()->id)
+        $orders = Order::with(['items.product.media', 'items.variation'])
+            ->where('user_id', $request->user()->id)
             ->latest()
             ->paginate(10);
 
@@ -102,8 +103,7 @@ class OrderApiController extends Controller
             return $this->sendJsonResponse(false, 'No items to order', [], 400);
         }
 
-        // Calculate totals
-        $subtotal = 0;
+        // Prepare order items data
         $orderItemsData = [];
 
         foreach ($items as $item) {
@@ -115,7 +115,6 @@ class OrderApiController extends Controller
             $price = $product->final_price ?? $product->price;
             $quantity = $item['quantity'];
             $itemSubtotal = $price * $quantity;
-            $subtotal += $itemSubtotal;
 
             $orderItemsData[] = [
                 'product' => $product,
@@ -129,88 +128,94 @@ class OrderApiController extends Controller
             ];
         }
 
+        if (empty($orderItemsData)) {
+            return $this->sendJsonResponse(false, 'No valid items to order', [], 400);
+        }
+
+        // Calculate default delivery date: 2 days after tomorrow (3 days from today)
+        $defaultDeliveryDate = now()->addDays(3)->format('Y-m-d');
+
+        // Create individual orders for each item
+        $createdOrders = [];
         $tax = 0; // Can be calculated based on GST if needed
         $shipping = 0; // Can be calculated based on address/weight if needed
-        
-        // Handle coupon application
-        $couponCodeId = null;
-        $discount = 0;
-        $coupon = null;
-        
-        if ($request->has('coupon_code') && $request->coupon_code) {
-            $coupon = $this->validateAndApplyCoupon($request->coupon_code, $subtotal, $userId);
-            if ($coupon) {
-                $couponCodeId = $coupon->id;
-                $discount = $this->calculateDiscount($coupon, $subtotal);
-            }
-        }
-        
-        $total = $subtotal + $tax + $shipping - $discount;
-        if ($total < 0) {
-            $total = 0;
-        }
 
-        // Generate order number
-        $orderNumber = $this->generateOrderNumber();
-
-        // Create order and items in transaction
         try {
             DB::beginTransaction();
 
-            // Calculate default delivery date: 2 days after tomorrow (3 days from today)
-            $defaultDeliveryDate = now()->addDays(3)->format('Y-m-d');
-
-            $order = Order::create([
-                'user_id' => $userId,
-                'order_number' => $orderNumber,
-                'name' => $request->name,
-                'email' => $request->email,
-                'phone' => $request->receiver_number, // Use receiver_number as phone
-                'receiver_name' => $request->receiver_name,
-                'receiver_number' => $request->receiver_number,
-                'address' => $request->address,
-                'house_no' => $request->house_no,
-                'floor_no' => $request->floor_no,
-                'building_name' => $request->building_name,
-                'landmark' => $request->landmark,
-                'district' => $request->district ?? 'Valsad',
-                'city' => $request->city ?? 'Vapi',
-                'postal_code' => $request->postal_code,
-                'state' => $request->state ?? 'Gujarat',
-                'country' => $request->country ?? 'India',
-                'address_type' => $request->address_type ?? 'home',
-                'subtotal' => $subtotal,
-                'tax' => $tax,
-                'shipping' => $shipping,
-                'discount' => $discount,
-                'coupon_code_id' => $couponCodeId,
-                'total' => $total,
-                'status' => 'pending',
-                'notes' => $request->notes,
-                'delivery_date' => $request->delivery_date ?? $defaultDeliveryDate,
-            ]);
+            // Handle coupon application (apply to first order only, or distribute proportionally)
+            $couponCodeId = null;
+            $discount = 0;
+            $coupon = null;
+            $totalSubtotal = array_sum(array_column($orderItemsData, 'subtotal'));
             
-            // Record coupon usage if coupon was applied
-            if ($coupon && $discount > 0) {
-                CouponCodeUsage::create([
-                    'coupon_code_id' => $coupon->id,
-                    'user_id' => $userId,
-                    'order_id' => $order->id,
-                    'discount_amount' => $discount,
-                    'order_total' => $total,
-                    'user_email' => $request->email,
-                    'user_name' => $request->name,
-                ]);
-                
-                // Update coupon usage count
-                $coupon->increment('usage_count');
+            if ($request->has('coupon_code') && $request->coupon_code) {
+                $coupon = $this->validateAndApplyCoupon($request->coupon_code, $totalSubtotal, $userId);
+                if ($coupon) {
+                    $couponCodeId = $coupon->id;
+                    $discount = $this->calculateDiscount($coupon, $totalSubtotal);
+                }
             }
 
-            // Create order items
-            foreach ($orderItemsData as $itemData) {
+            // Create a separate order for EACH item
+            foreach ($orderItemsData as $index => $itemData) {
                 $product = $itemData['product'];
                 $variation = $itemData['variation_id'] ? ProductVariation::find($itemData['variation_id']) : null;
 
+                // Calculate totals for this individual item
+                $itemSubtotal = $itemData['subtotal'];
+                $itemTax = 0; // Tax per item (can be calculated proportionally if needed)
+                $itemShipping = 0; // Shipping per item (can be calculated if needed)
+                
+                // Distribute discount proportionally if coupon applied
+                $itemDiscount = 0;
+                if ($coupon && $discount > 0 && $totalSubtotal > 0) {
+                    $itemDiscount = ($itemSubtotal / $totalSubtotal) * $discount;
+                }
+                
+                $itemTotal = $itemSubtotal + $itemTax + $itemShipping - $itemDiscount;
+                if ($itemTotal < 0) {
+                    $itemTotal = 0;
+                }
+
+                // Generate unique order number for each item
+                if ($index > 0) {
+                    usleep(mt_rand(2000, 5000)); // Small delay to ensure different microtime
+                }
+                $orderNumber = $this->generateOrderNumber();
+
+                // Create individual order for this item
+                $order = Order::create([
+                    'user_id' => $userId,
+                    'order_number' => $orderNumber,
+                    'name' => $request->name,
+                    'email' => $request->email,
+                    'phone' => $request->receiver_number, // Use receiver_number as phone
+                    'receiver_name' => $request->receiver_name,
+                    'receiver_number' => $request->receiver_number,
+                    'address' => $request->address,
+                    'house_no' => $request->house_no,
+                    'floor_no' => $request->floor_no,
+                    'building_name' => $request->building_name,
+                    'landmark' => $request->landmark,
+                    'district' => $request->district ?? 'Valsad',
+                    'city' => $request->city ?? 'Vapi',
+                    'postal_code' => $request->postal_code,
+                    'state' => $request->state ?? 'Gujarat',
+                    'country' => $request->country ?? 'India',
+                    'address_type' => $request->address_type ?? 'home',
+                    'subtotal' => $itemSubtotal,
+                    'tax' => $itemTax,
+                    'shipping' => $itemShipping,
+                    'discount' => $itemDiscount,
+                    'coupon_code_id' => $index === 0 ? $couponCodeId : null, // Apply coupon to first order only
+                    'total' => $itemTotal,
+                    'status' => 'pending',
+                    'notes' => $request->notes,
+                    'delivery_date' => $request->delivery_date ?? $defaultDeliveryDate,
+                ]);
+
+                // Create order item
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $product->id,
@@ -223,12 +228,12 @@ class OrderApiController extends Controller
                     'price' => $itemData['price'],
                     'subtotal' => $itemData['subtotal'],
                     'is_returnable' => $product->is_returnable ?? false, // Store returnable status at time of order
+                    'is_replaceable' => $product->is_replaceable ?? false, // Store replaceable status at time of order
                 ]);
 
                 // Update stock
-                if ($itemData['variation_id']) {
-                    $variation = ProductVariation::find($itemData['variation_id']);
-                    if ($variation && $variation->stock_quantity !== null) {
+                if ($itemData['variation_id'] && $variation) {
+                    if ($variation->stock_quantity !== null) {
                         $variation->stock_quantity -= $itemData['quantity'];
                         if ($variation->stock_quantity <= 0) {
                             $variation->in_stock = false;
@@ -242,6 +247,24 @@ class OrderApiController extends Controller
                     }
                     $product->save();
                 }
+
+                // Record coupon usage for first order only
+                if ($index === 0 && $coupon && $discount > 0) {
+                    CouponCodeUsage::create([
+                        'coupon_code_id' => $coupon->id,
+                        'user_id' => $userId,
+                        'order_id' => $order->id,
+                        'discount_amount' => $discount,
+                        'order_total' => $totalSubtotal + $itemTax + $itemShipping - $discount,
+                        'user_email' => $request->email,
+                        'user_name' => $request->name,
+                    ]);
+                    
+                    // Update coupon usage count
+                    $coupon->increment('usage_count');
+                }
+
+                $createdOrders[] = $order->load(['items.product', 'items.variation', 'couponCode']);
             }
 
             // Clear cart if order was created from cart
@@ -253,7 +276,11 @@ class OrderApiController extends Controller
 
             DB::commit();
 
-            return $this->sendJsonResponse(true, 'Order placed successfully', $order->load(['items.product', 'items.variation', 'couponCode']), 201);
+            $message = count($createdOrders) > 1 
+                ? count($createdOrders) . ' orders placed successfully' 
+                : 'Order placed successfully';
+
+            return $this->sendJsonResponse(true, $message, $createdOrders, 201);
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->sendError($e);
@@ -265,11 +292,46 @@ class OrderApiController extends Controller
      */
     private function generateOrderNumber(): string
     {
-        do {
-            $orderNumber = 'ORD-' . date('Ymd') . '-' . strtoupper(substr(uniqid(), -6));
-        } while (Order::where('order_number', $orderNumber)->exists());
+        // Use database transaction with lock to ensure atomic uniqueness check
+        return DB::transaction(function () {
+            $maxAttempts = 20;
+            $attempt = 0;
+            
+            do {
+                // Use microtime with microseconds, process ID, and random for maximum uniqueness
+                $microtime = microtime(true);
+                $timestamp = date('YmdHis', (int)$microtime);
+                $microseconds = substr(str_replace('.', '', sprintf('%.6f', $microtime)), -6, 6);
+                $processId = str_pad((getmypid() % 10000), 4, '0', STR_PAD_LEFT);
+                $random = strtoupper(substr(md5(uniqid(rand(), true) . $microtime . $processId . mt_rand() . time()), 0, 6));
+                $orderNumber = 'ORD-' . $timestamp . '-' . $processId . '-' . $random;
+                
+                // Check with lock to prevent concurrent access
+                $exists = Order::where('order_number', $orderNumber)->lockForUpdate()->exists();
+                
+                $attempt++;
+                
+                if ($exists && $attempt < $maxAttempts) {
+                    // Add random delay and try again
+                    usleep(mt_rand(500, 2000));
+                    continue;
+                }
+                
+                if ($attempt >= $maxAttempts) {
+                    // Fallback: use timestamp with microseconds, process ID and multiple random numbers
+                    $orderNumber = 'ORD-' . date('YmdHis') . '-' . $processId . '-' . str_pad(mt_rand(0, 999999), 6, '0', STR_PAD_LEFT) . '-' . mt_rand(1000, 9999);
+                    // Final check with lock
+                    $exists = Order::where('order_number', $orderNumber)->lockForUpdate()->exists();
+                    if ($exists) {
+                        // Last resort: append current microtime
+                        $orderNumber .= '-' . substr(str_replace('.', '', (string)microtime(true)), -8);
+                    }
+                    break;
+                }
+            } while ($exists);
 
-        return $orderNumber;
+            return $orderNumber;
+        });
     }
 
     public function show(Request $request)
@@ -278,7 +340,7 @@ class OrderApiController extends Controller
             'id' => 'required|exists:orders,id',
         ]);
 
-        $order = Order::with(['items.product', 'couponCode', 'deliveryBoy'])
+        $order = Order::with(['items.product', 'couponCode', 'deliveryBoy', 'replacementOrder'])
             ->where('user_id', $request->user()->id)
             ->findOrFail($request->id);
 
@@ -315,6 +377,8 @@ class OrderApiController extends Controller
             'id' => 'required|exists:orders,id',
             'return_reason' => 'required|string|in:defective_item,wrong_item,not_as_described,changed_mind,damaged_during_delivery,other',
             'return_notes' => 'nullable|string|max:500',
+            'item_ids' => 'nullable|array',
+            'item_ids.*' => 'exists:order_items,id',
         ]);
 
         $order = Order::with('items')->where('user_id', $request->user()->id)
@@ -325,6 +389,53 @@ class OrderApiController extends Controller
             return $this->sendJsonResponse(false, 'Return can only be requested for shipped, delivered, or completed orders', [], 400);
         }
 
+        // If item_ids provided, handle item-level return
+        if ($request->has('item_ids') && !empty($request->item_ids)) {
+            $itemIds = $request->item_ids;
+            $items = $order->items->whereIn('id', $itemIds);
+
+            if ($items->count() !== count($itemIds)) {
+                return $this->sendJsonResponse(false, 'Some items not found in this order', [], 400);
+            }
+
+            // Check if items are returnable
+            $nonReturnableItems = $items->filter(function ($item) {
+                return !($item->is_returnable ?? false) || $item->return_status === 'pending' || $item->return_status === 'approved';
+            });
+
+            if ($nonReturnableItems->count() > 0) {
+                $nonReturnableNames = $nonReturnableItems->pluck('product_name')->implode(', ');
+                return $this->sendJsonResponse(false, "Some items are not returnable or already have return requests: {$nonReturnableNames}", [], 400);
+            }
+
+            // Update individual items
+            foreach ($items as $item) {
+                $item->update([
+                    'return_reason' => $request->return_reason,
+                    'return_notes' => $request->return_notes,
+                    'return_status' => 'pending',
+                    'return_requested_at' => now(),
+                ]);
+            }
+
+            // Update order return status if all items are being returned
+            $allItemsReturned = $order->items->every(function ($item) {
+                return $item->return_status === 'pending' || $item->return_status === 'approved';
+            });
+
+            if ($allItemsReturned) {
+                $order->update([
+                    'return_reason' => $request->return_reason,
+                    'return_notes' => $request->return_notes,
+                    'return_status' => 'pending',
+                    'return_requested_at' => now(),
+                ]);
+            }
+
+            return $this->sendJsonResponse(true, 'Return request submitted successfully for selected items', $order->fresh(['items']), 200);
+        }
+
+        // Original order-level return logic
         // Check if return already requested
         if ($order->return_status === 'pending' || $order->return_status === 'approved') {
             return $this->sendJsonResponse(false, 'Return request already exists for this order', [], 400);
@@ -347,7 +458,117 @@ class OrderApiController extends Controller
             'return_requested_at' => now(),
         ]);
 
-        return $this->sendJsonResponse(true, 'Return request submitted successfully', $order->fresh(), 200);
+        // Also update all items
+        foreach ($order->items as $item) {
+            $item->update([
+                'return_reason' => $request->return_reason,
+                'return_notes' => $request->return_notes,
+                'return_status' => 'pending',
+                'return_requested_at' => now(),
+            ]);
+        }
+
+        return $this->sendJsonResponse(true, 'Return request submitted successfully', $order->fresh(['items']), 200);
+    }
+
+    public function requestReplacement(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:orders,id',
+            'replacement_reason' => 'required|string|in:defective_item,wrong_item,not_as_described,damaged_during_delivery,other',
+            'replacement_notes' => 'nullable|string|max:500',
+            'item_ids' => 'nullable|array',
+            'item_ids.*' => 'exists:order_items,id',
+        ]);
+
+        $order = Order::with('items')->where('user_id', $request->user()->id)
+            ->findOrFail($request->id);
+
+        // Allow replacement for shipped, delivered, or completed orders
+        if (!in_array($order->status, ['shipped', 'delivered', 'completed'])) {
+            return $this->sendJsonResponse(false, 'Replacement can only be requested for shipped, delivered, or completed orders', [], 400);
+        }
+
+        // If item_ids provided, handle item-level replacement
+        if ($request->has('item_ids') && !empty($request->item_ids)) {
+            $itemIds = $request->item_ids;
+            $items = $order->items->whereIn('id', $itemIds);
+
+            if ($items->count() !== count($itemIds)) {
+                return $this->sendJsonResponse(false, 'Some items not found in this order', [], 400);
+            }
+
+            // Check if items are replaceable
+            $nonReplaceableItems = $items->filter(function ($item) {
+                return !($item->is_replaceable ?? false) || $item->replacement_status === 'pending' || $item->replacement_status === 'approved';
+            });
+
+            if ($nonReplaceableItems->count() > 0) {
+                $nonReplaceableNames = $nonReplaceableItems->pluck('product_name')->implode(', ');
+                return $this->sendJsonResponse(false, "Some items are not replaceable or already have replacement requests: {$nonReplaceableNames}", [], 400);
+            }
+
+            // Update individual items
+            foreach ($items as $item) {
+                $item->update([
+                    'replacement_reason' => $request->replacement_reason,
+                    'replacement_notes' => $request->replacement_notes,
+                    'replacement_status' => 'pending',
+                    'replacement_requested_at' => now(),
+                ]);
+            }
+
+            // Update order replacement status if all items are being replaced
+            $allItemsReplaced = $order->items->every(function ($item) {
+                return $item->replacement_status === 'pending' || $item->replacement_status === 'approved';
+            });
+
+            if ($allItemsReplaced) {
+                $order->update([
+                    'replacement_reason' => $request->replacement_reason,
+                    'replacement_notes' => $request->replacement_notes,
+                    'replacement_status' => 'pending',
+                    'replacement_requested_at' => now(),
+                ]);
+            }
+
+            return $this->sendJsonResponse(true, 'Replacement request submitted successfully for selected items', $order->fresh(['items']), 200);
+        }
+
+        // Original order-level replacement logic
+        // Check if replacement already requested
+        if ($order->replacement_status === 'pending' || $order->replacement_status === 'approved') {
+            return $this->sendJsonResponse(false, 'Replacement request already exists for this order', [], 400);
+        }
+
+        // Check if all products in order are replaceable
+        $nonReplaceableItems = $order->items->filter(function ($item) {
+            return !($item->is_replaceable ?? false);
+        });
+
+        if ($nonReplaceableItems->count() > 0) {
+            $nonReplaceableNames = $nonReplaceableItems->pluck('product_name')->implode(', ');
+            return $this->sendJsonResponse(false, "Some products in this order are not replaceable: {$nonReplaceableNames}", [], 400);
+        }
+
+        $order->update([
+            'replacement_reason' => $request->replacement_reason,
+            'replacement_notes' => $request->replacement_notes,
+            'replacement_status' => 'pending',
+            'replacement_requested_at' => now(),
+        ]);
+
+        // Also update all items
+        foreach ($order->items as $item) {
+            $item->update([
+                'replacement_reason' => $request->replacement_reason,
+                'replacement_notes' => $request->replacement_notes,
+                'replacement_status' => 'pending',
+                'replacement_requested_at' => now(),
+            ]);
+        }
+
+        return $this->sendJsonResponse(true, 'Replacement request submitted successfully', $order->fresh(['items']), 200);
     }
 
     private function validateAndApplyCoupon(?string $code, float $subtotal, ?int $userId): ?CouponCode

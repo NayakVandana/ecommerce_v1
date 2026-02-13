@@ -529,7 +529,7 @@ export default function Show() {
                             </div>
                             
                             {/* Return/Refund Policy */}
-                            <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                            <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
                                 {product.is_returnable !== false ? (
                                     <div className="flex items-start gap-2">
                                         <svg className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -558,6 +558,35 @@ export default function Show() {
                                             {product.return_policy_note && (
                                                 <p className="text-xs text-gray-700 mt-1 italic">Note: {product.return_policy_note}</p>
                                             )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Replacement Policy */}
+                            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                {product.is_replaceable === true ? (
+                                    <div className="flex items-start gap-2">
+                                        <svg className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        <div>
+                                            <p className="text-sm font-semibold text-blue-900 mb-1">🔄 Replaceable</p>
+                                            <p className="text-xs text-gray-700">
+                                                This product is eligible for replacement within 7 days of delivery if defective or damaged.
+                                            </p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-start gap-2">
+                                        <svg className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <div>
+                                            <p className="text-sm font-semibold text-red-900 mb-1">❌ Not Replaceable</p>
+                                            <p className="text-xs text-gray-700">
+                                                This product is not eligible for replacement (only return/refund available).
+                                            </p>
                                         </div>
                                     </div>
                                 )}

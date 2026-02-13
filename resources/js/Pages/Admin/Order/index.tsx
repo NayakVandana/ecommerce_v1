@@ -54,6 +54,7 @@ export default function OrderIndex() {
     const [pendingCancelOrderId, setPendingCancelOrderId] = useState<number | null>(null);
     const [cancelling, setCancelling] = useState(false);
     const [processingReturn, setProcessingReturn] = useState<number | null>(null);
+    const [processingReplacement, setProcessingReplacement] = useState<number | null>(null);
     const [showDeliveryDateModal, setShowDeliveryDateModal] = useState(false);
     const [selectedOrderForDeliveryDate, setSelectedOrderForDeliveryDate] = useState<number | null>(null);
     const [deliveryDate, setDeliveryDate] = useState('');
@@ -233,6 +234,85 @@ export default function OrderIndex() {
             setShowAlert(true);
         } finally {
             setProcessingReturn(null);
+        }
+    };
+
+    const handleApproveReplacement = async (orderId: number) => {
+        try {
+            setProcessingReplacement(orderId);
+            const response = await useOrderStore.approveReplacement({ id: orderId });
+            if (response.data?.status) {
+                loadOrders();
+                loadOrderCounts();
+                setAlertMessage('Replacement approved and new order created successfully');
+                setAlertType('success');
+                setShowAlert(true);
+            } else {
+                setAlertMessage(response.data?.message || 'Failed to approve replacement');
+                setAlertType('error');
+                setShowAlert(true);
+            }
+        } catch (error: any) {
+            console.error('Error approving replacement:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to approve replacement');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setProcessingReplacement(null);
+        }
+    };
+
+    const handleRejectReplacement = async (orderId: number) => {
+        const rejectionReason = prompt('Please enter rejection reason (optional):');
+        try {
+            setProcessingReplacement(orderId);
+            const response = await useOrderStore.rejectReplacement({ 
+                id: orderId,
+                rejection_reason: rejectionReason || null
+            });
+            if (response.data?.status) {
+                loadOrders();
+                loadOrderCounts();
+                setAlertMessage('Replacement request rejected');
+                setAlertType('success');
+                setShowAlert(true);
+            } else {
+                setAlertMessage(response.data?.message || 'Failed to reject replacement');
+                setAlertType('error');
+                setShowAlert(true);
+            }
+        } catch (error: any) {
+            console.error('Error rejecting replacement:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to reject replacement');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setProcessingReplacement(null);
+        }
+    };
+
+    const handleProcessReplacement = async (orderId: number) => {
+        try {
+            setProcessingReplacement(orderId);
+            const response = await useOrderStore.processReplacement({ id: orderId });
+            if (response.data?.status) {
+                loadOrders();
+                loadOrderCounts();
+                setAlertMessage('Replacement processed successfully');
+                setAlertType('success');
+                setShowAlert(true);
+            } else {
+                setAlertMessage(response.data?.message || 'Failed to process replacement');
+                setAlertType('error');
+                setShowAlert(true);
+            }
+        } catch (error: any) {
+            console.error('Error processing replacement:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to process replacement');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setProcessingReplacement(null);
         }
     };
 
@@ -438,6 +518,8 @@ export default function OrderIndex() {
                 return 'Cancelled Orders';
             case 'return-refund':
                 return 'Return & Refund';
+            case 'replacement':
+                return 'Replacement Orders';
             case 'processed':
                 return 'Processed Orders';
             case 'all':
@@ -504,6 +586,16 @@ export default function OrderIndex() {
             href: '/admin/orders/return-refund',
             bgColor: 'bg-orange-500',
             hoverBgColor: 'hover:bg-orange-600',
+            textColor: 'text-white',
+            iconColor: 'text-white'
+        },
+        { 
+            id: 'replacement', 
+            label: 'Replacement', 
+            icon: ArrowPathIcon, 
+            href: '/admin/orders/replacement',
+            bgColor: 'bg-blue-500',
+            hoverBgColor: 'hover:bg-blue-600',
             textColor: 'text-white',
             iconColor: 'text-white'
         },
@@ -955,6 +1047,38 @@ export default function OrderIndex() {
                                                                 title="Process Refund"
                                                             >
                                                                 {processingReturn === order.id ? 'Processing...' : 'Process Refund'}
+                                                            </button>
+                                                        )}
+
+                                                        {/* Replacement Actions */}
+                                                        {normalizedSection === 'replacement' && order.replacement_status === 'pending' && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => handleApproveReplacement(order.id)}
+                                                                    disabled={processingReplacement === order.id}
+                                                                    className={`px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700 ${processingReplacement === order.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                    title="Approve Replacement"
+                                                                >
+                                                                    {processingReplacement === order.id ? 'Processing...' : 'Approve Replacement'}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleRejectReplacement(order.id)}
+                                                                    disabled={processingReplacement === order.id}
+                                                                    className={`px-3 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700 ${processingReplacement === order.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                    title="Reject Replacement"
+                                                                >
+                                                                    {processingReplacement === order.id ? 'Processing...' : 'Reject Replacement'}
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                        {normalizedSection === 'replacement' && order.replacement_status === 'approved' && (
+                                                            <button
+                                                                onClick={() => handleProcessReplacement(order.id)}
+                                                                disabled={processingReplacement === order.id}
+                                                                className={`px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 ${processingReplacement === order.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                                title="Process Replacement"
+                                                            >
+                                                                {processingReplacement === order.id ? 'Processing...' : 'Process Replacement'}
                                                             </button>
                                                         )}
                                                     </div>

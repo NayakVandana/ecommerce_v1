@@ -45,6 +45,12 @@ class Order extends Model
         'return_requested_at',
         'return_processed_at',
         'refund_amount',
+        'replacement_reason',
+        'replacement_notes',
+        'replacement_status',
+        'replacement_requested_at',
+        'replacement_processed_at',
+        'replacement_order_id',
         'otp_code',
         'otp_verified',
         'otp_generated_at',
@@ -65,6 +71,8 @@ class Order extends Model
         'delivery_date' => 'date',
         'return_requested_at' => 'datetime',
         'return_processed_at' => 'datetime',
+        'replacement_requested_at' => 'datetime',
+        'replacement_processed_at' => 'datetime',
         'processing_at' => 'datetime',
         'shipped_at' => 'datetime',
         'out_for_delivery_at' => 'datetime',
@@ -100,6 +108,16 @@ class Order extends Model
     public function deliveryVerificationMedia()
     {
         return $this->hasMany(DeliveryVerificationMedia::class);
+    }
+
+    public function replacementOrder()
+    {
+        return $this->belongsTo(Order::class, 'replacement_order_id');
+    }
+
+    public function originalOrder()
+    {
+        return $this->hasOne(Order::class, 'replacement_order_id');
     }
 
     /**
