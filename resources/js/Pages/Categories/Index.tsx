@@ -1,17 +1,17 @@
 import AppLayout from '../Layouts/AppLayout';
 import { Link } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useCategoryStore } from './useCategoryStore';
 import { useProductStore } from '../Products/useProductStore';
 import { 
     ChevronRightIcon, 
     ChevronDownIcon,
+    ChevronUpIcon,
     TagIcon,
     XMarkIcon,
-    SparklesIcon,
-    ShoppingBagIcon
+    ShoppingBagIcon,
+    MagnifyingGlassIcon
 } from '@heroicons/react/24/outline';
-import CategoryIcon from '../../Components/CategoryIcon';
 
 export default function Index() {
     const [categories, setCategories] = useState<any>([]);
@@ -21,6 +21,11 @@ export default function Index() {
     const [selectedCategory, setSelectedCategory] = useState<any>(null);
     const [products, setProducts] = useState<any>(null);
     const [productsLoading, setProductsLoading] = useState(false);
+    const [categorySearchQuery, setCategorySearchQuery] = useState('');
+    const [productSortBy, setProductSortBy] = useState<string>('popularity');
+    const [expandedFilters, setExpandedFilters] = useState<{[key: string]: boolean}>({
+        categories: true,
+    });
 
     useEffect(() => {
         fetchCategories();
@@ -234,116 +239,68 @@ export default function Index() {
         fetchAllProducts(); // Reload all products when clearing selection
     };
 
-    const renderCategory = (category: any, level: number = 0) => {
-        // Handle children - could be array or collection
-        const children = category.children || [];
-        const childrenArray = Array.isArray(children) ? children : (children.toArray ? children.toArray() : []);
-        const hasChildren = childrenArray.length > 0;
-        const isExpanded = expandedCategories.has(category.id);
-        const isSelected = selectedCategory?.id === category.id;
+    // Filter categories based on search query
+    const filteredHierarchicalCategories = useMemo(() => {
+        if (!categorySearchQuery.trim()) {
+            return hierarchicalCategories;
+        }
 
-        // Color gradients for different levels
-        const gradientColors = [
-            'from-indigo-500 via-purple-500 to-pink-500',
-            'from-blue-500 via-cyan-500 to-teal-500',
-            'from-pink-500 via-rose-500 to-red-500',
-            'from-emerald-500 via-teal-500 to-cyan-500',
-            'from-orange-500 via-amber-500 to-yellow-500',
-        ];
-        const gradient = gradientColors[level % gradientColors.length];
+        const query = categorySearchQuery.toLowerCase();
+        const filterCategory = (cat: any): any | null => {
+            const matchesName = cat.name?.toLowerCase().includes(query);
+            const matchesDescription = cat.description?.toLowerCase().includes(query);
+            
+            // Filter children recursively
+            const filteredChildren = cat.children
+                ?.map((child: any) => filterCategory(child))
+                .filter((child: any) => child !== null) || [];
 
-        return (
-            <div key={category.id} className="mb-2">
-                <div 
-                    className={`group relative flex items-center justify-between rounded-lg p-3 transition-all duration-200 ${
-                        isSelected 
-                            ? 'bg-indigo-50 border-2 border-indigo-500 shadow-md' 
-                            : 'bg-white hover:bg-gray-50 border border-gray-200 hover:border-indigo-300 shadow-sm hover:shadow-md'
-                    }`}
-                >
-                    <div className="flex items-center flex-1 min-w-0">
-                        {hasChildren && (
-                            <button
-                                onClick={() => toggleCategory(category.id)}
-                                className={`mr-2 p-1 rounded transition-all ${
-                                    isSelected 
-                                        ? 'hover:bg-indigo-100 text-indigo-700' 
-                                        : 'hover:bg-gray-100 text-gray-600 hover:text-indigo-600'
-                                }`}
-                                aria-label={isExpanded ? 'Collapse' : 'Expand'}
-                            >
-                                {isExpanded ? (
-                                    <ChevronDownIcon className="h-4 w-4" />
-                                ) : (
-                                    <ChevronRightIcon className="h-4 w-4" />
-                                )}
-                            </button>
-                        )}
-                        {!hasChildren && <div className="w-6" />}
-                        
-                        <div
-                            onClick={(e) => handleCategoryClick(category, e)}
-                            className="flex-1 cursor-pointer min-w-0"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className={`p-2 rounded-lg transition-all ${
-                                    isSelected 
-                                        ? 'bg-indigo-600 text-white' 
-                                        : 'bg-indigo-100 text-indigo-600 group-hover:bg-indigo-200'
-                                }`}>
-                                    <CategoryIcon icon={category.icon} className="h-4 w-4" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className={`font-semibold truncate ${
-                                        isSelected 
-                                            ? 'text-indigo-900 text-base' 
-                                            : level === 0 ? 'text-base text-gray-900 group-hover:text-indigo-600' : level === 1 ? 'text-sm text-gray-800' : 'text-sm text-gray-700'
-                                    }`}>
-                                        {category.name}
-                                    </h3>
-                                    {category.description && (
-                                        <p className={`text-xs mt-0.5 line-clamp-1 ${
-                                            isSelected ? 'text-indigo-700' : 'text-gray-600'
-                                        }`}>
-                                            {category.description}
-                                        </p>
-                                    )}
-                                    {category.products_count !== undefined && (
-                                        <div className="flex items-center gap-1 mt-1.5">
-                                            <ShoppingBagIcon className={`h-3 w-3 ${
-                                                isSelected ? 'text-indigo-600' : 'text-gray-400'
-                                            }`} />
-                                            <span className={`text-xs ${
-                                                isSelected ? 'text-indigo-700 font-medium' : category.products_count > 0 ? 'text-indigo-600 font-medium' : 'text-gray-500'
-                                            }`}>
-                                                {category.products_count} {category.products_count === 1 ? 'product' : 'products'}
-                                            </span>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <Link
-                            href={`/categories/${category.slug}`}
-                            className={`ml-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                                isSelected
-                                    ? 'bg-indigo-600 hover:bg-indigo-700 text-white'
-                                    : 'bg-gray-100 hover:bg-indigo-100 text-gray-700 hover:text-indigo-700'
-                            }`}
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            View
-                        </Link>
-                    </div>
-                </div>
-                {hasChildren && isExpanded && (
-                    <div className="mt-2 ml-4 pl-4 border-l-2 border-gray-200">
-                        {childrenArray.map((child: any) => renderCategory(child, level + 1))}
-                    </div>
-                )}
-            </div>
-        );
+            // Include category if it matches or has matching children
+            if (matchesName || matchesDescription || filteredChildren.length > 0) {
+                return {
+                    ...cat,
+                    children: filteredChildren
+                };
+            }
+            return null;
+        };
+
+        return hierarchicalCategories
+            .map((cat: any) => filterCategory(cat))
+            .filter((cat: any) => cat !== null);
+    }, [hierarchicalCategories, categorySearchQuery]);
+
+    // Sort products
+    const sortedProducts = useMemo(() => {
+        if (!products?.data) return products;
+
+        const sorted = [...products.data];
+        switch (productSortBy) {
+            case 'price-low':
+                sorted.sort((a: any, b: any) => (a.final_price || a.price || 0) - (b.final_price || b.price || 0));
+                break;
+            case 'price-high':
+                sorted.sort((a: any, b: any) => (b.final_price || b.price || 0) - (a.final_price || a.price || 0));
+                break;
+            case 'name':
+                sorted.sort((a: any, b: any) => (a.product_name || '').localeCompare(b.product_name || ''));
+                break;
+            case 'discount':
+                sorted.sort((a: any, b: any) => (b.discount_percent || 0) - (a.discount_percent || 0));
+                break;
+            default:
+                // Keep original order for 'popularity'
+                break;
+        }
+
+        return { ...products, data: sorted };
+    }, [products, productSortBy]);
+
+    const toggleFilterSection = (section: string) => {
+        setExpandedFilters(prev => ({
+            ...prev,
+            [section]: !prev[section]
+        }));
     };
 
     const renderProductCard = (product: any) => {
@@ -396,10 +353,10 @@ export default function Index() {
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-baseline gap-2">
                             <p className="text-xl font-bold text-indigo-600">
-                                ${displayPrice}
+                                ₹{displayPrice}
                             </p>
                             {mrp && mrp > displayPrice && (
-                                <p className="text-gray-400 line-through text-sm">${mrp}</p>
+                                <p className="text-gray-400 line-through text-sm">₹{mrp}</p>
                             )}
                         </div>
                     </div>
@@ -422,207 +379,254 @@ export default function Index() {
 
     return (
         <AppLayout>
-            <style>{`
-                .custom-scrollbar::-webkit-scrollbar {
-                    width: 6px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-track {
-                    background: #f1f1f1;
-                    border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb {
-                    background: linear-gradient(to bottom, #6366f1, #9333ea);
-                    border-radius: 10px;
-                }
-                .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                    background: linear-gradient(to bottom, #4f46e5, #7e22ce);
-                }
-            `}</style>
             <div className="min-h-screen bg-gray-50">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     {/* Header Section */}
-                    <div className="mb-8">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                                    All Categories
-                                </h1>
-                                <p className="text-gray-600">Browse products by category</p>
-                            </div>
-                            {selectedCategory && (
-                                <button
-                                    onClick={clearSelection}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200"
-                                >
-                                    <XMarkIcon className="h-4 w-4" />
-                                    <span className="text-sm font-medium">Clear Filter</span>
-                                </button>
-                            )}
-                        </div>
+                    <div className="mb-6">
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">All Categories</h1>
+                        <p className="text-gray-500 text-sm">Browse products by category</p>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="flex flex-col lg:flex-row gap-6">
                         {/* Categories Section */}
-                        <div className="lg:col-span-1">
-                            <div className="sticky top-8">
-                                <div className="bg-white rounded-lg shadow-sm p-4 border border-gray-200">
-                                    <div className="flex items-center gap-2 mb-4 pb-3 border-b border-gray-200">
-                                        <SparklesIcon className="h-5 w-5 text-indigo-600" />
-                                        <h2 className="text-lg font-semibold text-gray-900">
-                                            Categories
-                                        </h2>
+                        <div className="w-full lg:w-64 flex-shrink-0">
+                            <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-lg font-semibold text-gray-900">Categories</h2>
+                                    {selectedCategory && (
+                                        <button
+                                            onClick={clearSelection}
+                                            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium"
+                                        >
+                                            Clear
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Search Bar */}
+                                <div className="mb-4">
+                                    <div className="relative">
+                                        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                        <input
+                                            type="text"
+                                            placeholder="Search categories..."
+                                            value={categorySearchQuery}
+                                            onChange={(e) => setCategorySearchQuery(e.target.value)}
+                                            className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        />
+                                        {categorySearchQuery && (
+                                            <button
+                                                onClick={() => setCategorySearchQuery('')}
+                                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                            >
+                                                <XMarkIcon className="h-4 w-4" />
+                                            </button>
+                                        )}
                                     </div>
-                                    
-                                    {loading ? (
+                                </div>
+
+                                {/* Collapsible Categories Filter */}
+                                <div className="border-b border-gray-200 pb-4">
+                                    <button
+                                        onClick={() => toggleFilterSection('categories')}
+                                        className="w-full flex items-center justify-between text-sm font-medium text-gray-900 mb-3"
+                                    >
+                                        <span>Categories</span>
+                                        {expandedFilters.categories ? (
+                                            <ChevronUpIcon className="h-4 w-4" />
+                                        ) : (
+                                            <ChevronDownIcon className="h-4 w-4" />
+                                        )}
+                                    </button>
+                                    {expandedFilters.categories && (
+                                        <>
+                                        {loading ? (
                                         <div className="text-center py-16">
                                             <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-200 border-t-indigo-600"></div>
                                             <p className="text-gray-500 text-sm mt-4 font-medium">Loading categories...</p>
                                         </div>
-                                    ) : hierarchicalCategories && hierarchicalCategories.length > 0 ? (
-                                        <div className="space-y-2 max-h-[calc(100vh-12rem)] overflow-y-auto pr-3 custom-scrollbar">
-                                            {hierarchicalCategories.map((category: any) => renderCategory(category, 0))}
+                                    ) : filteredHierarchicalCategories && filteredHierarchicalCategories.length > 0 ? (
+                                        <div className="space-y-1 max-h-96 overflow-y-auto">
+                                            {filteredHierarchicalCategories.map((category: any) => {
+                                                const renderCategoryItem = (cat: any, level: number = 0) => {
+                                                    const hasChildren = cat.children && cat.children.length > 0;
+                                                    const isExpanded = expandedCategories.has(cat.id);
+                                                    
+                                                    return (
+                                                        <div key={cat.id} className="space-y-1">
+                                                            <div className="flex items-center gap-2">
+                                                                {hasChildren && (
+                                                                    <button
+                                                                        onClick={() => toggleCategory(cat.id)}
+                                                                        className="p-0.5 hover:bg-gray-100 rounded"
+                                                                        aria-label={isExpanded ? 'Collapse' : 'Expand'}
+                                                                    >
+                                                                        {isExpanded ? (
+                                                                            <ChevronDownIcon className="h-3 w-3 text-gray-600" />
+                                                                        ) : (
+                                                                            <ChevronRightIcon className="h-3 w-3 text-gray-600" />
+                                                                        )}
+                                                                    </button>
+                                                                )}
+                                                                {!hasChildren && <div className="w-4" />}
+                                                                <label 
+                                                                    className="flex items-center flex-1 cursor-pointer"
+                                                                    onClick={(e) => handleCategoryClick(cat, e)}
+                                                                >
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={selectedCategory?.id === cat.id}
+                                                                        onChange={() => {}}
+                                                                        className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                                    />
+                                                                    <span className={`ml-2 text-sm ${level === 0 ? 'text-gray-700 font-medium' : 'text-gray-600'}`}>
+                                                                        {cat.name} 
+                                                                        {/* ({cat.products_count || 0}) */}
+                                                                    </span>
+                                                                </label>
+                                                            </div>
+                                                            {hasChildren && isExpanded && (
+                                                                <div className={`space-y-1 border-l-2 border-gray-200 pl-3 ${level === 0 ? 'ml-6' : 'ml-4'}`}>
+                                                                    {cat.children.map((childCat: any) => renderCategoryItem(childCat, level + 1))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                };
+                                                
+                                                return renderCategoryItem(category, 0);
+                                            })}
                                         </div>
                                     ) : categories && categories.length > 0 ? (
                                         // Fallback: Show flat list if hierarchy failed
-                                        <div className="grid grid-cols-1 gap-3">
-                                            {categories.map((category: any) => (
-                                                <div
-                                                    key={category.id}
-                                                    onClick={(e) => handleCategoryClick(category, e)}
-                                                    className={`group relative bg-gradient-to-br from-white to-gray-50 rounded-xl p-5 hover:shadow-xl transition-all duration-300 cursor-pointer border-2 ${
-                                                        selectedCategory?.id === category.id 
-                                                            ? 'border-indigo-500 shadow-lg scale-105' 
-                                                            : 'border-gray-100 hover:border-indigo-300'
-                                                    }`}
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`p-3 rounded-xl ${
-                                                            selectedCategory?.id === category.id
-                                                                ? 'bg-gradient-to-br from-indigo-500 to-purple-600'
-                                                                : 'bg-gradient-to-br from-indigo-100 to-purple-100 group-hover:from-indigo-200 group-hover:to-purple-200'
-                                                        }`}>
-                                                            <CategoryIcon 
-                                                                icon={category.icon} 
-                                                                className={`h-6 w-6 ${
-                                                                    selectedCategory?.id === category.id ? 'text-white' : 'text-indigo-600'
-                                                                }`} 
-                                                            />
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <h3 className={`font-bold text-lg mb-1 ${
-                                                                selectedCategory?.id === category.id ? 'text-indigo-600' : 'text-gray-900'
-                                                            }`}>
-                                                                {category.name}
-                                                            </h3>
-                                                            {category.description && (
-                                                                <p className="text-gray-600 text-sm mb-2 line-clamp-1">
-                                                                    {category.description}
-                                                                </p>
-                                                            )}
-                                                            {category.products_count !== undefined && (
-                                                                <p className="text-xs text-gray-500 font-medium">
-                                                                    {category.products_count} {category.products_count === 1 ? 'product' : 'products'}
-                                                                </p>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                        <div className="space-y-1 max-h-96 overflow-y-auto">
+                                            {categories
+                                                .filter((cat: any) => 
+                                                    !categorySearchQuery || 
+                                                    cat.name?.toLowerCase().includes(categorySearchQuery.toLowerCase()) ||
+                                                    cat.description?.toLowerCase().includes(categorySearchQuery.toLowerCase())
+                                                )
+                                                .map((category: any) => (
+                                                    <label 
+                                                        key={category.id}
+                                                        className="flex items-center cursor-pointer"
+                                                        onClick={(e) => handleCategoryClick(category, e)}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={selectedCategory?.id === category.id}
+                                                            onChange={() => {}}
+                                                            className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                        />
+                                                        <span className="ml-2 text-sm text-gray-700">
+                                                            {category.name} ({category.products_count || 0})
+                                                        </span>
+                                                    </label>
+                                                ))}
                                         </div>
                                     ) : (
-                                        <div className="text-center py-12">
-                                            <TagIcon className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                                            <p className="text-gray-500 text-lg font-medium">No categories found</p>
-                                            <p className="text-gray-400 text-sm mt-2">Please check the browser console for details</p>
+                                        <div className="text-center py-8">
+                                            <TagIcon className="h-10 w-10 text-gray-300 mx-auto mb-2" />
+                                            <p className="text-gray-500 text-sm">No categories found</p>
                                         </div>
+                                    )}
+                                        </>
                                     )}
                                 </div>
                             </div>
                         </div>
 
                         {/* Products Section */}
-                        <div className="lg:col-span-2">
-                            <div className="mb-6">
-                                {selectedCategory ? (
-                                    <div>
-                                        <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                                            Products in "{selectedCategory.name}"
-                                        </h2>
-                                        {selectedCategory.description && (
-                                            <p className="text-gray-600 text-sm">{selectedCategory.description}</p>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div>
-                                        <h2 className="text-2xl font-bold text-gray-900 mb-1">All Products</h2>
-                                        <p className="text-gray-600 text-sm">Browse our complete collection</p>
-                                    </div>
-                                )}
+                        <div className="flex-1">
+                            {/* Header with Sort */}
+                            <div className="flex items-center justify-between mb-6">
+                                <div>
+                                    {selectedCategory ? (
+                                        <>
+                                            <h1 className="text-3xl font-bold text-gray-900">{selectedCategory.name}</h1>
+                                            {selectedCategory.description && (
+                                                <p className="text-gray-500 text-sm mt-1">{selectedCategory.description}</p>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <>
+                                            <h1 className="text-3xl font-bold text-gray-900">All Products</h1>
+                                            <p className="text-gray-500 text-sm mt-1">Browse our complete collection</p>
+                                        </>
+                                    )}
+                                    {sortedProducts && (
+                                        <p className="text-gray-500 text-sm mt-1">
+                                            {sortedProducts.total || 0} {sortedProducts.total === 1 ? 'product' : 'products'} found
+                                        </p>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <label className="text-sm text-gray-700">Sort by:</label>
+                                    <select
+                                        value={productSortBy}
+                                        onChange={(e) => setProductSortBy(e.target.value)}
+                                        className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    >
+                                        <option value="popularity">Popularity</option>
+                                        <option value="price-low">Price: Low to High</option>
+                                        <option value="price-high">Price: High to Low</option>
+                                        <option value="name">Name: A to Z</option>
+                                        <option value="discount">Discount</option>
+                                    </select>
+                                </div>
                             </div>
 
                             {productsLoading ? (
-                                <div className="text-center py-24">
-                                    <div className="relative inline-block">
-                                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full blur-xl opacity-30 animate-pulse"></div>
-                                        <div className="relative inline-block animate-spin rounded-full h-16 w-16 border-4 border-indigo-200 border-t-indigo-600"></div>
-                                    </div>
-                                    <p className="text-gray-600 text-lg font-semibold mt-6">Loading products...</p>
-                                    <p className="text-gray-400 text-sm mt-2">Please wait a moment</p>
+                                <div className="text-center py-20">
+                                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-200 border-t-indigo-600"></div>
+                                    <p className="text-gray-500 text-lg mt-4 font-medium">Loading products...</p>
                                 </div>
-                            ) : products && products.data && products.data.length > 0 ? (
+                            ) : sortedProducts && sortedProducts.data && sortedProducts.data.length > 0 ? (
                                 <>
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                                        {products.data.map((product: any) => renderProductCard(product))}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                                        {sortedProducts.data.map((product: any) => renderProductCard(product))}
                                     </div>
-                                    {products.last_page > 1 && (
-                                        <div className="mt-10 text-center">
+                                    {sortedProducts.last_page > 1 && (
+                                        <div className="mt-8">
                                             <Link
                                                 href={selectedCategory ? `/categories/${selectedCategory.slug}` : '/categories'}
-                                                className="group inline-flex items-center gap-3 px-10 py-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-2xl hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 transition-all duration-300 shadow-2xl hover:shadow-3xl font-bold text-lg transform hover:scale-105"
+                                                className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium"
                                             >
-                                                <span>View All Products ({products.total} total)</span>
-                                                <ChevronRightIcon className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
+                                                View All Products ({sortedProducts.total} total)
+                                                <ChevronRightIcon className="h-5 w-5" />
                                             </Link>
                                         </div>
                                     )}
                                 </>
                             ) : (
-                                <div className="text-center py-24 bg-gradient-to-br from-white via-indigo-50/30 to-purple-50/30 backdrop-blur-sm rounded-3xl shadow-2xl border-2 border-gray-100">
-                                    <div className="relative inline-block mb-6">
-                                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full blur-2xl opacity-20"></div>
-                                        <div className="relative p-6 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full">
-                                            <ShoppingBagIcon className="h-20 w-20 text-gray-400" />
-                                        </div>
-                                    </div>
-                                    <h3 className="text-2xl font-extrabold text-gray-800 mb-3">
+                                <div className="text-center py-20 bg-white rounded-lg shadow-sm border border-gray-200">
+                                    <ShoppingBagIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">
                                         {selectedCategory 
                                             ? `No products in "${selectedCategory.name}"` 
                                             : 'No products found'}
                                     </h3>
-                                    <p className="text-gray-600 text-lg font-medium mb-6 max-w-md mx-auto">
+                                    <p className="text-gray-600 mb-6">
                                         {selectedCategory 
                                             ? 'Try selecting a different category or browse all products.' 
                                             : 'Products will appear here once they are added.'}
                                     </p>
-                                    <div className="flex items-center justify-center gap-4">
-                                        {selectedCategory && (
-                                            <>
-                                                <Link
-                                                    href={`/categories/${selectedCategory.slug}`}
-                                                    className="group inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold transform hover:scale-105"
-                                                >
-                                                    View Category Page
-                                                    <ChevronRightIcon className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                                                </Link>
-                                                <button
-                                                    onClick={clearSelection}
-                                                    className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold border-2 border-gray-200 hover:border-indigo-300 transform hover:scale-105"
-                                                >
-                                                    View All Products
-                                                </button>
-                                            </>
-                                        )}
-                                    </div>
+                                    {selectedCategory && (
+                                        <div className="flex items-center justify-center gap-4">
+                                            <Link
+                                                href={`/categories/${selectedCategory.slug}`}
+                                                className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition font-medium"
+                                            >
+                                                View Category Page
+                                            </Link>
+                                            <button
+                                                onClick={clearSelection}
+                                                className="inline-flex items-center gap-2 px-6 py-3 bg-white text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium border border-gray-300"
+                                            >
+                                                View All Products
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>

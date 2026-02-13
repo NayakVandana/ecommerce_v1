@@ -446,7 +446,8 @@ export default function Show() {
                                                                         className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                                                     />
                                                                     <span className="ml-2 text-sm text-gray-700">
-                                                                        {cat.name} ({cat.products_count || 0})
+                                                                        {cat.name} 
+                                                                        {/* ({cat.products_count || 0}) */}
                                                                     </span>
                                                                 </label>
                                                             </div>
