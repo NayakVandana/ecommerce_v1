@@ -53,7 +53,7 @@ export default function RecentlyViewedDetailsModal({
                                                     </p>
                                                 )}
                                                 <p className="text-sm text-gray-600 mt-1">
-                                                    Price: ${parseFloat(selectedItem.product?.final_price || selectedItem.product?.price || '0').toFixed(2)}
+                                                    Price: ₹{parseFloat(selectedItem.product?.final_price || selectedItem.product?.price || '0').toFixed(2)}
                                                 </p>
                                                 {selectedItem.product?.description && (
                                                     <p className="text-sm text-gray-600 mt-2">

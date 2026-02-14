@@ -205,10 +205,10 @@ export default function Index() {
                                                         
                                                         <div className="text-right">
                                                             <p className="font-bold text-indigo-600">
-                                                                ${(item.subtotal || 0).toFixed(2)}
+                                                                ₹{(item.subtotal || 0).toFixed(2)}
                                                             </p>
                                                             <p className="text-sm text-gray-500">
-                                                                ${((item.subtotal || 0) / item.quantity).toFixed(2)} each
+                                                                ₹{((item.subtotal || 0) / item.quantity).toFixed(2)} each
                                                             </p>
                                                         </div>
                                                         
@@ -251,7 +251,7 @@ export default function Index() {
                                 <div className="space-y-2 mb-4">
                                     <div className="flex justify-between text-gray-600">
                                         <span>Subtotal ({items.length} items)</span>
-                                        <span>${total.toFixed(2)}</span>
+                                        <span>₹{total.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-gray-600">
                                         <span>Shipping</span>
@@ -262,7 +262,7 @@ export default function Index() {
                                 <div className="border-t pt-4 mb-4">
                                     <div className="flex justify-between text-lg font-bold">
                                         <span>Total</span>
-                                        <span>${total.toFixed(2)}</span>
+                                        <span>₹{total.toFixed(2)}</span>
                                     </div>
                                 </div>
                                 

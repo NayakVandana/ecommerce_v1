@@ -393,7 +393,7 @@ export default function Show() {
                             )}
                             {order.refund_amount && (
                                 <p className="text-sm font-semibold text-orange-900 mt-2">
-                                    Refund Amount: ${Number(order.refund_amount).toFixed(2)}
+                                    Refund Amount: ₹{Number(order.refund_amount).toFixed(2)}
                                 </p>
                             )}
                         </div>
@@ -709,7 +709,7 @@ export default function Show() {
                                                     </p>
                                                 )}
                                                 <p className="text-sm text-gray-600 mt-1">
-                                                    Quantity: {item.quantity} × ${Number(item.price || 0).toFixed(2)}
+                                                    Quantity: {item.quantity} × ₹{Number(item.price || 0).toFixed(2)}
                                                 </p>
                                                 <div className="flex flex-wrap gap-2 mt-2">
                                                     {/* Return Eligibility Badge */}
@@ -768,7 +768,7 @@ export default function Show() {
                                             
                                             <div className="text-right">
                                                 <p className="font-bold text-indigo-600">
-                                                    ${Number(item.subtotal || 0).toFixed(2)}
+                                                    ₹{Number(item.subtotal || 0).toFixed(2)}
                                                 </p>
                                             </div>
                                         </div>
@@ -879,28 +879,28 @@ export default function Show() {
                             <div className="space-y-2 mb-4">
                                 <div className="flex justify-between text-gray-600">
                                     <span>Subtotal</span>
-                                    <span>${subtotal.toFixed(2)}</span>
+                                    <span>₹{subtotal.toFixed(2)}</span>
                                 </div>
                                 {discount > 0 && order.coupon_code && (
                                     <div className="flex justify-between text-green-600">
                                         <span>Discount ({order.coupon_code.code})</span>
-                                        <span>-${discount.toFixed(2)}</span>
+                                        <span>-₹{discount.toFixed(2)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-gray-600">
                                     <span>Tax</span>
-                                    <span>${tax.toFixed(2)}</span>
+                                    <span>₹{tax.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-gray-600">
                                     <span>Shipping</span>
-                                    <span>${shipping.toFixed(2)}</span>
+                                    <span>₹{shipping.toFixed(2)}</span>
                                 </div>
                             </div>
                             
                             <div className="border-t pt-4 mb-4">
                                 <div className="flex justify-between text-lg font-bold">
                                     <span>Total</span>
-                                    <span>${total.toFixed(2)}</span>
+                                    <span>₹{total.toFixed(2)}</span>
                                 </div>
                             </div>
                         </div>

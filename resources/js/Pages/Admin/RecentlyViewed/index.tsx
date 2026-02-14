@@ -316,7 +316,7 @@ export default function RecentlyViewedIndex() {
                                                         )}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        ${price.toFixed(2)}
+                                                        ₹{price.toFixed(2)}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                         {item.viewed_at ? new Date(item.viewed_at).toLocaleString() : 'N/A'}

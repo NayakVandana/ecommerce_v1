@@ -102,7 +102,7 @@ export default function CouponShow() {
         if (coupon.type === 'percentage') {
             return `${coupon.value}%`;
         }
-        return `$${Number(coupon.value).toFixed(2)}`;
+        return `₹${Number(coupon.value).toFixed(2)}`;
     };
 
     if (loading) {
@@ -180,7 +180,7 @@ export default function CouponShow() {
                                     <div>
                                         <p className="text-xs text-gray-500">Min Purchase</p>
                                         <p className="text-sm font-medium text-gray-900">
-                                            ${Number(coupon.min_purchase_amount).toFixed(2)}
+                                            ₹{Number(coupon.min_purchase_amount).toFixed(2)}
                                         </p>
                                     </div>
                                 )}
@@ -189,7 +189,7 @@ export default function CouponShow() {
                                     <div>
                                         <p className="text-xs text-gray-500">Max Discount</p>
                                         <p className="text-sm font-medium text-gray-900">
-                                            ${Number(coupon.max_discount_amount).toFixed(2)}
+                                            ₹{Number(coupon.max_discount_amount).toFixed(2)}
                                         </p>
                                     </div>
                                 )}
@@ -321,10 +321,10 @@ export default function CouponShow() {
                                                         )}
                                                     </td>
                                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        ${Number(usage.order_total || 0).toFixed(2)}
+                                                        ₹{Number(usage.order_total || 0).toFixed(2)}
                                                     </td>
                                                     <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                                                        -${Number(usage.discount_amount || 0).toFixed(2)}
+                                                        -₹{Number(usage.discount_amount || 0).toFixed(2)}
                                                     </td>
                                                 </tr>
                                             ))}

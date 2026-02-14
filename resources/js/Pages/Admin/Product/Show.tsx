@@ -251,19 +251,19 @@ export default function ProductShow() {
                                     <div>
                                         <p className="text-sm text-gray-500">Base Price</p>
                                         <p className="text-base font-medium text-gray-900">
-                                            ${Number(product.price || 0).toFixed(2)}
+                                            ₹{Number(product.price || 0).toFixed(2)}
                                         </p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-500">MRP</p>
                                         <p className="text-base font-medium text-gray-900">
-                                            ${Number(product.mrp || 0).toFixed(2)}
+                                            ₹{Number(product.mrp || 0).toFixed(2)}
                                         </p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-500">Final Price</p>
                                         <p className="text-xl font-bold text-indigo-600">
-                                            ${Number(product.final_price || product.price || 0).toFixed(2)}
+                                            ₹{Number(product.final_price || product.price || 0).toFixed(2)}
                                         </p>
                                     </div>
                                     <div>
@@ -281,19 +281,19 @@ export default function ProductShow() {
                                     <div>
                                         <p className="text-sm text-gray-500">Total with GST</p>
                                         <p className="text-base font-medium text-gray-900">
-                                            ${Number(product.total_with_gst || 0).toFixed(2)}
+                                            ₹{Number(product.total_with_gst || 0).toFixed(2)}
                                         </p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-500">Commission</p>
                                         <p className="text-base font-medium text-gray-900">
-                                            ${Number(product.commission || 0).toFixed(2)}
+                                            ₹{Number(product.commission || 0).toFixed(2)}
                                         </p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-500">Commission GST</p>
                                         <p className="text-base font-medium text-gray-900">
-                                            ${Number(product.commission_gst_amount || 0).toFixed(2)}
+                                            ₹{Number(product.commission_gst_amount || 0).toFixed(2)}
                                         </p>
                                     </div>
                                 </div>
@@ -365,7 +365,7 @@ export default function ProductShow() {
                                                             {variation.stock_quantity || 0}
                                                         </td>
                                                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                                                            ${Number(variation.price || 0).toFixed(2)}
+                                                            ₹{Number(variation.price || 0).toFixed(2)}
                                                         </td>
                                                         <td className="px-4 py-3 whitespace-nowrap">
                                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

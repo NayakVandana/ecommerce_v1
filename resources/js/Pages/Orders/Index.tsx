@@ -166,7 +166,7 @@ export default function Index() {
                                                                 {getStatusBadge(order.status)}
                                                             </div>
                                                             <div className="text-lg font-bold text-gray-900">
-                                                                ${Number(order.total || 0).toFixed(2)}
+                                                                ₹{Number(order.total || 0).toFixed(2)}
                                                             </div>
                                                         </div>
                                                     </div>

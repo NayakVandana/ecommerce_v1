@@ -306,10 +306,10 @@ export default function CartIndex() {
                                                         {quantity}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        ${price.toFixed(2)}
+                                                        ₹{price.toFixed(2)}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                        ${subtotal.toFixed(2)}
+                                                        ₹{subtotal.toFixed(2)}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                         {new Date(cart.created_at).toLocaleDateString()}

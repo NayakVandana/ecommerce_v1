@@ -159,10 +159,10 @@ export default function CouponUsageModal({
                                                     )}
                                                 </td>
                                                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    ${Number(usage.order_total || 0).toFixed(2)}
+                                                    ₹{Number(usage.order_total || 0).toFixed(2)}
                                                 </td>
                                                 <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                                                    -${Number(usage.discount_amount || 0).toFixed(2)}
+                                                    -₹{Number(usage.discount_amount || 0).toFixed(2)}
                                                 </td>
                                             </tr>
                                         ))}

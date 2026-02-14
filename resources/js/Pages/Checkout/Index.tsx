@@ -584,13 +584,13 @@ export default function Index() {
                                                             </p>
                                                         )}
                                                         <p className="text-sm text-gray-600 mt-1">
-                                                            Quantity: {item.quantity} × ${((item.subtotal || 0) / item.quantity).toFixed(2)}
+                                                            Quantity: {item.quantity} × ₹{((item.subtotal || 0) / item.quantity).toFixed(2)}
                                                         </p>
                                                     </div>
                                                     
                                                     <div className="text-right">
                                                         <p className="font-bold text-indigo-600">
-                                                            ${(item.subtotal || 0).toFixed(2)}
+                                                            ₹{(item.subtotal || 0).toFixed(2)}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -771,28 +771,28 @@ export default function Index() {
                                     <div className="space-y-2 mb-4">
                                         <div className="flex justify-between text-gray-600">
                                             <span>Subtotal ({items.length} items)</span>
-                                            <span>${subtotal.toFixed(2)}</span>
+                                            <span>₹{subtotal.toFixed(2)}</span>
                                         </div>
                                         {couponDiscount > 0 && (
                                             <div className="flex justify-between text-green-600">
                                                 <span>Discount ({appliedCoupon?.code})</span>
-                                                <span>-${couponDiscount.toFixed(2)}</span>
+                                                <span>-₹{couponDiscount.toFixed(2)}</span>
                                             </div>
                                         )}
                                         <div className="flex justify-between text-gray-600">
                                             <span>Tax</span>
-                                            <span>${tax.toFixed(2)}</span>
+                                            <span>₹{tax.toFixed(2)}</span>
                                         </div>
                                         <div className="flex justify-between text-gray-600">
                                             <span>Shipping</span>
-                                            <span>${shipping.toFixed(2)}</span>
+                                            <span>₹{shipping.toFixed(2)}</span>
                                         </div>
                                     </div>
                                     
                                     <div className="border-t pt-4 mb-4">
                                         <div className="flex justify-between text-lg font-bold">
                                             <span>Total</span>
-                                            <span>${finalTotal.toFixed(2)}</span>
+                                            <span>₹{finalTotal.toFixed(2)}</span>
                                         </div>
                                     </div>
                                     

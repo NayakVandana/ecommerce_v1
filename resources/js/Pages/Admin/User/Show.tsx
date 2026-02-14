@@ -253,7 +253,7 @@ export default function UserShow() {
                                                         </span>
                                                     </td>
                                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        ${Number(order.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        ₹{Number(order.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </td>
                                                     <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                         <Link

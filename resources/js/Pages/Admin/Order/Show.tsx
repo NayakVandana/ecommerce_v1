@@ -1034,7 +1034,7 @@ export default function OrderShow() {
                                             )}
                                             {order.refund_amount && (
                                                 <p className="text-sm font-semibold text-orange-900 mb-2">
-                                                    Refund Amount: ${Number(order.refund_amount).toFixed(2)}
+                                                    Refund Amount: ₹{Number(order.refund_amount).toFixed(2)}
                                                 </p>
                                             )}
                                             <div className="flex flex-wrap gap-4 mt-2 pt-2 border-t border-orange-200">
@@ -1405,7 +1405,7 @@ export default function OrderShow() {
                                                     </p>
                                                 )}
                                                 <p className="text-xs text-gray-600 mt-1">
-                                                    Quantity: {item.quantity} × ${Number(item.price || 0).toFixed(2)}
+                                                    Quantity: {item.quantity} × ₹{Number(item.price || 0).toFixed(2)}
                                                 </p>
                                                 {/* Return/Replace Eligibility Badges */}
                                                 <div className="flex flex-wrap gap-2 mt-2">
@@ -1565,7 +1565,7 @@ export default function OrderShow() {
                                             
                                             <div className="text-right">
                                                 <p className="font-bold text-sm text-indigo-600">
-                                                    ${Number(item.subtotal || 0).toFixed(2)}
+                                                    ₹{Number(item.subtotal || 0).toFixed(2)}
                                                 </p>
                                             </div>
                                         </div>
@@ -1680,28 +1680,28 @@ export default function OrderShow() {
                             <div className="space-y-2 mb-4">
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Subtotal</span>
-                                    <span className="text-gray-900">${subtotal.toFixed(2)}</span>
+                                    <span className="text-gray-900">₹{subtotal.toFixed(2)}</span>
                                 </div>
                                 {discount > 0 && order.coupon_code && (
                                     <div className="flex justify-between text-sm">
                                         <span className="text-green-600">Discount ({order.coupon_code.code})</span>
-                                        <span className="text-green-600">-${discount.toFixed(2)}</span>
+                                        <span className="text-green-600">-₹{discount.toFixed(2)}</span>
                                     </div>
                                 )}
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Tax</span>
-                                    <span className="text-gray-900">${tax.toFixed(2)}</span>
+                                    <span className="text-gray-900">₹{tax.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-600">Shipping</span>
-                                    <span className="text-gray-900">${shipping.toFixed(2)}</span>
+                                    <span className="text-gray-900">₹{shipping.toFixed(2)}</span>
                                 </div>
                             </div>
                             
                             <div className="border-t pt-4">
                                 <div className="flex justify-between">
                                     <span className="font-medium text-gray-900">Total</span>
-                                    <span className="font-bold text-lg text-indigo-600">${total.toFixed(2)}</span>
+                                    <span className="font-bold text-lg text-indigo-600">₹{total.toFixed(2)}</span>
                                 </div>
                             </div>
                         </div>

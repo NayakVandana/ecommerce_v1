@@ -478,11 +478,11 @@ export default function Show() {
                             <div className="mb-6">
                                 <div className="flex items-center gap-3 flex-wrap">
                                     <p className="text-3xl font-bold text-indigo-600">
-                                        ${Number(product.final_price || product.price || 0).toFixed(2)}
+                                        ₹{Number(product.final_price || product.price || 0).toFixed(2)}
                                     </p>
                                     {product.mrp && Number(product.mrp) > Number(product.final_price || product.price || 0) && (
                                         <>
-                                            <p className="text-xl text-gray-400 line-through">${Number(product.mrp).toFixed(2)}</p>
+                                            <p className="text-xl text-gray-400 line-through">₹{Number(product.mrp).toFixed(2)}</p>
                                             {product.discount_percent > 0 && (
                                                 <span className="bg-red-500 text-white px-3 py-1 rounded-md text-sm font-bold">
                                                     {Number(product.discount_percent).toFixed(2)}% OFF

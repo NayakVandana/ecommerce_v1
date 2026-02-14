@@ -179,7 +179,7 @@ export default function DashboardIndex() {
                                                             {order.user?.name || 'Guest'}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                            ${order.total?.toLocaleString() || '0.00'}
+                                                            ₹{order.total?.toLocaleString() || '0.00'}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap">
                                                             {getStatusBadge(order.status)}

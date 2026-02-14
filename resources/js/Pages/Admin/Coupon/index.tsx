@@ -147,7 +147,7 @@ export default function CouponIndex() {
         if (coupon.type === 'percentage') {
             return `${coupon.value}%`;
         }
-        return `$${Number(coupon.value).toFixed(2)}`;
+        return `₹${Number(coupon.value).toFixed(2)}`;
     };
 
     return (
@@ -254,7 +254,7 @@ export default function CouponIndex() {
                                                 </span>
                                                 {coupon.min_purchase_amount && (
                                                     <div className="text-xs text-gray-500">
-                                                        Min: ${Number(coupon.min_purchase_amount).toFixed(2)}
+                                                        Min: ₹{Number(coupon.min_purchase_amount).toFixed(2)}
                                                     </div>
                                                 )}
                                             </td>
