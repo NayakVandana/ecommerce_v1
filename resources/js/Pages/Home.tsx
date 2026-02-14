@@ -314,21 +314,22 @@ export default function Home() {
                         {featuredCategories.length > 0 && (
                             <div className="mb-12">
                                 <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                                <div className="flex overflow-x-auto gap-8 pb-4 scrollbar-hide">
                                     {featuredCategories.map((category) => (
-                                        <Link key={category.id} href={`/categories/${category.slug}`}>
-                                            <Card hover className="text-center p-6 flex flex-col items-center justify-center h-full">
-                                                <div className="mb-4 flex items-center justify-center">
-                                                    <CategoryIcon 
-                                                        icon={category.icon} 
-                                                        className="h-12 w-12 text-indigo-600"
-                                                    />
-                                                </div>
-                                                <h3 className="text-lg font-semibold mb-1">{category.name}</h3>
-                                                {category.description && (
-                                                    <p className="text-gray-600 text-sm line-clamp-2">{category.description}</p>
-                                                )}                                              
-                                            </Card>
+                                        <Link 
+                                            key={category.id} 
+                                            href={`/categories/${category.slug}`}
+                                            className="flex flex-col items-center flex-shrink-0 group"
+                                        >
+                                            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-2 shadow-md group-hover:shadow-lg transition-all group-hover:scale-105 border border-gray-200">
+                                                <CategoryIcon 
+                                                    icon={category.icon} 
+                                                    className="h-8 w-8 text-purple-600"
+                                                />
+                                            </div>
+                                            <span className="text-sm font-medium text-gray-800 text-center max-w-[80px] line-clamp-2">
+                                                {category.name}
+                                            </span>
                                         </Link>
                                     ))}
                                 </div>
