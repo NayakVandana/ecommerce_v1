@@ -69,6 +69,11 @@ Route::middleware('auth.optional')->group(function () {
         Route::post('/clear', [WishlistApiController::class, 'clear']);
         Route::post('/check', [WishlistApiController::class, 'check']);
     });
+    
+    // Coupon Validation (works with both authenticated users and guests)
+    Route::prefix('coupons')->group(function () {
+        Route::post('/validate', [CouponApiController::class, 'validateCoupon']);
+    });
 });
 
 // Protected Routes (require authentication) - only for authenticated users
@@ -88,14 +93,6 @@ Route::middleware('auth.token')->prefix('auth')->group(function () {
         Route::post('/request-return', [OrderApiController::class, 'requestReturn']);
         Route::post('/request-replacement', [OrderApiController::class, 'requestReplacement']);
     });
-    
-    // Coupon Routes (require authentication)
-    Route::prefix('coupons')->group(function () {
-        Route::post('/validate', [CouponApiController::class, 'validate']);
-    });
-    
-    // Public Coupon Routes (for validation before checkout)
-    Route::post('/coupons/validate', [CouponApiController::class, 'validate']);
     
     // Cart Routes for authenticated users (optional - can also use /cart)
     Route::prefix('cart')->group(function () {

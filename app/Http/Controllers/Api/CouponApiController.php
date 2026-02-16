@@ -10,7 +10,7 @@ use Carbon\Carbon;
 
 class CouponApiController extends Controller
 {
-    public function validate(Request $request)
+    public function validateCoupon(Request $request)
     {
         $request->validate([
             'code' => 'required|string',

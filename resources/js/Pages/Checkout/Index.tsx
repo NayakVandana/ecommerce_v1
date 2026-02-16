@@ -768,32 +768,75 @@ export default function Index() {
                                     </div>
                                     )}
                                     
-                                    <div className="space-y-2 mb-4">
-                                        <div className="flex justify-between text-gray-600">
+                                    <div className="space-y-3 mb-4">
+                                        <div className="flex justify-between text-sm text-gray-700">
                                             <span>Subtotal ({items.length} items)</span>
                                             <span>₹{subtotal.toFixed(2)}</span>
                                         </div>
+                                        
                                         {couponDiscount > 0 && (
-                                            <div className="flex justify-between text-green-600">
-                                                <span>Discount ({appliedCoupon?.code})</span>
-                                                <span>-₹{couponDiscount.toFixed(2)}</span>
+                                            <div className="flex justify-between text-sm">
+                                                <span className="text-green-600 font-medium">Coupon Discount ({appliedCoupon?.code})</span>
+                                                <span className="text-green-600 font-semibold">-₹{couponDiscount.toFixed(2)}</span>
                                             </div>
                                         )}
-                                        <div className="flex justify-between text-gray-600">
-                                            <span>Tax</span>
-                                            <span>₹{tax.toFixed(2)}</span>
+                                        
+                                        <div className="flex justify-between text-sm text-gray-700">
+                                            <span>Tax & Fees</span>
+                                            <span className={tax === 0 ? 'text-green-600 font-medium' : ''}>
+                                                {tax === 0 ? 'FREE' : `₹${tax.toFixed(2)}`}
+                                            </span>
                                         </div>
-                                        <div className="flex justify-between text-gray-600">
-                                            <span>Shipping</span>
-                                            <span>₹{shipping.toFixed(2)}</span>
+                                        
+                                        <div className="flex justify-between text-sm text-gray-700">
+                                            <div className="flex items-center gap-2">
+                                                <span>Delivery Charges</span>
+                                                {shipping === 0 && (
+                                                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                                                        FREE
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <span className={shipping === 0 ? 'text-green-600 font-semibold line-through' : ''}>
+                                                {shipping === 0 ? (
+                                                    <span className="flex items-center gap-1">
+                                                        <span className="line-through text-gray-400">₹40</span>
+                                                        <span className="text-green-600 font-medium">FREE</span>
+                                                    </span>
+                                                ) : (
+                                                    `₹${shipping.toFixed(2)}`
+                                                )}
+                                            </span>
                                         </div>
                                     </div>
                                     
-                                    <div className="border-t pt-4 mb-4">
-                                        <div className="flex justify-between text-lg font-bold">
-                                            <span>Total</span>
-                                            <span>₹{finalTotal.toFixed(2)}</span>
+                                    {/* Savings Summary */}
+                                    {(couponDiscount > 0 || shipping === 0) && (
+                                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-sm font-medium text-green-800">Total Savings</span>
+                                                <span className="text-base font-bold text-green-600">
+                                                    ₹{(couponDiscount + (shipping === 0 ? 40 : 0)).toFixed(2)}
+                                                </span>
+                                            </div>
+                                            <div className="mt-1 text-xs text-green-700">
+                                                {couponDiscount > 0 && `Coupon: ₹${couponDiscount.toFixed(2)}`}
+                                                {couponDiscount > 0 && shipping === 0 && ' + '}
+                                                {shipping === 0 && 'Free Delivery: ₹40'}
+                                            </div>
                                         </div>
+                                    )}
+                                    
+                                    <div className="border-t pt-4 mb-4">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-lg font-bold text-gray-900">Total Amount</span>
+                                            <span className="text-2xl font-bold text-indigo-600">₹{finalTotal.toFixed(2)}</span>
+                                        </div>
+                                        {(couponDiscount > 0 || shipping === 0) && (
+                                            <div className="mt-2 text-xs text-green-600 text-right">
+                                                You saved ₹{(couponDiscount + (shipping === 0 ? 40 : 0)).toFixed(2)} on this order! 🎉
+                                            </div>
+                                        )}
                                     </div>
                                     
                                     {/* Payment Method - Show only on step 3 */}
