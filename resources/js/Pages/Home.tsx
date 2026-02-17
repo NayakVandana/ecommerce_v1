@@ -14,6 +14,7 @@ import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import RecentlyViewedProducts from '../Components/RecentlyViewedProducts';
 import Pagination from '../Components/Pagination';
 import CategoryIcon from '../Components/CategoryIcon';
+import CategoryModal from '../Components/CategoryModal';
 
 export default function Home() {
     const { url } = usePage();
@@ -28,6 +29,9 @@ export default function Home() {
     const [addingToCart, setAddingToCart] = useState<{ [key: number]: boolean }>({});
     const [wishlistStatus, setWishlistStatus] = useState<{ [key: number]: boolean }>({});
     const [togglingWishlist, setTogglingWishlist] = useState<{ [key: number]: boolean }>({});
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
+    const [selectedCategoryForModal, setSelectedCategoryForModal] = useState<any>(null);
+    const [allCategoriesForModal, setAllCategoriesForModal] = useState<any[]>([]);
 
     useEffect(() => {
         fetchData();
@@ -126,6 +130,32 @@ export default function Home() {
         } finally {
             setAddingToCart(prev => ({ ...prev, [product.id]: false }));
         }
+    };
+
+    const handleCategoryClick = async (e: React.MouseEvent, category: any) => {
+        e.preventDefault();
+        setSelectedCategoryForModal(category);
+        
+        // Fetch all categories for the modal (with hierarchy)
+        try {
+            const response = await useCategoryStore.list();
+            if (response.data?.status && response.data?.data) {
+                // Use hierarchical if available, otherwise use flat
+                const categoriesData = response.data.data;
+                if (categoriesData.hierarchical && Array.isArray(categoriesData.hierarchical) && categoriesData.hierarchical.length > 0) {
+                    setAllCategoriesForModal(categoriesData.hierarchical);
+                } else if (categoriesData.flat && Array.isArray(categoriesData.flat) && categoriesData.flat.length > 0) {
+                    setAllCategoriesForModal(categoriesData.flat);
+                } else {
+                    setAllCategoriesForModal([]);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching categories for modal:', error);
+            setAllCategoriesForModal([]);
+        }
+        
+        setShowCategoryModal(true);
     };
 
     const fetchData = async () => {
@@ -294,17 +324,7 @@ export default function Home() {
 
     return (
         <AppLayout>
-            <Container className="py-8">
-                {/* Hero Section */}
-                <Card className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white mb-12 border-0 shadow-xl">
-                    <div className="text-center">
-                        <h1 className="text-4xl md:text-5xl font-bold mb-4">Welcome to Our Ecommerce Store</h1>
-                        <p className="text-xl mb-6">Discover amazing products at great prices</p>
-                        <Button as="link" href="/categories" variant="secondary" size="lg">
-                            Shop Now
-                        </Button>
-                    </div>
-                </Card>
+            <Container className="py-8">             
 
                 {loading ? (
                     <div className="text-center py-12 text-gray-500">Loading...</div>
@@ -316,10 +336,10 @@ export default function Home() {
                                 <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
                                 <div className="flex overflow-x-auto gap-8 pb-4 scrollbar-hide">
                                     {featuredCategories.map((category) => (
-                                        <Link 
-                                            key={category.id} 
-                                            href={`/categories/${category.slug}`}
-                                            className="flex flex-col items-center flex-shrink-0 group"
+                                        <button
+                                            key={category.id}
+                                            onClick={(e) => handleCategoryClick(e, category)}
+                                            className="flex flex-col items-center flex-shrink-0 group cursor-pointer"
                                         >
                                             <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-2 shadow-md group-hover:shadow-lg transition-all group-hover:scale-105 border border-gray-200">
                                                 <CategoryIcon 
@@ -330,7 +350,7 @@ export default function Home() {
                                             <span className="text-sm font-medium text-gray-800 text-center max-w-[80px] line-clamp-2">
                                                 {category.name}
                                             </span>
-                                        </Link>
+                                        </button>
                                     ))}
                                 </div>
                             </div>
@@ -363,6 +383,14 @@ export default function Home() {
                     </>
                 )}
             </Container>
+
+            {/* Category Modal */}
+            <CategoryModal
+                isOpen={showCategoryModal}
+                onClose={() => setShowCategoryModal(false)}
+                parentCategory={selectedCategoryForModal}
+                allCategories={allCategoriesForModal}
+            />
         </AppLayout>
     );
 }
