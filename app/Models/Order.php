@@ -28,6 +28,7 @@ class Order extends Model
         'postal_code',
         'state',
         'country',
+        'delivery_area',
         'address_type',
         'total',
         'subtotal',

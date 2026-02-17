@@ -29,29 +29,119 @@ class OrderApiController extends Controller
 
     public function store(Request $request)
     {
+        // Define district-city and district-delivery_area mappings
+        $districtCityMap = [
+            'Valsad' => ['Vapi', 'Pardi', 'Valsad City', 'Dharampur'],
+            'Daman' => ['Moti Daman', 'Nani Daman', 'Daman Fort Area'],
+        ];
+
+        $deliveryAreaMap = [
+            'Valsad' => ['gunjan', 'charvada', 'vapi_char_rasta', 'vapi_station', 'vapi_gidc', 'pardi', 'valsad_city', 'dharampur'],
+            'Daman' => ['moti_daman', 'nani_daman', 'daman_fort'],
+        ];
+
+        $expectedStates = [
+            'Valsad' => 'Gujarat',
+            'Daman' => 'Daman and Diu (UT)',
+        ];
+
+        // Build dynamic validation rules based on district
+        $district = $request->input('district');
+        
+        // Determine valid cities based on district
+        $validCities = [];
+        if ($district && isset($districtCityMap[$district])) {
+            $validCities = $districtCityMap[$district];
+        } else {
+            // If no district or invalid district, allow all cities for basic validation
+            $validCities = array_merge(...array_values($districtCityMap));
+        }
+
+        // Determine valid delivery areas based on district
+        $validDeliveryAreas = [];
+        if ($district && isset($deliveryAreaMap[$district])) {
+            $validDeliveryAreas = $deliveryAreaMap[$district];
+        } else {
+            // If no district or invalid district, allow all areas for basic validation
+            $validDeliveryAreas = array_merge(...array_values($deliveryAreaMap));
+        }
+
+        // Determine expected state based on district
+        $expectedState = $expectedStates[$district] ?? null;
+
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email',
-            'phone' => 'nullable|string',
+            'email' => 'required|email|max:255',
+            'phone' => 'nullable|string|regex:/^[6-9]\d{9}$/',
             'receiver_name' => 'nullable|string|max:255',
-            'receiver_number' => 'required|string',
-            'address' => 'required|string',
+            'receiver_number' => 'required|string|regex:/^[6-9]\d{9}$/',
+            'address' => 'required|string|max:500',
             'house_no' => 'nullable|string|max:50',
             'floor_no' => 'nullable|string|max:50',
             'building_name' => 'nullable|string|max:255',
             'landmark' => 'nullable|string|max:255',
-            'district' => 'nullable|string|in:Valsad',
-            'city' => 'required|string|in:Vapi',
-            'postal_code' => 'required|string',
-            'state' => 'nullable|string',
+            'district' => 'required|string|in:Valsad,Daman',
+            'city' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) use ($district, $districtCityMap) {
+                    if ($district && isset($districtCityMap[$district])) {
+                        if (!in_array($value, $districtCityMap[$district])) {
+                            $fail("The selected city is not valid for {$district} district. Valid cities are: " . implode(', ', $districtCityMap[$district]));
+                        }
+                    }
+                },
+            ],
+            'postal_code' => 'required|string|regex:/^\d{6}$/',
+            'state' => [
+                'required',
+                'string',
+                'max:100',
+                function ($attribute, $value, $fail) use ($district, $expectedStates) {
+                    if ($district && isset($expectedStates[$district])) {
+                        if ($value !== $expectedStates[$district]) {
+                            $fail("The state for {$district} district should be {$expectedStates[$district]}.");
+                        }
+                    }
+                },
+            ],
             'country' => 'required|string|in:India',
-            'address_type' => 'nullable|string|in:home,office,other',
-            'notes' => 'nullable|string',
+            'address_type' => 'required|string|in:home,office,other',
+            'delivery_area' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) use ($district, $deliveryAreaMap) {
+                    if ($district && isset($deliveryAreaMap[$district])) {
+                        if (!in_array($value, $deliveryAreaMap[$district])) {
+                            $fail("The selected delivery area is not valid for {$district} district. Valid areas are: " . implode(', ', $deliveryAreaMap[$district]));
+                        }
+                    }
+                },
+            ],
+            'notes' => 'nullable|string|max:1000',
             'items' => 'nullable|array',
             'items.*.product_id' => 'required_with:items|exists:products,id',
             'items.*.quantity' => 'required_with:items|integer|min:1',
             'use_cart' => 'nullable|boolean',
             'coupon_code' => 'nullable|string',
+        ], [
+            'name.required' => 'Name is required.',
+            'email.required' => 'Email is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'receiver_number.required' => 'Receiver number is required.',
+            'receiver_number.regex' => 'Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.',
+            'address.required' => 'Address is required.',
+            'district.required' => 'Please select a district.',
+            'district.in' => 'Please select a valid district (Valsad or Daman).',
+            'city.required' => 'Please select a city.',
+            'postal_code.required' => 'Postal code is required.',
+            'postal_code.regex' => 'Please enter a valid 6-digit PIN code.',
+            'state.required' => 'State is required.',
+            'country.required' => 'Country is required.',
+            'country.in' => 'Currently, we only accept orders from India.',
+            'address_type.required' => 'Please select an address type.',
+            'address_type.in' => 'Please select a valid address type (home, office, or other).',
+            'delivery_area.required' => 'Please select a delivery area.',
         ]);
 
         $userId = $request->user()->id;
@@ -204,6 +294,7 @@ class OrderApiController extends Controller
                     'state' => $request->state ?? 'Gujarat',
                     'country' => $request->country ?? 'India',
                     'address_type' => $request->address_type ?? 'home',
+                    'delivery_area' => $request->delivery_area,
                     'subtotal' => $itemSubtotal,
                     'tax' => $itemTax,
                     'shipping' => $itemShipping,

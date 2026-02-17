@@ -26,6 +26,21 @@ export default function Show() {
     const [showReplacementModal, setShowReplacementModal] = useState(false);
     const [requestingReplacement, setRequestingReplacement] = useState(false);
 
+    // Delivery area label mapping
+    const deliveryAreaLabels: { [key: string]: string } = {
+        'gunjan': 'Gunjan',
+        'charvada': 'Charvada',
+        'vapi_char_rasta': 'Vapi Char Rasta',
+        'vapi_station': 'Vapi Station',
+        'vapi_gidc': 'Vapi GIDC',
+        'pardi': 'Pardi',
+        'valsad_city': 'Valsad City',
+        'dharampur': 'Dharampur',
+        'moti_daman': 'Moti Daman',
+        'nani_daman': 'Nani Daman',
+        'daman_fort': 'Daman Fort Area',
+    };
+
     useEffect(() => {
         fetchOrder();
     }, [orderId]);
@@ -832,6 +847,46 @@ export default function Show() {
                                     )}
                                     <p><span className="font-semibold">Country:</span> {order.country}</p>
                                 </div>
+
+                                {/* Delivery Area Display */}
+                                {order.delivery_area && (
+                                    <div className="pt-4 border-t">
+                                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 border-2 border-indigo-200">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <p className="font-semibold text-gray-900">Delivery Area / Store:</p>
+                                                <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-300">
+                                                    <svg className="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                    </svg>
+                                                    Confirmed
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="flex items-center gap-2 mb-3">
+                                                <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                </svg>
+                                                <span className="text-lg font-bold text-indigo-900">
+                                                    {deliveryAreaLabels[order.delivery_area] || order.delivery_area}
+                                                </span>
+                                            </div>
+                                            
+                                            <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-md p-3">
+                                                <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <div className="flex-1">
+                                                    <p className="text-xs font-semibold text-blue-900 mb-0.5">Delivery Store Information</p>
+                                                    <p className="text-xs text-blue-700">
+                                                        Your order will be delivered from the nearest store to this area. 
+                                                        Delivery times may vary based on area and availability.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                                 
                                 <div className="pt-2 border-t">
                                     <p>

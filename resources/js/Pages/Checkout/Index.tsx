@@ -34,14 +34,46 @@ export default function Index() {
         floor_no: '',
         building_name: '',
         landmark: '',
-        district: 'Valsad',
-        city: 'Vapi',
+        district: '',
+        city: '',
         postal_code: '',
         country: 'India',
-        state: 'Gujarat',
+        state: '',
+        delivery_area: '',
         address_type: 'home',
         notes: '',
     });
+
+    // District and city mapping
+    const districtCityMap: { [key: string]: { cities: string[], state: string } } = {
+        'Valsad': {
+            cities: ['Vapi', 'Pardi', 'Valsad City', 'Dharampur'],
+            state: 'Gujarat'
+        },
+        'Daman': {
+            cities: ['Moti Daman', 'Nani Daman', 'Daman Fort Area'],
+            state: 'Daman and Diu (UT)'
+        }
+    };
+
+    // Delivery area mapping based on district
+    const deliveryAreaMap: { [key: string]: { value: string, label: string }[] } = {
+        'Valsad': [
+            { value: 'gunjan', label: 'Gunjan' },
+            { value: 'charvada', label: 'Charvada' },
+            { value: 'vapi_char_rasta', label: 'Vapi Char Rasta' },
+            { value: 'vapi_station', label: 'Vapi Station' },
+            { value: 'vapi_gidc', label: 'Vapi GIDC' },
+            { value: 'pardi', label: 'Pardi' },
+            { value: 'valsad_city', label: 'Valsad City' },
+            { value: 'dharampur', label: 'Dharampur' },
+        ],
+        'Daman': [
+            { value: 'moti_daman', label: 'Moti Daman' },
+            { value: 'nani_daman', label: 'Nani Daman' },
+            { value: 'daman_fort', label: 'Daman Fort Area' },
+        ]
+    };
 
     useEffect(() => {
         fetchCart();
@@ -83,12 +115,49 @@ export default function Index() {
 
     const handleInputChange = (e: any) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value,
-        }));
-        // Clear error for this field
-        if (errors[name]) {
+        
+        // Handle district change - update state and reset city and delivery_area
+        if (name === 'district') {
+            const districtData = districtCityMap[value];
+            setFormData(prev => ({
+                ...prev,
+                district: value,
+                state: districtData?.state || '',
+                city: '', // Reset city when district changes
+                delivery_area: '', // Reset delivery_area when district changes
+            }));
+        } 
+        // Handle city change - reset delivery_area if it doesn't match new district
+        else if (name === 'city' && formData.district) {
+            setFormData(prev => ({
+                ...prev,
+                city: value,
+            }));
+        }
+        else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: value,
+            }));
+        }
+        
+        // Clear errors for related fields
+        if (name === 'district') {
+            setErrors((prev: any) => {
+                const newErrors = { ...prev };
+                delete newErrors.district;
+                delete newErrors.city;
+                delete newErrors.delivery_area;
+                delete newErrors.state;
+                return newErrors;
+            });
+        } else if (name === 'city') {
+            setErrors((prev: any) => {
+                const newErrors = { ...prev };
+                delete newErrors.city;
+                return newErrors;
+            });
+        } else if (errors[name]) {
             setErrors((prev: any) => {
                 const newErrors = { ...prev };
                 delete newErrors[name];
@@ -100,39 +169,96 @@ export default function Index() {
     const validateForm = () => {
         const newErrors: any = {};
 
+        /**
+         * Frontend Validation Rules (matching backend validation):
+         * - Name: required, string
+         * - Email: required, valid email format
+         * - Receiver Number: required, valid 10-digit mobile number (starting with 6-9)
+         * - Address: required, string
+         * - District: required, must be one of: Valsad, Daman
+         * - City: required, must belong to selected district
+         * - Postal Code: required, valid 6-digit PIN code
+         * - Delivery Area: required, must belong to selected district
+         * - State: required, auto-filled based on district
+         * - Country: required, must be India
+         * - Address Type: required, must be one of: home, office, other
+         */
+
+        // Name validation
         if (!formData.name || formData.name.trim() === '') {
             newErrors.name = 'Name is required';
         }
 
+        // Email validation
         if (!formData.email || formData.email.trim() === '') {
             newErrors.email = 'Email is required';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
             newErrors.email = 'Please enter a valid email address';
         }
 
+        // Receiver number validation
         if (!formData.receiver_number || formData.receiver_number.trim() === '') {
             newErrors.receiver_number = 'Receiver number is required';
+        } else if (!/^[6-9]\d{9}$/.test(formData.receiver_number.trim())) {
+            newErrors.receiver_number = 'Please enter a valid 10-digit mobile number';
         }
 
+        // Address validation
         if (!formData.address || formData.address.trim() === '') {
             newErrors.address = 'Address is required';
         }
 
+        // District validation
         if (!formData.district || formData.district.trim() === '') {
             newErrors.district = 'District is required';
+        } else if (!districtCityMap[formData.district]) {
+            newErrors.district = 'Please select a valid district';
         }
+        
+        // City validation
         if (!formData.city || formData.city.trim() === '') {
             newErrors.city = 'City is required';
-        }
-        if (formData.district !== 'Valsad') {
-            newErrors.district = 'Only Valsad district is allowed for shipping';
-        }
-        if (formData.city !== 'Vapi') {
-            newErrors.city = 'Only Vapi city is allowed for shipping';
+        } else if (formData.district && districtCityMap[formData.district]) {
+            // Validate city belongs to selected district
+            const allowedCities = districtCityMap[formData.district].cities;
+            if (!allowedCities.includes(formData.city)) {
+                newErrors.city = 'Please select a valid city from your district';
+            }
         }
 
+        // Postal code validation
         if (!formData.postal_code || formData.postal_code.trim() === '') {
             newErrors.postal_code = 'Postal code is required';
+        } else if (!/^\d{6}$/.test(formData.postal_code.trim())) {
+            newErrors.postal_code = 'Please enter a valid 6-digit PIN code';
+        }
+
+        // Delivery area validation
+        if (!formData.delivery_area || formData.delivery_area.trim() === '') {
+            newErrors.delivery_area = 'Please select a delivery area';
+        } else if (formData.district && deliveryAreaMap[formData.district]) {
+            // Validate delivery_area belongs to selected district
+            const allowedAreas = deliveryAreaMap[formData.district].map(area => area.value);
+            if (!allowedAreas.includes(formData.delivery_area)) {
+                newErrors.delivery_area = 'Please select a valid delivery area from your district';
+            }
+        } else if (!formData.district) {
+            newErrors.delivery_area = 'Please select a district first';
+        }
+
+        // State validation
+        if (formData.district && !formData.state) {
+            newErrors.state = 'State is required';
+        }
+
+        // Country validation (must be India)
+        if (!formData.country || formData.country !== 'India') {
+            newErrors.country = 'Country must be India';
+        }
+
+        // Address type validation
+        if (!formData.address_type || !['home', 'office', 'other'].includes(formData.address_type)) {
+            newErrors.address_type = 'Please select a valid address type';
         }
 
         setErrors(newErrors);
@@ -143,6 +269,12 @@ export default function Index() {
         e.preventDefault();
 
         if (!validateForm()) {
+            toast({ type: 'error', message: 'Please fill in all required fields correctly' });
+            // Scroll to first error
+            const firstErrorElement = document.querySelector('.text-red-600');
+            if (firstErrorElement) {
+                firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
             return;
         }
 
@@ -459,7 +591,12 @@ export default function Index() {
                                                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                                                     required
                                                 >
-                                                    <option value="Valsad">Valsad</option>
+                                                    <option value="">Select District...</option>
+                                                    {Object.keys(districtCityMap).map((district) => (
+                                                        <option key={district} value={district}>
+                                                            {district}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                                 {errors.district && (
                                                     <p className="mt-1 text-xs text-red-600">{errors.district}</p>
@@ -473,10 +610,18 @@ export default function Index() {
                                                     name="city"
                                                     value={formData.city}
                                                     onChange={handleInputChange}
-                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                                                     required
+                                                    disabled={!formData.district}
                                                 >
-                                                    <option value="Vapi">Vapi</option>
+                                                    <option value="">
+                                                        {!formData.district ? 'Select District First...' : 'Select City...'}
+                                                    </option>
+                                                    {formData.district && districtCityMap[formData.district]?.cities.map((city) => (
+                                                        <option key={city} value={city}>
+                                                            {city}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                                 {errors.city && (
                                                     <p className="mt-1 text-xs text-red-600">{errors.city}</p>
@@ -504,11 +649,51 @@ export default function Index() {
                                             </div>
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                    State
+                                                    State / UT
                                                 </label>
-                                                <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700">
-                                                    {formData.state}
+                                                <div className={`w-full px-3 py-2 border border-gray-300 rounded-md text-gray-700 ${
+                                                    formData.state ? 'bg-indigo-50 font-medium' : 'bg-gray-50'
+                                                }`}>
+                                                    {formData.state || 'Select district to auto-fill'}
                                                 </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Delivery Area Selection */}
+                                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 border-2 border-indigo-200">
+                                            <label htmlFor="delivery_area" className="block text-sm font-medium text-gray-700 mb-2">
+                                                Delivery Area / Store <span className="text-red-500">*</span>
+                                            </label>
+                                            <select
+                                                id="delivery_area"
+                                                name="delivery_area"
+                                                value={formData.delivery_area}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-2.5 border-2 border-indigo-300 rounded-lg bg-white text-gray-900 font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
+                                                required
+                                                disabled={!formData.district}
+                                            >
+                                                <option value="">
+                                                    {!formData.district ? 'Select District First...' : 'Select delivery area...'}
+                                                </option>
+                                                {formData.district && deliveryAreaMap[formData.district]?.map((area) => (
+                                                    <option key={area.value} value={area.value}>
+                                                        {area.label}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                            {errors.delivery_area && (
+                                                <p className="mt-1 text-xs text-red-600">{errors.delivery_area}</p>
+                                            )}
+                                            <div className="mt-3 flex items-start gap-2">
+                                                <svg className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                <p className="text-xs text-indigo-700">
+                                                    {formData.district 
+                                                        ? `Select the delivery area within ${formData.district}. Your order will be delivered from the nearest store.`
+                                                        : 'Please select a district first to view available delivery areas.'}
+                                                </p>
                                             </div>
                                         </div>
 
@@ -527,6 +712,13 @@ export default function Index() {
                                                 onClick={() => {
                                                     if (validateForm()) {
                                                         setCurrentStep(2);
+                                                    } else {
+                                                        toast({ type: 'error', message: 'Please fill in all required fields correctly' });
+                                                        // Scroll to first error
+                                                        const firstErrorElement = document.querySelector('.text-red-600');
+                                                        if (firstErrorElement) {
+                                                            firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                        }
                                                     }
                                                 }}
                                                 className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition"
@@ -627,6 +819,14 @@ export default function Index() {
                                                 <p><span className="font-semibold">City:</span> {formData.city}, {formData.postal_code}</p>
                                                 <p><span className="font-semibold">State:</span> {formData.state}</p>
                                                 <p><span className="font-semibold">Country:</span> {formData.country}</p>
+                                                {formData.delivery_area && formData.district && (
+                                                    <p className="mt-2">
+                                                        <span className="font-semibold">Delivery Area:</span>{' '}
+                                                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-800">
+                                                            {deliveryAreaMap[formData.district]?.find(area => area.value === formData.delivery_area)?.label || formData.delivery_area}
+                                                        </span>
+                                                    </p>
+                                                )}
                                                 {formData.notes && (
                                                     <p><span className="font-semibold">Notes:</span> {formData.notes}</p>
                                                 )}
