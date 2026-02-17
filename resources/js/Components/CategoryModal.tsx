@@ -290,17 +290,13 @@ export default function CategoryModal({
                                             </button>
 
                                             {/* Child Categories List - ALL EXPANDED BY DEFAULT */}
-                                            <div className="p-4 max-h-96 overflow-y-auto">
-                                                {group.children.length > 0 ? (
+                                            {group.children.length > 0 && (
+                                                <div className="p-4 max-h-96 overflow-y-auto">
                                                     <div className="space-y-1">
                                                         {group.children.map((child) => renderNestedCategory(child, 0))}
                                                     </div>
-                                                ) : (
-                                                    <p className="text-xs text-gray-400 italic text-center py-3">
-                                                        No subcategories
-                                                    </p>
-                                                )}
-                                            </div>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
                                 </div>

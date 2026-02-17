@@ -132,38 +132,19 @@ export default function Home() {
         }
     };
 
-    const handleCategoryClick = async (e: React.MouseEvent, category: any) => {
+    const handleCategoryClick = (e: React.MouseEvent, category: any) => {
         e.preventDefault();
         setSelectedCategoryForModal(category);
-        
-        // Fetch all categories for the modal (with hierarchy)
-        try {
-            const response = await useCategoryStore.list();
-            if (response.data?.status && response.data?.data) {
-                // Use hierarchical if available, otherwise use flat
-                const categoriesData = response.data.data;
-                if (categoriesData.hierarchical && Array.isArray(categoriesData.hierarchical) && categoriesData.hierarchical.length > 0) {
-                    setAllCategoriesForModal(categoriesData.hierarchical);
-                } else if (categoriesData.flat && Array.isArray(categoriesData.flat) && categoriesData.flat.length > 0) {
-                    setAllCategoriesForModal(categoriesData.flat);
-                } else {
-                    setAllCategoriesForModal([]);
-                }
-            }
-        } catch (error) {
-            console.error('Error fetching categories for modal:', error);
-            setAllCategoriesForModal([]);
-        }
-        
         setShowCategoryModal(true);
     };
 
     const fetchData = async () => {
         try {
             setLoading(true);
-            const [productsRes, categoriesRes] = await Promise.all([
+            const [productsRes, categoriesRes, allCategoriesRes] = await Promise.all([
                 useProductStore.list({ page: currentPage, per_page: 8 }),
-                useCategoryStore.home(), // Use home API for minimal data
+                useCategoryStore.home(), // Use home API for minimal data (parent categories only)
+                useCategoryStore.list(), // Fetch all categories with hierarchy for modal
             ]);
 
             if (productsRes.data?.status && productsRes.data?.data) {
@@ -181,6 +162,16 @@ export default function Home() {
                 if (categoriesArray.length > 0) {
                     // Show all categories, not just featured
                     setFeaturedCategories(categoriesArray);
+                }
+            }
+
+            // Store all categories with hierarchy for modal use
+            if (allCategoriesRes.data?.status && allCategoriesRes.data?.data) {
+                const categoriesData = allCategoriesRes.data.data;
+                if (categoriesData.hierarchical && Array.isArray(categoriesData.hierarchical) && categoriesData.hierarchical.length > 0) {
+                    setAllCategoriesForModal(categoriesData.hierarchical);
+                } else if (categoriesData.flat && Array.isArray(categoriesData.flat) && categoriesData.flat.length > 0) {
+                    setAllCategoriesForModal(categoriesData.flat);
                 }
             }
         } catch (error) {
