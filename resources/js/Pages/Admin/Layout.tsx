@@ -14,7 +14,8 @@ import {
     CurrencyDollarIcon,
     ChevronUpIcon,
     ChevronDownIcon,
-    TicketIcon
+    TicketIcon,
+    SwatchIcon
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/Pages/Auth/useAuthStore';
@@ -25,6 +26,7 @@ const adminNavigation = [
     { name: 'Revenue', href: '/admin/revenue', icon: CurrencyDollarIcon },
     { name: 'Products', href: '/admin/products', icon: Squares2X2Icon },
     { name: 'Categories', href: '/admin/categories', icon: TagIcon },
+    { name: 'Fabrics', href: '/admin/fabrics', icon: SwatchIcon },
     { name: 'Carts', href: '/admin/carts', icon: ShoppingCartIcon },
     { name: 'Recently Viewed', href: '/admin/recently-viewed', icon: EyeIcon },
     { name: 'Users', href: '/admin/users', icon: UsersIcon },

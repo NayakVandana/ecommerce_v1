@@ -146,7 +146,7 @@ class ProductApiController extends Controller
         ]);
 
         $product = Product::with([
-            'categoryRelation',
+            'categoryRelation.parent',
             'media' => function($q) {
                 $q->orderBy('sort_order')->orderBy('is_primary', 'desc');
             },
@@ -155,6 +155,9 @@ class ProductApiController extends Controller
             },
             'variations' => function($q) {
                 $q->orderBy('gender')->orderBy('size')->orderBy('color');
+            },
+            'fabrics' => function($q) {
+                $q->orderBy('sort_order');
             },
             'discounts' => function($q) {
                 $q->where('is_active', true)

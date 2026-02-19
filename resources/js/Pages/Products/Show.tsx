@@ -463,6 +463,52 @@ export default function Show() {
                         <div className="md:w-3/5 lg:w-1/2 p-6 md:p-8">
                             {/* Product Title */}
                             <h1 className="text-3xl font-bold text-gray-900 mb-3">{product.product_name}</h1>
+                                {/* Fabrics - Only for Fashion Category */}
+                            {(() => {
+                                // Check if category is Fashion or has Fashion as parent
+                                const category = product.categoryRelation;
+                                let isFashion = false;
+                                
+                                if (category) {
+                                    // Check if category name is Fashion (case-insensitive)
+                                    if (category.name.toLowerCase() === 'fashion') {
+                                        isFashion = true;
+                                    }
+                                    // Also check if parent category is Fashion (for subcategories)
+                                    // Note: parent might not be loaded, so we check parent_id
+                                    // The API should load parent if needed, but we'll handle both cases
+                                    else if (category.parent_id) {
+                                        // If parent is loaded, check it
+                                        if (category.parent && category.parent.name.toLowerCase() === 'fashion') {
+                                            isFashion = true;
+                                        }
+                                        // If parent is not loaded but we have parent_id, we can't check it here
+                                        // In that case, we'll rely on the backend to only return fabrics for fashion products
+                                    }
+                                }
+                                
+                                // Show fabrics if it's fashion category and fabrics exist
+                                // Also show if fabrics exist (backend should only return for fashion)
+                                return (isFashion || (product.fabrics && product.fabrics.length > 0)) && product.fabrics && product.fabrics.length > 0 ? (
+                                    <div className="mb-6">
+                                        <h3 className="font-semibold text-gray-900 mb-3">Available Fabrics</h3>
+                                        <div className="space-y-3">
+                                            {product.fabrics.map((fabric: any, index: number) => (
+                                                <div key={fabric.id || index} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex-1">
+                                                            <h4 className="font-medium text-gray-900 mb-1">{fabric.fabric_name}</h4>
+                                                            {fabric.description && (
+                                                                <p className="text-sm text-gray-600">{fabric.description}</p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : null;
+                            })()}
                             
                             {/* Brand */}
                             {product.brand && (
@@ -608,7 +654,7 @@ export default function Show() {
                                     </ul>
                                 </div>
                             )}
-                            
+                        
                             {/* Gender Selection (for fashion products) */}
                             {availableGenders.length > 0 && (
                                 <div className="mb-6">

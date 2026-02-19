@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductMedia;
 use App\Models\ProductVariation;
+use App\Models\Fabric;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -89,7 +90,20 @@ class AdminProductController extends Controller
             }
         }
 
-        return $this->sendJsonResponse(true, 'Product created successfully', $product->load(['media', 'variations']), 201);
+        // Handle fabrics if provided (array of fabric IDs)
+        if ($request->has('fabric_ids') && is_array($request->fabric_ids)) {
+            $fabricIds = array_filter($request->fabric_ids); // Remove empty values
+            if (!empty($fabricIds)) {
+                // Attach fabrics with sort order
+                $syncData = [];
+                foreach ($fabricIds as $index => $fabricId) {
+                    $syncData[$fabricId] = ['sort_order' => $index];
+                }
+                $product->fabrics()->sync($syncData);
+            }
+        }
+
+        return $this->sendJsonResponse(true, 'Product created successfully', $product->load(['media', 'variations', 'fabrics']), 201);
     }
 
     public function show(Request $request)
@@ -98,7 +112,7 @@ class AdminProductController extends Controller
             'id' => 'required|exists:products,id',
         ]);
 
-        $product = Product::with(['categoryRelation', 'media', 'variations'])->findOrFail($request->id);
+        $product = Product::with(['categoryRelation', 'media', 'variations', 'fabrics'])->findOrFail($request->id);
 
         return $this->sendJsonResponse(true, 'Product fetched successfully', $product, 200);
     }
@@ -122,8 +136,8 @@ class AdminProductController extends Controller
             $product = Product::findOrFail($request->id);
             
             // IMPORTANT: Media is managed separately and should NEVER be deleted during product update
-            // Only update product fields, exclude media and variations from update
-            $updateData = $request->except(['id', 'variations', 'media']);
+            // Only update product fields, exclude media, variations, and fabrics from update
+            $updateData = $request->except(['id', 'variations', 'media', 'fabrics']);
             $product->update($updateData);
 
             // Handle variations if provided
@@ -210,8 +224,25 @@ class AdminProductController extends Controller
             }
             // If variations key is not present, don't touch existing variations
 
-            // Always return fresh product with all media and variations
-            $product = $product->fresh(['media', 'variations', 'categoryRelation']);
+            // Handle fabrics if provided (array of fabric IDs)
+            if ($request->has('fabric_ids')) {
+                if (is_array($request->fabric_ids) && !empty($request->fabric_ids)) {
+                    $fabricIds = array_filter($request->fabric_ids); // Remove empty values
+                    // Attach fabrics with sort order
+                    $syncData = [];
+                    foreach ($fabricIds as $index => $fabricId) {
+                        $syncData[$fabricId] = ['sort_order' => $index];
+                    }
+                    $product->fabrics()->sync($syncData);
+                } else {
+                    // If fabric_ids is empty array, detach all fabrics
+                    $product->fabrics()->detach();
+                }
+            }
+            // If fabric_ids key is not present, don't touch existing fabrics
+
+            // Always return fresh product with all media, variations, and fabrics
+            $product = $product->fresh(['media', 'variations', 'fabrics', 'categoryRelation']);
             return $this->sendJsonResponse(true, 'Product updated successfully', $product, 200);
             
         } catch (\Exception $e) {

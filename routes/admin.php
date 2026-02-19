@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminCartController;
 use App\Http\Controllers\Admin\AdminRecentlyViewedController;
 use App\Http\Controllers\Admin\AdminCouponController;
+use App\Http\Controllers\Admin\AdminFabricController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -101,5 +102,16 @@ Route::prefix('admin')->middleware(['auth.token', 'admin'])->group(function () {
         Route::post('/toggle-status', [AdminCouponController::class, 'toggleStatus']);
         Route::post('/usages', [AdminCouponController::class, 'getUsages']);
         Route::post('/all-usages', [AdminCouponController::class, 'getAllUsages']);
+    });
+    
+    // Fabric Management
+    Route::prefix('fabrics')->group(function () {
+        Route::post('/', [AdminFabricController::class, 'index']);
+        Route::post('/list', [AdminFabricController::class, 'list']);
+        Route::post('/store', [AdminFabricController::class, 'store']);
+        Route::post('/show', [AdminFabricController::class, 'show']);
+        Route::post('/update', [AdminFabricController::class, 'update']);
+        Route::post('/delete', [AdminFabricController::class, 'destroy']);
+        Route::post('/toggle-status', [AdminFabricController::class, 'toggleStatus']);
     });
 });

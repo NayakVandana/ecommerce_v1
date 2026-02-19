@@ -35,6 +35,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,              // Step 1: Create users
             AddressSeeder::class,           // Step 2: Create addresses (requires users)
             CategorySeeder::class,           // Step 3: Create categories
+            FabricSeeder::class,             // Step 3.5: Create master fabrics (before products)
             ProductSeeder::class,            // Step 4: Create products
             ProductVariationSeeder::class,   // Step 5: Create variations (size, color, gender) - MUST be before media
             ProductMediaSeeder::class,       // Step 6: Create media (can link to variations) - Requires variations

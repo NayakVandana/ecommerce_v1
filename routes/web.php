@@ -288,6 +288,10 @@ Route::prefix('admin')->group(function () {
             'id' => $id
         ]);
     })->name('admin.coupons.show');
+    
+    Route::get('/fabrics', function () {
+        return Inertia::render('Admin/Fabric/index');
+    })->name('admin.fabrics');
 });
 
 // Guest Routes (only accessible when not authenticated)

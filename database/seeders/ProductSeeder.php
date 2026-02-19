@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\Fabric;
 use App\Models\User;
 
 class ProductSeeder extends Seeder
@@ -21,7 +22,8 @@ class ProductSeeder extends Seeder
         }
 
         // Get ALL categories (including parent categories) - add 2 products to EVERY category
-        $categories = Category::orderBy('id')->get();
+        // Eager load parent relationship to avoid N+1 queries when checking for fashion category
+        $categories = Category::with('parent')->orderBy('id')->get();
         $totalCategories = $categories->count();
         
         $this->command->info("Found {$totalCategories} categories. Adding 2 products to each category...");
@@ -90,13 +92,19 @@ class ProductSeeder extends Seeder
                     
                     if ($existing) {
                         $existing->update($productData);
+                        $product = $existing;
                         $updatedCount++;
                         $this->command->line("  ✓ Updated product {$i}/2: {$productName}");
                     } else {
                         $productData['uuid'] = Str::uuid()->toString();
-                        Product::create($productData);
+                        $product = Product::create($productData);
                         $createdCount++;
                         $this->command->line("  ✓ Created product {$i}/2: {$productName}");
+                    }
+                    
+                    // Add fabrics for fashion category products
+                    if ($this->isFashionCategory($category)) {
+                        $this->addFabricsToProduct($product, $category->name);
                     }
                 } catch (\Exception $e) {
                     $this->command->error("  ✗ Error creating product {$i}/2 for category '{$category->name}': " . $e->getMessage());
@@ -351,5 +359,69 @@ class ProductSeeder extends Seeder
         
         // Default
         return rand(100, 500);
+    }
+    
+    /**
+     * Check if category is Fashion or has Fashion as parent
+     */
+    private function isFashionCategory(Category $category): bool
+    {
+        // Check if category name is Fashion (case-insensitive)
+        if (strtolower($category->name) === 'fashion') {
+            return true;
+        }
+        
+        // Also check if parent category is Fashion (for subcategories)
+        if ($category->parent_id) {
+            // Load parent if not already loaded
+            if (!$category->relationLoaded('parent')) {
+                $category->load('parent');
+            }
+            $parent = $category->parent;
+            if ($parent && strtolower($parent->name) === 'fashion') {
+                return true;
+            }
+            
+            // Check grandparent if exists
+            if ($parent && $parent->parent_id) {
+                if (!$parent->relationLoaded('parent')) {
+                    $parent->load('parent');
+                }
+                $grandParent = $parent->parent;
+                if ($grandParent && strtolower($grandParent->name) === 'fashion') {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Add fabrics to fashion product
+     */
+    private function addFabricsToProduct(Product $product, string $categoryName): void
+    {
+        // Get active fabrics from master table
+        $availableFabrics = Fabric::where('is_active', true)->orderBy('sort_order')->get();
+        
+        if ($availableFabrics->isEmpty()) {
+            $this->command->warn("    → No fabrics available in master table. Run FabricSeeder first.");
+            return;
+        }
+        
+        // Select 3-5 random fabrics per product
+        $fabricCount = min(rand(3, 5), $availableFabrics->count());
+        $selectedFabrics = $availableFabrics->random($fabricCount);
+        
+        // Attach fabrics to product with sort order
+        $syncData = [];
+        foreach ($selectedFabrics as $index => $fabric) {
+            $syncData[$fabric->id] = ['sort_order' => $index];
+        }
+        
+        $product->fabrics()->sync($syncData);
+        
+        $this->command->line("    → Added " . count($selectedFabrics) . " fabric(s) to fashion product");
     }
 }

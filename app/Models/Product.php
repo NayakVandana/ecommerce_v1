@@ -87,6 +87,14 @@ class Product extends Model
         return $this->hasMany(ProductVariation::class);
     }
 
+    public function fabrics()
+    {
+        return $this->belongsToMany(Fabric::class, 'product_fabric')
+                    ->withPivot('sort_order')
+                    ->withTimestamps()
+                    ->orderByPivot('sort_order');
+    }
+
     public function discounts()
     {
         return $this->belongsToMany(Discount::class, 'discount_product');
