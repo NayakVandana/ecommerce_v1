@@ -42,5 +42,6 @@ export const useOrderStore = {
     rejectReplacement: (data: any) => adminApi.post('/orders/reject-replacement', data),
     processReplacement: (data: any) => adminApi.post('/orders/process-replacement', data),
     updateDeliveryDate: (data: any) => adminApi.post('/orders/update-delivery-date', data),
+    createDirectOrder: (data: any) => adminApi.post('/orders/create-direct-order', data),
 };
 

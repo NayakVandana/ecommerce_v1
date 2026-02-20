@@ -7,8 +7,9 @@ import { useWishlistStore } from '../Wishlist/useWishlistStore';
 import toast from '../../utils/toast';
 import ImageGallery from 'react-image-gallery';
 import 'react-image-gallery/styles/css/image-gallery.css';
-import { HeartIcon } from '@heroicons/react/24/outline';
+import { HeartIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
+import DirectOrderModal from '../../Components/DirectOrderModal';
 
 export default function Show() {
     const { props } = usePage();
@@ -23,11 +24,23 @@ export default function Show() {
     const [addingToCart, setAddingToCart] = useState(false);
     const [inWishlist, setInWishlist] = useState(false);
     const [togglingWishlist, setTogglingWishlist] = useState(false);
+    const [showDirectOrderModal, setShowDirectOrderModal] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
         if (productId) {
             fetchProduct();
             checkWishlistStatus();
+        }
+        // Check if user is admin
+        const storedUser = localStorage.getItem('auth_user');
+        if (storedUser) {
+            try {
+                const userData = JSON.parse(storedUser);
+                setIsAdmin(userData.role === 'admin');
+            } catch (error) {
+                setIsAdmin(false);
+            }
         }
     }, [productId]);
 
@@ -914,6 +927,20 @@ export default function Show() {
                                     )}
                                 </button>
                             </div>
+
+                            {/* Direct Order Button (Admin Only) */}
+                            {isAdmin && (
+                                <div className="mt-4">
+                                    <button
+                                        onClick={() => setShowDirectOrderModal(true)}
+                                        disabled={selectedVariation ? !selectedVariation.in_stock : (product.total_quantity !== null && product.total_quantity === 0)}
+                                        className="w-full bg-green-600 text-white px-6 py-4 rounded-lg font-semibold text-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+                                    >
+                                        <ShoppingBagIcon className="h-5 w-5" />
+                                        Create Direct Order
+                                    </button>
+                                </div>
+                            )}
                             
                             {/* Hashtags */}
                             {product.hashtags && (
@@ -927,6 +954,20 @@ export default function Show() {
                     </div>
                 </div>
             </div>
+
+            {/* Direct Order Modal */}
+            {isAdmin && (
+                <DirectOrderModal
+                    isOpen={showDirectOrderModal}
+                    onClose={() => setShowDirectOrderModal(false)}
+                    product={product}
+                    selectedVariation={selectedVariation}
+                    quantity={quantity}
+                    onSuccess={() => {
+                        setShowDirectOrderModal(false);
+                    }}
+                />
+            )}
         </AppLayout>
     );
 }

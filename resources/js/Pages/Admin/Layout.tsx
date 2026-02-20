@@ -51,6 +51,7 @@ const orderManagementItems = [
     { name: 'Completed', href: '/admin/orders/completed' },
     { name: 'Cancelled Orders', href: '/admin/orders/cancelled' },
     { name: 'Processed Orders', href: '/admin/orders/processed' },
+    { name: 'Direct Orders', href: '/admin/orders/direct-orders' },
 ];
 
 export default function AdminLayout({ children, currentPath }: any) {

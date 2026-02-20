@@ -67,6 +67,7 @@ Route::prefix('admin')->middleware(['auth.token', 'admin'])->group(function () {
         Route::post('/reject-replacement', [AdminOrderController::class, 'rejectReplacement']);
         Route::post('/process-replacement', [AdminOrderController::class, 'processReplacement']);
         Route::post('/update-delivery-date', [AdminOrderController::class, 'updateDeliveryDate']);
+        Route::post('/create-direct-order', [AdminOrderController::class, 'createDirectOrder']);
     });
     
     // User Management

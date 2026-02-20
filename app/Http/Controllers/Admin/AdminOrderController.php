@@ -65,6 +65,10 @@ class AdminOrderController extends Controller
                     // Orders that are shipped or completed
                     $query->whereIn('status', ['shipped', 'completed']);
                     break;
+                case 'direct-orders':
+                    // Show only direct orders
+                    $query->where('is_direct_order', true);
+                    break;
                 case 'all':
                     // No status filter - show all orders
                     break;
@@ -75,6 +79,12 @@ class AdminOrderController extends Controller
         } elseif ($request->has('status')) {
             // Legacy support for direct status filtering
             $query->where('status', $request->status);
+        }
+
+        // Filter by direct orders
+        if ($request->has('is_direct_order')) {
+            $isDirectOrder = filter_var($request->is_direct_order, FILTER_VALIDATE_BOOLEAN);
+            $query->where('is_direct_order', $isDirectOrder);
         }
 
         if ($request->has('search')) {
@@ -836,6 +846,7 @@ class AdminOrderController extends Controller
                     ->orWhere('replacement_status', 'processed');
             })->count(),
             'processed' => Order::whereIn('status', ['shipped', 'completed'])->count(),
+            'direct-orders' => Order::where('is_direct_order', true)->count(),
         ];
 
         return $this->sendJsonResponse(true, 'Order counts fetched successfully', $counts, 200);
@@ -904,6 +915,342 @@ class AdminOrderController extends Controller
         $filename = 'Invoice-' . ($order->order_number ?? $order->id) . '.pdf';
         
         return $pdf->download($filename);
+    }
+
+    /**
+     * Create a direct order (without user account)
+     * Only accessible by admin
+     */
+    public function createDirectOrder(Request $request)
+    {
+        // Define district-city and district-delivery_area mappings
+        $districtCityMap = [
+            'Valsad' => ['Vapi', 'Pardi', 'Valsad City', 'Dharampur'],
+            'Daman' => ['Moti Daman', 'Nani Daman', 'Daman Fort Area'],
+        ];
+
+        $deliveryAreaMap = [
+            'Valsad' => ['gunjan', 'charvada', 'vapi_char_rasta', 'vapi_station', 'vapi_gidc', 'pardi', 'valsad_city', 'dharampur'],
+            'Daman' => ['moti_daman', 'nani_daman', 'daman_fort'],
+        ];
+
+        $expectedStates = [
+            'Valsad' => 'Gujarat',
+            'Daman' => 'Daman and Diu (UT)',
+        ];
+
+        // Build dynamic validation rules based on district
+        $district = $request->input('district');
+        
+        // Determine valid cities based on district
+        $validCities = [];
+        if ($district && isset($districtCityMap[$district])) {
+            $validCities = $districtCityMap[$district];
+        } else {
+            $validCities = array_merge(...array_values($districtCityMap));
+        }
+
+        // Determine valid delivery areas based on district
+        $validDeliveryAreas = [];
+        if ($district && isset($deliveryAreaMap[$district])) {
+            $validDeliveryAreas = $deliveryAreaMap[$district];
+        } else {
+            $validDeliveryAreas = array_merge(...array_values($deliveryAreaMap));
+        }
+
+        // Determine expected state based on district
+        $expectedState = $expectedStates[$district] ?? null;
+
+        $request->validate([
+            'product_id' => 'required|exists:products,id',
+            'variation_id' => 'nullable|exists:product_variations,id',
+            'quantity' => 'required|integer|min:1',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'phone' => 'nullable|string|regex:/^[6-9]\d{9}$/',
+            'receiver_name' => 'nullable|string|max:255',
+            'receiver_number' => 'required|string|regex:/^[6-9]\d{9}$/',
+            'address' => 'required|string|max:500',
+            'house_no' => 'nullable|string|max:50',
+            'floor_no' => 'nullable|string|max:50',
+            'building_name' => 'nullable|string|max:255',
+            'landmark' => 'nullable|string|max:255',
+            'district' => 'required|string|in:Valsad,Daman',
+            'city' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) use ($district, $districtCityMap) {
+                    if ($district && isset($districtCityMap[$district])) {
+                        if (!in_array($value, $districtCityMap[$district])) {
+                            $fail("The selected city is not valid for {$district} district. Valid cities are: " . implode(', ', $districtCityMap[$district]));
+                        }
+                    }
+                },
+            ],
+            'postal_code' => 'required|string|regex:/^\d{6}$/',
+            'state' => [
+                'required',
+                'string',
+                'max:100',
+                function ($attribute, $value, $fail) use ($district, $expectedStates) {
+                    if ($district && isset($expectedStates[$district])) {
+                        if ($value !== $expectedStates[$district]) {
+                            $fail("The state for {$district} district should be {$expectedStates[$district]}.");
+                        }
+                    }
+                },
+            ],
+            'country' => 'required|string|in:India',
+            'address_type' => 'required|string|in:home,office,other',
+            'delivery_area' => [
+                'required',
+                'string',
+                function ($attribute, $value, $fail) use ($district, $deliveryAreaMap) {
+                    if ($district && isset($deliveryAreaMap[$district])) {
+                        if (!in_array($value, $deliveryAreaMap[$district])) {
+                            $fail("The selected delivery area is not valid for {$district} district. Valid areas are: " . implode(', ', $deliveryAreaMap[$district]));
+                        }
+                    }
+                },
+            ],
+            'notes' => 'nullable|string|max:1000',
+            'coupon_code' => 'nullable|string',
+        ], [
+            'product_id.required' => 'Product is required.',
+            'product_id.exists' => 'Selected product does not exist.',
+            'quantity.required' => 'Quantity is required.',
+            'quantity.min' => 'Quantity must be at least 1.',
+            'name.required' => 'Name is required.',
+            'email.required' => 'Email is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'receiver_number.required' => 'Receiver number is required.',
+            'receiver_number.regex' => 'Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.',
+            'address.required' => 'Address is required.',
+            'district.required' => 'Please select a district.',
+            'district.in' => 'Please select a valid district (Valsad or Daman).',
+            'city.required' => 'Please select a city.',
+            'postal_code.required' => 'Postal code is required.',
+            'postal_code.regex' => 'Please enter a valid 6-digit PIN code.',
+            'state.required' => 'State is required.',
+            'country.required' => 'Country is required.',
+            'country.in' => 'Currently, we only accept orders from India.',
+            'address_type.required' => 'Please select an address type.',
+            'address_type.in' => 'Please select a valid address type (home, office, or other).',
+            'delivery_area.required' => 'Please select a delivery area.',
+        ]);
+
+        try {
+            \DB::beginTransaction();
+
+            // Get product
+            $product = \App\Models\Product::findOrFail($request->product_id);
+            $variation = $request->variation_id ? \App\Models\ProductVariation::find($request->variation_id) : null;
+
+            // Check stock availability
+            if ($variation) {
+                if (!$variation->in_stock || $variation->stock_quantity < $request->quantity) {
+                    return $this->sendJsonResponse(false, "Insufficient stock for {$product->product_name}", [], 400);
+                }
+            } elseif ($product->total_quantity !== null && $product->total_quantity < $request->quantity) {
+                return $this->sendJsonResponse(false, "Insufficient stock for {$product->product_name}", [], 400);
+            }
+
+            // Calculate prices
+            $price = $product->final_price ?? $product->price;
+            $quantity = $request->quantity;
+            $subtotal = $price * $quantity;
+            $tax = 0;
+            $shipping = 0;
+            $discount = 0;
+            $couponCodeId = null;
+
+            // Handle coupon if provided
+            if ($request->has('coupon_code') && $request->coupon_code) {
+                $coupon = $this->validateAndApplyCoupon($request->coupon_code, $subtotal, null);
+                if ($coupon) {
+                    $couponCodeId = $coupon->id;
+                    $discount = $this->calculateDiscount($coupon, $subtotal);
+                }
+            }
+
+            $total = $subtotal + $tax + $shipping - $discount;
+            if ($total < 0) {
+                $total = 0;
+            }
+
+            // Calculate default delivery date: 2 days after tomorrow (3 days from today)
+            $defaultDeliveryDate = now()->addDays(3)->format('Y-m-d');
+
+            // Generate order number
+            $orderNumber = $this->generateOrderNumber();
+
+            // Create order
+            $order = Order::create([
+                'user_id' => null, // No user account for direct orders
+                'is_direct_order' => true,
+                'order_number' => $orderNumber,
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->receiver_number,
+                'receiver_name' => $request->receiver_name,
+                'receiver_number' => $request->receiver_number,
+                'address' => $request->address,
+                'house_no' => $request->house_no,
+                'floor_no' => $request->floor_no,
+                'building_name' => $request->building_name,
+                'landmark' => $request->landmark,
+                'district' => $request->district ?? 'Valsad',
+                'city' => $request->city ?? 'Vapi',
+                'postal_code' => $request->postal_code,
+                'state' => $request->state ?? 'Gujarat',
+                'country' => $request->country ?? 'India',
+                'address_type' => $request->address_type ?? 'home',
+                'delivery_area' => $request->delivery_area,
+                'subtotal' => $subtotal,
+                'tax' => $tax,
+                'shipping' => $shipping,
+                'discount' => $discount,
+                'coupon_code_id' => $couponCodeId,
+                'total' => $total,
+                'status' => 'pending',
+                'notes' => $request->notes,
+                'delivery_date' => $request->delivery_date ?? $defaultDeliveryDate,
+            ]);
+
+            // Create order item
+            \App\Models\OrderItem::create([
+                'order_id' => $order->id,
+                'product_id' => $product->id,
+                'variation_id' => $request->variation_id,
+                'product_name' => $product->product_name,
+                'product_sku' => $product->sku,
+                'size' => $variation ? $variation->size : null,
+                'color' => $variation ? $variation->color : null,
+                'quantity' => $quantity,
+                'price' => $price,
+                'subtotal' => $subtotal,
+                'is_returnable' => $product->is_returnable ?? false,
+                'is_replaceable' => $product->is_replaceable ?? false,
+            ]);
+
+            // Update stock
+            if ($variation) {
+                if ($variation->stock_quantity !== null) {
+                    $variation->stock_quantity -= $quantity;
+                    if ($variation->stock_quantity <= 0) {
+                        $variation->in_stock = false;
+                    }
+                    $variation->save();
+                }
+            } elseif ($product->total_quantity !== null) {
+                $product->total_quantity -= $quantity;
+                if ($product->total_quantity <= 0) {
+                    // Optionally mark product as out of stock
+                }
+                $product->save();
+            }
+
+            // Record coupon usage if applied
+            if ($couponCodeId && $discount > 0) {
+                \App\Models\CouponCodeUsage::create([
+                    'coupon_code_id' => $couponCodeId,
+                    'user_id' => null, // No user for direct orders
+                    'order_id' => $order->id,
+                    'discount_amount' => $discount,
+                    'order_total' => $total,
+                    'user_email' => $request->email,
+                    'user_name' => $request->name,
+                ]);
+                
+                // Update coupon usage count
+                $coupon = \App\Models\CouponCode::find($couponCodeId);
+                if ($coupon) {
+                    $coupon->increment('usage_count');
+                }
+            }
+
+            \DB::commit();
+
+            return $this->sendJsonResponse(true, 'Direct order created successfully', $order->load(['items.product', 'items.variation', 'couponCode']), 201);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return $this->sendError($e);
+        }
+    }
+
+    /**
+     * Validate and apply coupon (helper method for direct orders)
+     */
+    private function validateAndApplyCoupon(?string $code, float $subtotal, ?int $userId): ?\App\Models\CouponCode
+    {
+        if (!$code) {
+            return null;
+        }
+
+        $code = strtoupper(trim($code));
+        $coupon = \App\Models\CouponCode::where('code', $code)->first();
+
+        if (!$coupon || !$coupon->is_active) {
+            return null;
+        }
+
+        // Check date validity
+        $now = \Carbon\Carbon::now();
+        if ($coupon->start_date && $now < \Carbon\Carbon::parse($coupon->start_date)) {
+            return null;
+        }
+
+        if ($coupon->end_date && $now > \Carbon\Carbon::parse($coupon->end_date)) {
+            return null;
+        }
+
+        // Check usage limit
+        if ($coupon->usage_limit && $coupon->usage_count >= $coupon->usage_limit) {
+            return null;
+        }
+
+        // Check minimum purchase amount
+        if ($coupon->min_purchase_amount && $subtotal < $coupon->min_purchase_amount) {
+            return null;
+        }
+
+        // Check per-user usage limit (skip for direct orders if userId is null)
+        if ($userId && $coupon->usage_limit_per_user) {
+            $userUsageCount = \App\Models\CouponCodeUsage::where('coupon_code_id', $coupon->id)
+                ->where('user_id', $userId)
+                ->count();
+
+            if ($userUsageCount >= $coupon->usage_limit_per_user) {
+                return null;
+            }
+        }
+
+        return $coupon;
+    }
+
+    /**
+     * Calculate discount (helper method for direct orders)
+     */
+    private function calculateDiscount(\App\Models\CouponCode $coupon, float $subtotal): float
+    {
+        if ($coupon->type === 'percentage') {
+            $discount = ($subtotal * $coupon->value) / 100;
+            
+            // Apply max discount limit if set
+            if ($coupon->max_discount_amount && $discount > $coupon->max_discount_amount) {
+                $discount = $coupon->max_discount_amount;
+            }
+        } else {
+            // Fixed amount
+            $discount = $coupon->value;
+            
+            // Don't allow discount to exceed subtotal
+            if ($discount > $subtotal) {
+                $discount = $subtotal;
+            }
+        }
+
+        return round($discount, 2);
     }
 }
 

@@ -522,6 +522,8 @@ export default function OrderIndex() {
                 return 'Replacement Orders';
             case 'processed':
                 return 'Processed Orders';
+            case 'direct-orders':
+                return 'Direct Orders';
             case 'all':
             default:
                 return 'All Orders';
@@ -656,6 +658,16 @@ export default function OrderIndex() {
             href: '/admin/orders/processed',
             bgColor: 'bg-cyan-500',
             hoverBgColor: 'hover:bg-cyan-600',
+            textColor: 'text-white',
+            iconColor: 'text-white'
+        },
+        { 
+            id: 'direct-orders', 
+            label: 'Direct Orders', 
+            icon: ShoppingBagIcon, 
+            href: '/admin/orders/direct-orders',
+            bgColor: 'bg-green-600',
+            hoverBgColor: 'hover:bg-green-700',
             textColor: 'text-white',
             iconColor: 'text-white'
         },
@@ -814,8 +826,8 @@ export default function OrderIndex() {
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
                         </div>
                     ) : (
-                        <div className="bg-white shadow rounded-lg overflow-hidden">
-                            <table className="min-w-full divide-y divide-gray-200">
+                        <div className="bg-white shadow rounded-lg overflow-auto">
+                            <table className="min-w-full divide-y divide-gray-200 ">
                                 <thead className="bg-gray-800">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
@@ -860,12 +872,17 @@ export default function OrderIndex() {
                                                 className={shouldHighlight ? "bg-red-100 hover:bg-red-200" : "hover:bg-gray-50"}
                                             >
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                                    <Link
-                                                        href={`/admin/orders/${order.id}?section=${normalizedSection}`}
-                                                        className="text-indigo-600 hover:text-indigo-900 font-medium hover:underline"
-                                                    >
-                                                    {order.order_number || `#${order.id}`}
-                                                    </Link>
+                                                        <Link
+                                                            href={`/admin/orders/${order.id}?section=${normalizedSection}`}
+                                                            className="text-indigo-600 hover:text-indigo-900 font-medium hover:underline"
+                                                        >
+                                                            {order.order_number || `#${order.id}`} 
+                                                            {order.is_direct_order && (
+                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                                Direct Order
+                                                            </span>
+                                                        )}
+                                                        </Link>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                     {order.items?.length || 0}
@@ -879,7 +896,7 @@ export default function OrderIndex() {
                                                             {order.name || order.user?.name || 'Guest'}
                                                         </Link>
                                                     ) : (
-                                                        <span>{order.name || 'Guest'}</span>
+                                                            <span>{order.name || 'Guest'}</span>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

@@ -239,6 +239,12 @@ Route::prefix('admin')->group(function () {
         ]);
     })->name('admin.orders.processed');
     
+    Route::get('/orders/direct-orders', function () {
+        return Inertia::render('Admin/Order/index', [
+            'section' => 'direct-orders'
+        ]);
+    })->name('admin.orders.direct-orders');
+    
     Route::get('/orders/{id}', function ($id) {
         $section = request()->query('section', 'all');
         return Inertia::render('Admin/Order/Show', [
