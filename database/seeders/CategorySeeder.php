@@ -537,11 +537,73 @@ class CategorySeeder extends Seeder
                 ]
             ],
             [
+                'name' => 'Jewellery',
+                'description' => 'Jewelry and accessories for all',
+                'is_featured' => true,
+                'icon' => 'fa-ring',
+                'sort_order' => 9,
+                'children' => [
+                    [
+                        'name' => 'Fashion Jewellery',
+                        'description' => 'Fashion jewelry',
+                        'icon' => 'fa-ring',
+                        'sort_order' => 1,
+                        'children' => [
+                            ['name' => 'Necklaces', 'description' => 'Necklaces and chains', 'sort_order' => 1],
+                            ['name' => 'Earrings', 'description' => 'Earrings and studs', 'sort_order' => 2],
+                            ['name' => 'Rings', 'description' => 'Rings and bands', 'sort_order' => 3],
+                            ['name' => 'Bracelets', 'description' => 'Bracelets and bangles', 'sort_order' => 4],
+                            ['name' => 'Anklets', 'description' => 'Anklets', 'sort_order' => 5],
+                            ['name' => 'Pendants', 'description' => 'Pendants and lockets', 'sort_order' => 6],
+                            ['name' => 'Hair Accessories', 'description' => 'Hair pins and clips', 'sort_order' => 7],
+                            ['name' => 'Brooches', 'description' => 'Brooches and pins', 'sort_order' => 8],
+                        ]
+                    ],
+                    [
+                        'name' => 'Fine Jewellery',
+                        'description' => 'Fine jewelry with precious metals and stones',
+                        'icon' => 'fa-gem',
+                        'sort_order' => 2,
+                        'children' => [
+                            ['name' => 'Gold Jewellery', 'description' => 'Gold jewelry', 'sort_order' => 1],
+                            ['name' => 'Silver Jewellery', 'description' => 'Silver jewelry', 'sort_order' => 2],
+                            ['name' => 'Diamond Jewellery', 'description' => 'Diamond jewelry', 'sort_order' => 3],
+                            ['name' => 'Pearl Jewellery', 'description' => 'Pearl jewelry', 'sort_order' => 4],
+                            ['name' => 'Gemstone Jewellery', 'description' => 'Gemstone jewelry', 'sort_order' => 5],
+                        ]
+                    ],
+                    [
+                        'name' => 'Men\'s Jewellery',
+                        'description' => 'Jewelry for men',
+                        'icon' => 'fa-ring',
+                        'sort_order' => 3,
+                        'children' => [
+                            ['name' => 'Men\'s Rings', 'description' => 'Rings for men', 'sort_order' => 1],
+                            ['name' => 'Men\'s Chains', 'description' => 'Chains and necklaces for men', 'sort_order' => 2],
+                            ['name' => 'Men\'s Bracelets', 'description' => 'Bracelets for men', 'sort_order' => 3],
+                            ['name' => 'Men\'s Watches', 'description' => 'Watches for men', 'sort_order' => 4],
+                        ]
+                    ],
+                    [
+                        'name' => 'Kids Jewellery',
+                        'description' => 'Jewelry for kids',
+                        'icon' => 'fa-ring',
+                        'sort_order' => 4,
+                        'children' => [
+                            ['name' => 'Kids Necklaces', 'description' => 'Necklaces for kids', 'sort_order' => 1],
+                            ['name' => 'Kids Earrings', 'description' => 'Earrings for kids', 'sort_order' => 2],
+                            ['name' => 'Kids Bracelets', 'description' => 'Bracelets for kids', 'sort_order' => 3],
+                            ['name' => 'Kids Rings', 'description' => 'Rings for kids', 'sort_order' => 4],
+                        ]
+                    ],
+                ]
+            ],
+            [
                 'name' => 'Sports',
                 'description' => 'Fitness and outdoor gear',
                 'is_featured' => true,
                 'icon' => 'fa-dumbbell',
-                'sort_order' => 9,
+                'sort_order' => 10,
                 'children' => [
                     ['name' => 'Fitness Equipment', 'description' => 'Gym and fitness equipment', 'icon' => 'fa-dumbbell', 'sort_order' => 1],
                     ['name' => 'Outdoor Sports', 'description' => 'Outdoor and adventure gear', 'icon' => 'fa-mountain', 'sort_order' => 2],
@@ -553,7 +615,7 @@ class CategorySeeder extends Seeder
                 'description' => 'Fiction, non-fiction, and educational books',
                 'is_featured' => false,
                 'icon' => 'fa-book',
-                'sort_order' => 10,
+                'sort_order' => 11,
                 'children' => [
                     ['name' => 'Fiction', 'description' => 'Fiction books and novels', 'icon' => 'fa-book', 'sort_order' => 1],
                     ['name' => 'Non-Fiction', 'description' => 'Non-fiction and educational books', 'icon' => 'fa-book', 'sort_order' => 2],
@@ -565,7 +627,7 @@ class CategorySeeder extends Seeder
                 'description' => 'Food items and daily essentials',
                 'is_featured' => true,
                 'icon' => 'fa-shopping-cart',
-                'sort_order' => 11,
+                'sort_order' => 12,
                 'children' => [
                     ['name' => 'Food & Beverages', 'description' => 'Food and drinks', 'icon' => 'fa-utensils', 'sort_order' => 1],
                     ['name' => 'Snacks', 'description' => 'Snacks and munchies', 'icon' => 'fa-cookie', 'sort_order' => 2],
