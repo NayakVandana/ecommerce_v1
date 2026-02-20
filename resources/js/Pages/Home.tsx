@@ -1,7 +1,6 @@
 import AppLayout from './Layouts/AppLayout';
 import Container from '../Components/Container';
 import Card from '../Components/Card';
-import Button from '../Components/Button';
 import { Link, usePage } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { useProductStore } from './Products/useProductStore';
@@ -32,6 +31,7 @@ export default function Home() {
     const [showCategoryModal, setShowCategoryModal] = useState(false);
     const [selectedCategoryForModal, setSelectedCategoryForModal] = useState<any>(null);
     const [allCategoriesForModal, setAllCategoriesForModal] = useState<any[]>([]);
+    const [specificCategories, setSpecificCategories] = useState<any[]>([]);
 
     useEffect(() => {
         fetchData();
@@ -138,6 +138,26 @@ export default function Home() {
         setShowCategoryModal(true);
     };
 
+    const findSpecificCategories = (categories: any[]): void => {
+        const targetSlugs = ['sarees', 'kurtas-suits', 'kurtas-and-suits'];
+        const found: any[] = [];
+
+        const searchCategories = (cats: any[]): void => {
+            for (const cat of cats) {
+                const slug = cat.slug?.toLowerCase();
+                if (slug && targetSlugs.includes(slug)) {
+                    found.push(cat);
+                }
+                if (cat.children && Array.isArray(cat.children)) {
+                    searchCategories(cat.children);
+                }
+            }
+        };
+
+        searchCategories(categories);
+        setSpecificCategories(found);
+    };
+
     const fetchData = async () => {
         try {
             setLoading(true);
@@ -170,8 +190,12 @@ export default function Home() {
                 const categoriesData = allCategoriesRes.data.data;
                 if (categoriesData.hierarchical && Array.isArray(categoriesData.hierarchical) && categoriesData.hierarchical.length > 0) {
                     setAllCategoriesForModal(categoriesData.hierarchical);
+                    // Find specific categories: Sarees and Kurtas & Suits
+                    findSpecificCategories(categoriesData.hierarchical);
                 } else if (categoriesData.flat && Array.isArray(categoriesData.flat) && categoriesData.flat.length > 0) {
                     setAllCategoriesForModal(categoriesData.flat);
+                    // Find specific categories from flat array
+                    findSpecificCategories(categoriesData.flat);
                 }
             }
         } catch (error) {
@@ -342,6 +366,31 @@ export default function Home() {
                                                 {category.name}
                                             </span>
                                         </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Specific Categories Section - Sarees and Kurtas & Suits */}
+                        {specificCategories.length > 0 && (
+                            <div className="mb-12">
+                                <div className="flex gap-8">
+                                    {specificCategories.map((category) => (
+                                        <Link
+                                            key={category.id}
+                                            href={`/categories/${category.slug}`}
+                                            className="flex flex-col items-center flex-shrink-0 group cursor-pointer"
+                                        >
+                                            <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center mb-3 shadow-md group-hover:shadow-lg transition-all group-hover:scale-110 border-2 border-indigo-200 group-hover:border-indigo-400">
+                                                <CategoryIcon 
+                                                    icon={category.icon} 
+                                                    className="h-10 w-10 text-indigo-600"
+                                                />
+                                            </div>
+                                            <span className="text-base font-semibold text-gray-800 text-center max-w-[120px] line-clamp-2 group-hover:text-indigo-600 transition-colors">
+                                                {category.name}
+                                            </span>
+                                        </Link>
                                     ))}
                                 </div>
                             </div>
