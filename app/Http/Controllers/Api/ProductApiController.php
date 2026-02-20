@@ -95,6 +95,14 @@ class ProductApiController extends Controller
             $query->whereIn('category', array_unique($allCategoryIds));
         }
 
+        // Filter by colors (supports multiple colors)
+        if ($request->has('colors') && $request->colors) {
+            $colors = is_array($request->colors) ? $request->colors : explode(',', $request->colors);
+            $query->whereHas('variations', function($q) use ($colors) {
+                $q->whereIn('color', $colors);
+            });
+        }
+
         // Sort options
         $sortBy = $request->input('sort_by', 'popularity');
         switch ($sortBy) {
@@ -446,9 +454,23 @@ class ProductApiController extends Controller
                 ->selectRaw('MIN(discount_percent) as min_discount, MAX(discount_percent) as max_discount')
                 ->first();
 
+            // Get all unique colors from product variations
+            $productIds = (clone $baseQuery)->pluck('id');
+            $colors = DB::table('product_variations')
+                ->whereIn('product_id', $productIds)
+                ->whereNotNull('color')
+                ->where('color', '!=', '')
+                ->select('color')
+                ->distinct()
+                ->orderBy('color')
+                ->pluck('color')
+                ->filter()
+                ->values();
+
             return $this->sendJsonResponse(true, 'Filter options fetched successfully', [
                 'brands' => $brands,
                 'categories' => $categories,
+                'colors' => $colors,
                 'price_range' => [
                     'min' => $priceStats->min_price ?? 0,
                     'max' => $priceStats->max_price ?? 10000,

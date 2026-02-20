@@ -324,7 +324,7 @@ export default function Home() {
                         {/* Featured Categories */}
                         {featuredCategories.length > 0 && (
                             <div className="mb-12">
-                                <h2 className="text-2xl font-bold mb-6">Shop by Category</h2>
+                                {/* <h2 className="text-2xl font-bold mb-6">Shop by Category</h2> */}
                                 <div className="flex overflow-x-auto gap-8 pb-4 scrollbar-hide">
                                     {featuredCategories.map((category) => (
                                         <button

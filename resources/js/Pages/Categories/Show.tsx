@@ -22,6 +22,7 @@ export default function Show() {
     // Filter states
     const [filterOptions, setFilterOptions] = useState<any>(null);
     const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
+    const [selectedColors, setSelectedColors] = useState<string[]>([]);
     const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
     const [discountRange, setDiscountRange] = useState<[number, number]>([0, 100]);
     const [includeOutOfStock, setIncludeOutOfStock] = useState(false);
@@ -29,6 +30,7 @@ export default function Show() {
     const [expandedFilters, setExpandedFilters] = useState<{[key: string]: boolean}>({
         availability: true,
         categories: true,
+        colors: true,
         price: true,
         discount: true,
     });
@@ -55,7 +57,7 @@ export default function Show() {
         if (category?.id && filterOptions && !isInitializingFilters.current) {
             fetchProductsForCategory();
         }
-    }, [category?.id, selectedCategories, includeOutOfStock, sortBy, currentPage]);
+    }, [category?.id, selectedCategories, selectedColors, includeOutOfStock, sortBy, currentPage]);
 
     // Separate effect for price and discount range changes (only after initialization)
     useEffect(() => {
@@ -137,6 +139,9 @@ export default function Show() {
             if (selectedCategories.length > 0) {
                 filters.categories = selectedCategories;
             }
+            if (selectedColors.length > 0) {
+                filters.colors = selectedColors;
+            }
             if (priceRange[0] > 0 || priceRange[1] < 100000) {
                 filters.min_price = priceRange[0];
                 filters.max_price = priceRange[1];
@@ -172,6 +177,14 @@ export default function Show() {
         );
     };
 
+    const handleColorToggle = (color: string) => {
+        setSelectedColors(prev => 
+            prev.includes(color) 
+                ? prev.filter(c => c !== color)
+                : [...prev, color]
+        );
+    };
+
     const toggleCategoryExpand = (categoryId: number) => {
         setExpandedCategoryIds(prev => {
             const newSet = new Set(prev);
@@ -193,6 +206,7 @@ export default function Show() {
 
     const clearFilters = () => {
         setSelectedCategories([]);
+        setSelectedColors([]);
         if (filterOptions) {
             setPriceRange([filterOptions.price_range?.min || 0, filterOptions.price_range?.max || 100000]);
             setDiscountRange([filterOptions.discount_range?.min || 0, filterOptions.discount_range?.max || 100]);
@@ -363,6 +377,7 @@ export default function Show() {
                                 <div className="flex items-center justify-between mb-4">
                                     <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
                                     {(selectedCategories.length > 0 || 
+                                      selectedColors.length > 0 ||
                                       priceRange[0] > (filterOptions?.price_range?.min || 0) || 
                                       priceRange[1] < (filterOptions?.price_range?.max || 100000) ||
                                       discountRange[0] > 0 || discountRange[1] < 100) && (
@@ -400,6 +415,59 @@ export default function Show() {
                                         </label>
                                     )}
                                 </div>
+
+                                {/* Colors Filter */}
+                                {filterOptions?.colors && filterOptions.colors.length > 0 && (
+                                    <div className="mb-6 border-b border-gray-200 pb-4">
+                                        <button
+                                            onClick={() => toggleFilterSection('colors')}
+                                            className="w-full flex items-center justify-between text-sm font-medium text-gray-900 mb-3"
+                                        >
+                                            <span>Colors</span>
+                                            {expandedFilters.colors ? (
+                                                <ChevronUpIcon className="h-4 w-4" />
+                                            ) : (
+                                                <ChevronDownIcon className="h-4 w-4" />
+                                            )}
+                                        </button>
+                                        {expandedFilters.colors && (
+                                            <div className="flex flex-wrap gap-2">
+                                                {filterOptions.colors.map((color: string) => {
+                                                    const isSelected = selectedColors.includes(color);
+                                                    // Try to parse color as hex, otherwise use as-is
+                                                    const isHexColor = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/.test(color);
+                                                    const colorValue = isHexColor ? color : color;
+                                                    
+                                                    return (
+                                                        <button
+                                                            key={color}
+                                                            onClick={() => handleColorToggle(color)}
+                                                            className={`relative flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all ${
+                                                                isSelected 
+                                                                    ? 'border-indigo-600 ring-2 ring-indigo-200 scale-110' 
+                                                                    : 'border-gray-300 hover:border-gray-400'
+                                                            }`}
+                                                            style={{
+                                                                backgroundColor: isHexColor ? colorValue : 'transparent',
+                                                                borderColor: isSelected ? '#4f46e5' : undefined
+                                                            }}
+                                                            title={color}
+                                                        >
+                                                            {isSelected && (
+                                                                <svg className="w-5 h-5 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                                </svg>
+                                                            )}
+                                                            {!isHexColor && (
+                                                                <span className="text-xs font-medium text-gray-700">{color.substring(0, 2)}</span>
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* Categories Filter */}
                                 {filterOptions?.categories && filterOptions.categories.length > 0 && (
