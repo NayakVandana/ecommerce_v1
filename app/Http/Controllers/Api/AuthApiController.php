@@ -27,7 +27,7 @@ class AuthApiController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|regex:/^[6-9]\d{9}$/|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => 'required|string|min:8',
         ], [
             'phone.required' => 'Phone number is required.',
             'phone.regex' => 'Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.',
@@ -89,28 +89,12 @@ class AuthApiController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required',
+            'email' => 'required|email',
             'password' => 'required',
         ]);
 
-        $emailOrPhone = $request->email;
-        
-        // Determine if input is email or phone
-        $isEmail = filter_var($emailOrPhone, FILTER_VALIDATE_EMAIL);
-        $isPhone = preg_match('/^[6-9]\d{9}$/', $emailOrPhone);
-        
-        if (!$isEmail && !$isPhone) {
-            throw ValidationException::withMessages([
-                'email' => ['Please enter a valid email address or phone number.'],
-            ]);
-        }
-
-        // Find user by email or phone
-        if ($isEmail) {
-            $user = User::where('email', $emailOrPhone)->first();
-        } else {
-            $user = User::where('phone', $emailOrPhone)->first();
-        }
+        // Find user by email only
+        $user = User::where('email', $request->email)->first();
 
         if (!$user) {
             throw ValidationException::withMessages([
@@ -231,35 +215,17 @@ class AuthApiController extends Controller
     public function forgotPassword(Request $request)
     {
         $request->validate([
-            'email' => 'required',
+            'email' => 'required|email',
         ]);
 
-        $emailOrPhone = $request->email;
-        
-        // Determine if input is email or phone
-        $isEmail = filter_var($emailOrPhone, FILTER_VALIDATE_EMAIL);
-        $isPhone = preg_match('/^[6-9]\d{9}$/', $emailOrPhone);
-        
-        if (!$isEmail && !$isPhone) {
-            throw ValidationException::withMessages([
-                'email' => ['Please enter a valid email address or phone number.'],
-            ]);
-        }
-
-        // Find user by email or phone
-        if ($isEmail) {
-            $user = User::where('email', $emailOrPhone)->first();
-            $userEmail = $user ? $user->email : null;
-            $userPhone = $user ? $user->phone : null;
-        } else {
-            $user = User::where('phone', $emailOrPhone)->first();
-            $userEmail = $user ? $user->email : null;
-            $userPhone = $user ? $user->phone : null;
-        }
+        // Find user by email only
+        $user = User::where('email', $request->email)->first();
+        $userEmail = $user ? $user->email : null;
+        $userPhone = $user ? $user->phone : null;
 
         if (!$user) {
             // Don't reveal if user exists or not for security
-            return $this->sendJsonResponse(true, 'If that email/phone exists, we have sent an OTP.', [], 200);
+            return $this->sendJsonResponse(true, 'If that email exists, we have sent an OTP.', [], 200);
         }
 
         // Generate 6-digit OTP (100000 to 999999)
@@ -268,7 +234,7 @@ class AuthApiController extends Controller
         // Generate verification token
         $verificationToken = Str::random(64);
 
-        // Delete any existing verification tokens for this email/phone
+        // Delete any existing verification tokens for this email
         VerificationToken::where('email', $userEmail)
             ->orWhere('mobile', $userPhone)
             ->where('request_type', 'FORGOT_PASSWORD')
@@ -295,16 +261,13 @@ class AuthApiController extends Controller
             ]);
         }
 
-        // TODO: Send OTP via SMS/Email
-        // if ($userPhone) {
-        //     // Send SMS with OTP
-        // }
+        // TODO: Send OTP via Email
         // if ($userEmail) {
         //     // Send Email with OTP
         //     // Mail::to($userEmail)->send(new PasswordResetOTP($otp));
         // }
 
-        return $this->sendJsonResponse(true, 'If that email/phone exists, we have sent an OTP.', [
+        return $this->sendJsonResponse(true, 'If that email exists, we have sent an OTP.', [
             'verification_token' => app()->environment(['local', 'testing']) ? $verificationToken : null, // Only in dev
             'otp' => app()->environment(['local', 'testing']) ? $otp : null, // Only in dev
             'email' => $userEmail,
@@ -315,35 +278,17 @@ class AuthApiController extends Controller
     public function resendOtp(Request $request)
     {
         $request->validate([
-            'email' => 'required',
+            'email' => 'required|email',
         ]);
 
-        $emailOrPhone = $request->email;
-        
-        // Determine if input is email or phone
-        $isEmail = filter_var($emailOrPhone, FILTER_VALIDATE_EMAIL);
-        $isPhone = preg_match('/^[6-9]\d{9}$/', $emailOrPhone);
-        
-        if (!$isEmail && !$isPhone) {
-            throw ValidationException::withMessages([
-                'email' => ['Please enter a valid email address or phone number.'],
-            ]);
-        }
-
-        // Find user by email or phone
-        if ($isEmail) {
-            $user = User::where('email', $emailOrPhone)->first();
-            $userEmail = $user ? $user->email : null;
-            $userPhone = $user ? $user->phone : null;
-        } else {
-            $user = User::where('phone', $emailOrPhone)->first();
-            $userEmail = $user ? $user->email : null;
-            $userPhone = $user ? $user->phone : null;
-        }
+        // Find user by email only
+        $user = User::where('email', $request->email)->first();
+        $userEmail = $user ? $user->email : null;
+        $userPhone = $user ? $user->phone : null;
 
         if (!$user) {
             // Don't reveal if user exists or not for security
-            return $this->sendJsonResponse(true, 'If that email/phone exists, we have sent an OTP.', [], 200);
+            return $this->sendJsonResponse(true, 'If that email exists, we have sent an OTP.', [], 200);
         }
 
         // Check for existing verification token to get rate limiting
@@ -370,7 +315,7 @@ class AuthApiController extends Controller
         // Generate new verification token
         $verificationToken = Str::random(64);
 
-        // Delete any existing verification tokens for this email/phone
+        // Delete any existing verification tokens for this email
         VerificationToken::where('email', $userEmail)
             ->orWhere('mobile', $userPhone)
             ->where('request_type', 'FORGOT_PASSWORD')
@@ -406,7 +351,7 @@ class AuthApiController extends Controller
         //     // Mail::to($userEmail)->send(new PasswordResetOTP($otp));
         // }
 
-        return $this->sendJsonResponse(true, 'A new OTP has been sent to your email/phone.', [
+        return $this->sendJsonResponse(true, 'A new OTP has been sent to your email.', [
             'verification_token' => app()->environment(['local', 'testing']) ? $verificationToken : null, // Only in dev
             'otp' => app()->environment(['local', 'testing']) ? $otp : null, // Only in dev
             'email' => $userEmail,

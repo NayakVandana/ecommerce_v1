@@ -12,7 +12,6 @@ export default function Register() {
         email: '',
         phone: '',
         password: '',
-        password_confirmation: '',
     });
     const [errors, setErrors] = useState<any>({});
     const [processing, setProcessing] = useState(false);
@@ -37,12 +36,8 @@ export default function Register() {
         }
         if (!data.password || data.password.trim() === '') {
             validationErrors.password = 'Enter Your password';
-        }
-        if (!data.password_confirmation || data.password_confirmation.trim() === '') {
-            validationErrors.password_confirmation = 'Enter Your password confirmation';
-        }
-        if (data.password !== data.password_confirmation) {
-            validationErrors.password_confirmation = 'Passwords do not match';
+        } else if (data.password.length < 8) {
+            validationErrors.password = 'Password must be at least 8 characters';
         }
         
         if (Object.keys(validationErrors).length > 0) {
@@ -62,7 +57,6 @@ export default function Register() {
                 email: data.email,
                 phone: data.phone.trim(),
                 password: data.password,
-                password_confirmation: data.password_confirmation,
                 ...(sessionId && { session_id: sessionId }),
             });
             
@@ -170,18 +164,7 @@ export default function Register() {
                                 onChange={(e: any) => setData({ ...data, password: e.target.value })}
                                 placeholder="Password"
                                 error={errors.password}
-                            />
-                            <FormInput
-                                label="Confirm Password"
-                                id="password_confirmation"
-                                name="password_confirmation"
-                                type="password"
-                                autoComplete="new-password"
-                                required
-                                value={data.password_confirmation}
-                                onChange={(e: any) => setData({ ...data, password_confirmation: e.target.value })}
-                                placeholder="Confirm Password"
-                                error={errors.password_confirmation}
+                                helperText="Password must be at least 8 characters"
                             />
                         </div>
 

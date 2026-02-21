@@ -29,15 +29,14 @@ export default function ForgotPassword() {
         const validationErrors: any = {};
         
         if (!data.email || data.email.trim() === '') {
-            validationErrors.email = 'Enter Your email or phone number';
+            validationErrors.email = 'Enter Your email address';
         } else {
-            // Validate format: must be either email or phone
+            // Validate format: must be email
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            const phoneRegex = /^[6-9]\d{9}$/;
             const trimmedValue = data.email.trim();
             
-            if (!emailRegex.test(trimmedValue) && !phoneRegex.test(trimmedValue)) {
-                validationErrors.email = 'Please enter a valid email address or 10-digit phone number';
+            if (!emailRegex.test(trimmedValue)) {
+                validationErrors.email = 'Please enter a valid email address';
             }
         }
         
@@ -240,10 +239,10 @@ export default function ForgotPassword() {
                             {passwordReset
                                 ? "Password reset successfully! Redirecting to login..."
                                 : !otpSent 
-                                ? "No worries! Enter your email or phone number and we'll send you an OTP to reset your password."
+                                ? "No worries! Enter your email address and we'll send you an OTP to reset your password."
                                 : otpVerified
                                 ? "Enter your new password below."
-                                : "We've sent a 6-digit OTP to your email/phone. Please enter it below."
+                                : "We've sent a 6-digit OTP to your email. Please enter it below."
                             }
                         </p>
                     </div>
@@ -334,7 +333,7 @@ export default function ForgotPassword() {
                                     }}
                                     placeholder="000000"
                                     error={errors.otp}
-                                    helperText="Enter the 6-digit OTP sent to your email/phone"
+                                    helperText="Enter the 6-digit OTP sent to your email"
                                     className="text-center text-2xl tracking-widest font-bold"
                                 />
                             </div>
@@ -378,7 +377,7 @@ export default function ForgotPassword() {
                                     }}
                                     className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
                                 >
-                                    Change email/phone
+                                    Change email
                                 </button>
                                 <div>
                                     <Link href="/login" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
@@ -391,26 +390,17 @@ export default function ForgotPassword() {
                         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                             <div className="space-y-4">
                                 <FormInput
-                                    label="Email or Phone Number"
+                                    label="Email Address"
                                     id="email"
                                     name="email"
-                                    type="text"
+                                    type="email"
                                     autoComplete="username"
                                     required
                                     value={data.email}
-                                    onChange={(e: any) => {
-                                        const value = e.target.value;
-                                        // If it looks like a phone number (only digits), limit to 10 digits
-                                        if (/^\d*$/.test(value) && value.length <= 10) {
-                                            setData({ ...data, email: value });
-                                        } else if (!/^\d*$/.test(value)) {
-                                            // Allow email format
-                                            setData({ ...data, email: value });
-                                        }
-                                    }}
-                                    placeholder="Email address or phone number"
+                                    onChange={(e: any) => setData({ ...data, email: e.target.value })}
+                                    placeholder="Email address"
                                     error={errors.email}
-                                    helperText="Enter your registered email address or phone number"
+                                    helperText="Enter your registered email address"
                                 />
                             </div>
 

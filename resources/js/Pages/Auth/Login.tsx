@@ -22,15 +22,14 @@ export default function Login() {
         const validationErrors: any = {};
         
         if (!data.email || data.email.trim() === '') {
-            validationErrors.email = 'Enter Your email or phone number';
+            validationErrors.email = 'Enter Your email address';
         } else {
-            // Validate format: must be either email or phone
+            // Validate format: must be email
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            const phoneRegex = /^[6-9]\d{9}$/;
             const trimmedValue = data.email.trim();
             
-            if (!emailRegex.test(trimmedValue) && !phoneRegex.test(trimmedValue)) {
-                validationErrors.email = 'Please enter a valid email address or 10-digit phone number';
+            if (!emailRegex.test(trimmedValue)) {
+                validationErrors.email = 'Please enter a valid email address';
             }
         }
         if (!data.password || data.password.trim() === '') {
@@ -103,26 +102,17 @@ export default function Login() {
                     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                         <div className="space-y-4">
                             <FormInput
-                                label="Email or Phone Number"
+                                label="Email Address"
                                 id="email"
                                 name="email"
-                                type="text"
+                                type="email"
                                 autoComplete="username"
                                 required
                                 value={data.email}
-                                onChange={(e: any) => {
-                                    const value = e.target.value;
-                                    // If it looks like a phone number (only digits), limit to 10 digits
-                                    if (/^\d*$/.test(value) && value.length <= 10) {
-                                        setData({ ...data, email: value });
-                                    } else if (!/^\d*$/.test(value)) {
-                                        // Allow email format
-                                        setData({ ...data, email: value });
-                                    }
-                                }}
-                                placeholder="Email address or phone number"
+                                onChange={(e: any) => setData({ ...data, email: e.target.value })}
+                                placeholder="Email address"
                                 error={errors.email}
-                                helperText="Enter your email address or 10-digit phone number"
+                                helperText="Enter your registered email address"
                             />
                             <FormInput
                                 label="Password"
