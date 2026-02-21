@@ -15,7 +15,8 @@ import {
     ChevronUpIcon,
     ChevronDownIcon,
     TicketIcon,
-    SwatchIcon
+    SwatchIcon,
+    EnvelopeIcon
 } from '@heroicons/react/24/outline';
 import { useState, useEffect } from 'react';
 import { useAuthStore } from '@/Pages/Auth/useAuthStore';
@@ -30,6 +31,7 @@ const adminNavigation = [
     { name: 'Carts', href: '/admin/carts', icon: ShoppingCartIcon },
     { name: 'Recently Viewed', href: '/admin/recently-viewed', icon: EyeIcon },
     { name: 'Users', href: '/admin/users', icon: UsersIcon },
+    { name: 'Contacts', href: '/admin/contacts', icon: EnvelopeIcon },
 ];
 
 const couponManagementItems = [

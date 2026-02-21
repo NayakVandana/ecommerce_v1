@@ -298,6 +298,10 @@ Route::prefix('admin')->group(function () {
     Route::get('/fabrics', function () {
         return Inertia::render('Admin/Fabric/index');
     })->name('admin.fabrics');
+    
+    Route::get('/contacts', function () {
+        return Inertia::render('Admin/Contact/index');
+    })->name('admin.contacts');
 });
 
 // Guest Routes (only accessible when not authenticated)

@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\WishlistApiController;
 use App\Http\Controllers\Api\CouponApiController;
 use App\Http\Controllers\Api\AddressApiController;
 use App\Http\Controllers\Api\DeliveryBoyApiController;
+use App\Http\Controllers\Api\ContactApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -40,6 +41,9 @@ Route::post('/products/filter-options', [ProductApiController::class, 'getFilter
 Route::post('/categories', [CategoryApiController::class, 'index']);
 Route::post('/categories/show', [CategoryApiController::class, 'show']);
 Route::post('/categories/home', [CategoryApiController::class, 'home']);
+
+// Public Contact Route
+Route::post('/contact', [ContactApiController::class, 'store']);
 
 // Routes with optional auth (work for both authenticated users and guest sessions)
 // Uses optional auth middleware to set user if token is provided, but allows guests
