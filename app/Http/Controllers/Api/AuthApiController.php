@@ -7,10 +7,16 @@ use App\Models\User;
 use App\Models\RecentlyViewedProduct;
 use App\Models\Cart;
 use App\Models\UserLoginLog;
+use App\Models\VerificationToken;
 use App\Services\SessionTrackingService;
 use App\Services\TokenService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 
 class AuthApiController extends Controller
@@ -220,6 +226,312 @@ class AuthApiController extends Controller
         $user->save();
 
         return $this->sendJsonResponse(true, 'Profile updated successfully', $user, 200);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required',
+        ]);
+
+        $emailOrPhone = $request->email;
+        
+        // Determine if input is email or phone
+        $isEmail = filter_var($emailOrPhone, FILTER_VALIDATE_EMAIL);
+        $isPhone = preg_match('/^[6-9]\d{9}$/', $emailOrPhone);
+        
+        if (!$isEmail && !$isPhone) {
+            throw ValidationException::withMessages([
+                'email' => ['Please enter a valid email address or phone number.'],
+            ]);
+        }
+
+        // Find user by email or phone
+        if ($isEmail) {
+            $user = User::where('email', $emailOrPhone)->first();
+            $userEmail = $user ? $user->email : null;
+            $userPhone = $user ? $user->phone : null;
+        } else {
+            $user = User::where('phone', $emailOrPhone)->first();
+            $userEmail = $user ? $user->email : null;
+            $userPhone = $user ? $user->phone : null;
+        }
+
+        if (!$user) {
+            // Don't reveal if user exists or not for security
+            return $this->sendJsonResponse(true, 'If that email/phone exists, we have sent an OTP.', [], 200);
+        }
+
+        // Generate 6-digit OTP (100000 to 999999)
+        $otp = (string) rand(100000, 999999);
+        
+        // Generate verification token
+        $verificationToken = Str::random(64);
+
+        // Delete any existing verification tokens for this email/phone
+        VerificationToken::where('email', $userEmail)
+            ->orWhere('mobile', $userPhone)
+            ->where('request_type', 'FORGOT_PASSWORD')
+            ->delete();
+
+        // Create new verification token record
+        VerificationToken::create([
+            'email' => $userEmail,
+            'mobile' => $userPhone,
+            'request_type' => 'FORGOT_PASSWORD',
+            'otp' => $otp,
+            'verification_token' => Hash::make($verificationToken),
+            'otp_verified' => false,
+            'attempt_counter' => 1,
+        ]);
+
+        // In development, log the OTP
+        if (app()->environment(['local', 'testing'])) {
+            Log::info('Password Reset OTP', [
+                'email' => $userEmail,
+                'mobile' => $userPhone,
+                'otp' => $otp,
+                'verification_token' => $verificationToken,
+            ]);
+        }
+
+        // TODO: Send OTP via SMS/Email
+        // if ($userPhone) {
+        //     // Send SMS with OTP
+        // }
+        // if ($userEmail) {
+        //     // Send Email with OTP
+        //     // Mail::to($userEmail)->send(new PasswordResetOTP($otp));
+        // }
+
+        return $this->sendJsonResponse(true, 'If that email/phone exists, we have sent an OTP.', [
+            'verification_token' => app()->environment(['local', 'testing']) ? $verificationToken : null, // Only in dev
+            'otp' => app()->environment(['local', 'testing']) ? $otp : null, // Only in dev
+            'email' => $userEmail,
+            'mobile' => $userPhone,
+        ], 200);
+    }
+
+    public function resendOtp(Request $request)
+    {
+        $request->validate([
+            'email' => 'required',
+        ]);
+
+        $emailOrPhone = $request->email;
+        
+        // Determine if input is email or phone
+        $isEmail = filter_var($emailOrPhone, FILTER_VALIDATE_EMAIL);
+        $isPhone = preg_match('/^[6-9]\d{9}$/', $emailOrPhone);
+        
+        if (!$isEmail && !$isPhone) {
+            throw ValidationException::withMessages([
+                'email' => ['Please enter a valid email address or phone number.'],
+            ]);
+        }
+
+        // Find user by email or phone
+        if ($isEmail) {
+            $user = User::where('email', $emailOrPhone)->first();
+            $userEmail = $user ? $user->email : null;
+            $userPhone = $user ? $user->phone : null;
+        } else {
+            $user = User::where('phone', $emailOrPhone)->first();
+            $userEmail = $user ? $user->email : null;
+            $userPhone = $user ? $user->phone : null;
+        }
+
+        if (!$user) {
+            // Don't reveal if user exists or not for security
+            return $this->sendJsonResponse(true, 'If that email/phone exists, we have sent an OTP.', [], 200);
+        }
+
+        // Check for existing verification token to get rate limiting
+        $existingToken = VerificationToken::where('email', $userEmail)
+            ->orWhere('mobile', $userPhone)
+            ->where('request_type', 'FORGOT_PASSWORD')
+            ->where('otp_verified', false)
+            ->first();
+
+        // Rate limiting: Check if OTP was sent within last 60 seconds
+        if ($existingToken) {
+            $secondsSinceCreation = Carbon::parse($existingToken->created_at)->diffInSeconds(now());
+            if ($secondsSinceCreation < 60) {
+                $remainingSeconds = 60 - $secondsSinceCreation;
+                throw ValidationException::withMessages([
+                    'email' => ["Please wait {$remainingSeconds} seconds before requesting a new OTP."],
+                ]);
+            }
+        }
+
+        // Generate new 6-digit OTP (100000 to 999999)
+        $otp = (string) rand(100000, 999999);
+        
+        // Generate new verification token
+        $verificationToken = Str::random(64);
+
+        // Delete any existing verification tokens for this email/phone
+        VerificationToken::where('email', $userEmail)
+            ->orWhere('mobile', $userPhone)
+            ->where('request_type', 'FORGOT_PASSWORD')
+            ->delete();
+
+        // Create new verification token record
+        VerificationToken::create([
+            'email' => $userEmail,
+            'mobile' => $userPhone,
+            'request_type' => 'FORGOT_PASSWORD',
+            'otp' => $otp,
+            'verification_token' => Hash::make($verificationToken),
+            'otp_verified' => false,
+            'attempt_counter' => 1,
+        ]);
+
+        // In development, log the OTP
+        if (app()->environment(['local', 'testing'])) {
+            Log::info('Password Reset OTP (Resent)', [
+                'email' => $userEmail,
+                'mobile' => $userPhone,
+                'otp' => $otp,
+                'verification_token' => $verificationToken,
+            ]);
+        }
+
+        // TODO: Send OTP via SMS/Email
+        // if ($userPhone) {
+        //     // Send SMS with OTP
+        // }
+        // if ($userEmail) {
+        //     // Send Email with OTP
+        //     // Mail::to($userEmail)->send(new PasswordResetOTP($otp));
+        // }
+
+        return $this->sendJsonResponse(true, 'A new OTP has been sent to your email/phone.', [
+            'verification_token' => app()->environment(['local', 'testing']) ? $verificationToken : null, // Only in dev
+            'otp' => app()->environment(['local', 'testing']) ? $otp : null, // Only in dev
+            'email' => $userEmail,
+            'mobile' => $userPhone,
+        ], 200);
+    }
+
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'verification_token' => 'required|string',
+            'otp' => 'required|string|size:6',
+            'email' => 'required|string',
+        ]);
+
+        // Find verification token record
+        $verificationRecord = VerificationToken::where('email', $request->email)
+            ->where('request_type', 'FORGOT_PASSWORD')
+            ->where('otp_verified', false)
+            ->first();
+
+        if (!$verificationRecord) {
+            throw ValidationException::withMessages([
+                'otp' => ['Invalid or expired OTP. Please request a new one.'],
+            ]);
+        }
+
+        // Check if verification token matches
+        if (!Hash::check($request->verification_token, $verificationRecord->verification_token)) {
+            throw ValidationException::withMessages([
+                'verification_token' => ['Invalid verification token.'],
+            ]);
+        }
+
+        // Check OTP expiration (15 minutes)
+        $otpAge = Carbon::parse($verificationRecord->created_at)->diffInMinutes(now());
+        if ($otpAge > 15) {
+            $verificationRecord->delete();
+            throw ValidationException::withMessages([
+                'otp' => ['OTP has expired. Please request a new one.'],
+            ]);
+        }
+
+        // Check attempt counter (max 5 attempts)
+        if ($verificationRecord->attempt_counter >= 5) {
+            $verificationRecord->delete();
+            throw ValidationException::withMessages([
+                'otp' => ['Maximum OTP verification attempts exceeded. Please request a new OTP.'],
+            ]);
+        }
+
+        // Verify OTP
+        if ($request->otp !== $verificationRecord->otp) {
+            $verificationRecord->increment('attempt_counter');
+            throw ValidationException::withMessages([
+                'otp' => ['Invalid OTP. Please try again.'],
+            ]);
+        }
+
+        // Mark OTP as verified
+        $verificationRecord->update([
+            'otp_verified' => true,
+            'verification_datetime' => now(),
+        ]);
+
+        return $this->sendJsonResponse(true, 'OTP verified successfully.', [
+            'verification_token' => $request->verification_token,
+            'email' => $request->email,
+        ], 200);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'verification_token' => 'required|string',
+            'email' => 'required|email',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        // Find verified verification token record
+        $verificationRecord = VerificationToken::where('email', $request->email)
+            ->where('request_type', 'FORGOT_PASSWORD')
+            ->where('otp_verified', true)
+            ->first();
+
+        if (!$verificationRecord) {
+            throw ValidationException::withMessages([
+                'verification_token' => ['OTP not verified. Please verify OTP first.'],
+            ]);
+        }
+
+        // Verify verification token
+        if (!Hash::check($request->verification_token, $verificationRecord->verification_token)) {
+            throw ValidationException::withMessages([
+                'verification_token' => ['Invalid verification token.'],
+            ]);
+        }
+
+        // Check if verification is still valid (30 minutes from verification)
+        if ($verificationRecord->verification_datetime) {
+            $verificationAge = Carbon::parse($verificationRecord->verification_datetime)->diffInMinutes(now());
+            if ($verificationAge > 30) {
+                $verificationRecord->delete();
+                throw ValidationException::withMessages([
+                    'verification_token' => ['Verification has expired. Please request a new OTP.'],
+                ]);
+            }
+        }
+
+        // Find user and update password
+        $user = User::where('email', $request->email)->first();
+        
+        if (!$user) {
+            throw ValidationException::withMessages([
+                'email' => ['User not found.'],
+            ]);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        // Delete the verification token record
+        $verificationRecord->delete();
+
+        return $this->sendJsonResponse(true, 'Your password has been reset successfully. You can now login with your new password.', [], 200);
     }
 
     /**

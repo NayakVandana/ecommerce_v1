@@ -30,6 +30,10 @@ use Illuminate\Support\Facades\Route;
 // Authentication Routes
 Route::post('/register', [AuthApiController::class, 'register']);
 Route::post('/login', [AuthApiController::class, 'login']);
+Route::post('/forgot-password', [AuthApiController::class, 'forgotPassword']);
+Route::post('/resend-otp', [AuthApiController::class, 'resendOtp']);
+Route::post('/verify-otp', [AuthApiController::class, 'verifyOtp']);
+Route::post('/reset-password', [AuthApiController::class, 'resetPassword']);
 
 // Public Product Routes
 Route::post('/products', [ProductApiController::class, 'index']);

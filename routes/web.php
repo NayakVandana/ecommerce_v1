@@ -23,6 +23,10 @@ Route::get('/', function () {
 })->name('home');
 
 // Product Routes
+Route::get('/products', function () {
+    return Inertia::render('Products/Index');
+})->name('products.index');
+
 Route::get('/products/{id}', function ($id) {
     return Inertia::render('Products/Show', [
         'id' => $id
@@ -313,4 +317,12 @@ Route::middleware('guest')->group(function () {
     Route::get('/register', function () {
         return Inertia::render('Auth/Register');
     })->name('register');
+    
+    Route::get('/forgot-password', function () {
+        return Inertia::render('Auth/ForgotPassword');
+    })->name('password.request');
+    
+    Route::get('/reset-password', function () {
+        return Inertia::render('Auth/ResetPassword');
+    })->name('password.reset');
 });
