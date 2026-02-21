@@ -20,12 +20,19 @@ class AuthApiController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
+            'phone' => 'required|string|regex:/^[6-9]\d{9}$/|unique:users',
             'password' => 'required|string|min:8|confirmed',
+        ], [
+            'phone.required' => 'Phone number is required.',
+            'phone.regex' => 'Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.',
+            'phone.unique' => 'This phone number is already registered.',
+            'email.unique' => 'This email address is already registered.',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
+            'phone' => $request->phone,
             'password' => Hash::make($request->password),
         ]);
 
@@ -76,11 +83,28 @@ class AuthApiController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'required',
             'password' => 'required',
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $emailOrPhone = $request->email;
+        
+        // Determine if input is email or phone
+        $isEmail = filter_var($emailOrPhone, FILTER_VALIDATE_EMAIL);
+        $isPhone = preg_match('/^[6-9]\d{9}$/', $emailOrPhone);
+        
+        if (!$isEmail && !$isPhone) {
+            throw ValidationException::withMessages([
+                'email' => ['Please enter a valid email address or phone number.'],
+            ]);
+        }
+
+        // Find user by email or phone
+        if ($isEmail) {
+            $user = User::where('email', $emailOrPhone)->first();
+        } else {
+            $user = User::where('phone', $emailOrPhone)->first();
+        }
 
         if (!$user) {
             throw ValidationException::withMessages([

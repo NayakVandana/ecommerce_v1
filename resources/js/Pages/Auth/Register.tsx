@@ -10,6 +10,7 @@ export default function Register() {
     const [data, setData] = useState({
         name: '',
         email: '',
+        phone: '',
         password: '',
         password_confirmation: '',
     });
@@ -26,6 +27,13 @@ export default function Register() {
         }
         if (!data.email || data.email.trim() === '') {
             validationErrors.email = 'Enter Your email';
+        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+            validationErrors.email = 'Please enter a valid email address';
+        }
+        if (!data.phone || data.phone.trim() === '') {
+            validationErrors.phone = 'Enter Your phone number';
+        } else if (!/^[6-9]\d{9}$/.test(data.phone.trim())) {
+            validationErrors.phone = 'Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9';
         }
         if (!data.password || data.password.trim() === '') {
             validationErrors.password = 'Enter Your password';
@@ -52,6 +60,7 @@ export default function Register() {
             const response = await useAuthStore.register({
                 name: data.name,
                 email: data.email,
+                phone: data.phone.trim(),
                 password: data.password,
                 password_confirmation: data.password_confirmation,
                 ...(sessionId && { session_id: sessionId }),
@@ -64,12 +73,22 @@ export default function Register() {
                 router.visit('/');
             }
         } catch (error: any) {
-            if (error.response?.data?.message) {
+            if (error.response?.data?.errors) {
+                // Laravel validation errors
+                setErrors(error.response.data.errors);
+            } else if (error.response?.data?.message) {
                 const errorMessage = error.response.data.message;
                 if (typeof errorMessage === 'object') {
                     setErrors(errorMessage);
                 } else {
-                    setErrors({ email: errorMessage });
+                    // Check if it's an email or phone error
+                    if (errorMessage.toLowerCase().includes('email')) {
+                        setErrors({ email: errorMessage });
+                    } else if (errorMessage.toLowerCase().includes('phone')) {
+                        setErrors({ phone: errorMessage });
+                    } else {
+                        setErrors({ email: errorMessage });
+                    }
                 }
             } else {
                 setErrors({ email: 'Registration failed. Please try again.' });
@@ -119,6 +138,26 @@ export default function Register() {
                                 onChange={(e: any) => setData({ ...data, email: e.target.value })}
                                 placeholder="email@example.com"
                                 error={errors.email}
+                            />
+                            <FormInput
+                                label="Phone Number"
+                                id="phone"
+                                name="phone"
+                                type="tel"
+                                autoComplete="tel"
+                                required
+                                value={data.phone}
+                                onChange={(e: any) => {
+                                    // Only allow numbers
+                                    const value = e.target.value.replace(/\D/g, '');
+                                    // Limit to 10 digits
+                                    if (value.length <= 10) {
+                                        setData({ ...data, phone: value });
+                                    }
+                                }}
+                                placeholder="9876543210"
+                                error={errors.phone}
+                                helperText="10-digit mobile number starting with 6, 7, 8, or 9"
                             />
                             <FormInput
                                 label="Password"

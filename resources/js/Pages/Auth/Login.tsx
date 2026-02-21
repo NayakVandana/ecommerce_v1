@@ -22,7 +22,16 @@ export default function Login() {
         const validationErrors: any = {};
         
         if (!data.email || data.email.trim() === '') {
-            validationErrors.email = 'Enter Your email';
+            validationErrors.email = 'Enter Your email or phone number';
+        } else {
+            // Validate format: must be either email or phone
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const phoneRegex = /^[6-9]\d{9}$/;
+            const trimmedValue = data.email.trim();
+            
+            if (!emailRegex.test(trimmedValue) && !phoneRegex.test(trimmedValue)) {
+                validationErrors.email = 'Please enter a valid email address or 10-digit phone number';
+            }
         }
         if (!data.password || data.password.trim() === '') {
             validationErrors.password = 'Enter Your password';
@@ -58,8 +67,16 @@ export default function Login() {
                 window.location.href = '/';
             }
         } catch (error: any) {
-            if (error.response?.data?.message) {
-                setErrors({ email: error.response.data.message });
+            if (error.response?.data?.errors) {
+                // Laravel validation errors
+                setErrors(error.response.data.errors);
+            } else if (error.response?.data?.message) {
+                const errorMessage = error.response.data.message;
+                if (typeof errorMessage === 'object') {
+                    setErrors(errorMessage);
+                } else {
+                    setErrors({ email: errorMessage });
+                }
             } else {
                 setErrors({ email: 'Login failed. Please try again.' });
             }
@@ -86,16 +103,26 @@ export default function Login() {
                     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                         <div className="space-y-4">
                             <FormInput
-                                label="Email address"
+                                label="Email or Phone Number"
                                 id="email"
                                 name="email"
-                                type="email"
-                                autoComplete="email"
+                                type="text"
+                                autoComplete="username"
                                 required
                                 value={data.email}
-                                onChange={(e: any) => setData({ ...data, email: e.target.value })}
-                                placeholder="Email address"
+                                onChange={(e: any) => {
+                                    const value = e.target.value;
+                                    // If it looks like a phone number (only digits), limit to 10 digits
+                                    if (/^\d*$/.test(value) && value.length <= 10) {
+                                        setData({ ...data, email: value });
+                                    } else if (!/^\d*$/.test(value)) {
+                                        // Allow email format
+                                        setData({ ...data, email: value });
+                                    }
+                                }}
+                                placeholder="Email address or phone number"
                                 error={errors.email}
+                                helperText="Enter your email address or 10-digit phone number"
                             />
                             <FormInput
                                 label="Password"
