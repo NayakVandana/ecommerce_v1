@@ -404,15 +404,7 @@ export default function Home() {
                             {/* Featured Products */}
                             {products.length > 0 && (
                                 <div className="mb-10">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <h2 className="text-2xl font-bold text-gray-900">Featured Products</h2>
-                                        <Link 
-                                            href="/products" 
-                                            className="text-indigo-600 hover:text-indigo-700 font-medium text-sm flex items-center gap-1"
-                                        >
-                                            View All →
-                                        </Link>
-                                    </div>
+                                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Products</h2>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                                         {products.map((product: any) => renderProductCard(product))}
                                     </div>
