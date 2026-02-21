@@ -158,8 +158,12 @@ export default function Navigation() {
             localStorage.removeItem('auth_user');
             // Clear session on logout (backend will create new session for next guest session)
             clearSession();
+            // Clear user state and counts immediately
             setUser(null);
-            router.visit('/');
+            setCartCount(0);
+            setWishlistCount(0);
+            // Force full page reload to ensure header updates
+            window.location.href = '/';
         }
     };
 

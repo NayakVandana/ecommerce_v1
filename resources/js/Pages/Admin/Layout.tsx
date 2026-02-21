@@ -93,7 +93,10 @@ export default function AdminLayout({ children, currentPath }: any) {
             localStorage.removeItem('auth_user');
             // Clear session on logout (backend will create new session for next guest session)
             clearSession();
-            router.visit('/');
+            // Clear user state immediately
+            setUser(null);
+            // Force full page reload to ensure header updates
+            window.location.href = '/';
         }
     };
 
