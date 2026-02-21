@@ -14,6 +14,7 @@ import RecentlyViewedProducts from '../Components/RecentlyViewedProducts';
 import Pagination from '../Components/Pagination';
 import CategoryIcon from '../Components/CategoryIcon';
 import CategoryModal from '../Components/CategoryModal';
+import CategoriesHeader from '../Components/CategoriesHeader';
 
 export default function Home() {
     const { url } = usePage();
@@ -219,27 +220,32 @@ export default function Home() {
         const isToggling = togglingWishlist[product.id] || false;
         
         return (
-            <Card key={product.id} hover padding="none" className="overflow-hidden flex flex-col">
-                <Link href={`/products/${product.id}`}>
-                    <div className="h-48 bg-gray-200 flex items-center justify-center relative">
+            <Card key={product.id} hover padding="none" className="overflow-hidden flex flex-col group bg-white border border-gray-100 hover:border-indigo-300 hover:shadow-xl transition-all duration-300">
+                <Link href={`/products/${product.id}`} className="relative overflow-hidden">
+                    <div className="h-64 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden">
                         {imageUrl ? (
-                            <img src={imageUrl} alt={product.product_name} className="h-full w-full object-cover" />
+                            <img 
+                                src={imageUrl} 
+                                alt={product.product_name} 
+                                className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                            />
                         ) : (
                             <span className="text-gray-400">No Image</span>
                         )}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
                         {discount > 0 && (
-                            <span className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-bold">
+                            <span className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg">
                                 {discount}% OFF
                             </span>
                         )}
                         <button
                             onClick={(e) => handleToggleWishlist(e, product.id)}
                             disabled={isToggling}
-                            className="absolute top-2 left-2 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors disabled:opacity-50 z-10"
+                            className="absolute top-3 left-3 p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-red-50 hover:scale-110 transition-all duration-200 disabled:opacity-50 z-10"
                             title={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
                         >
                             {isToggling ? (
-                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-red-600 border-t-transparent"></div>
                             ) : isInWishlist ? (
                                 <HeartIconSolid className="h-5 w-5 text-red-600" />
                             ) : (
@@ -248,34 +254,41 @@ export default function Home() {
                         </button>
                     </div>
                 </Link>
-                <div className="p-4 flex-1 flex flex-col">
-                    <Link href={`/products/${product.id}`}>
-                        <h3 className="font-semibold text-lg mb-2 line-clamp-1 hover:text-indigo-600">{product.product_name}</h3>
+                <div className="p-5 flex-1 flex flex-col bg-white">
+                    <Link href={`/products/${product.id}`} className="flex-1">
                         {product.brand && (
-                            <p className="text-gray-500 text-xs mb-1">{product.brand}</p>
+                            <p className="text-xs font-medium text-indigo-600 uppercase tracking-wide mb-1">{product.brand}</p>
                         )}
-                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.description}</p>
+                        <h3 className="font-bold text-lg mb-2 line-clamp-2 hover:text-indigo-600 transition-colors text-gray-900 leading-tight">
+                            {product.product_name}
+                        </h3>
+                        <p className="text-gray-500 text-sm mb-3 line-clamp-2 leading-relaxed">{product.description}</p>
                     </Link>
-                    <div className="flex items-center gap-2 mb-3">
-                        <p className="text-indigo-600 font-bold">₹{displayPrice}</p>
+                    <div className="flex items-baseline gap-2 mb-4">
+                        <p className="text-2xl font-bold text-gray-900">₹{displayPrice}</p>
                         {mrp && mrp > displayPrice && (
-                            <p className="text-gray-400 line-through text-sm">₹{mrp}</p>
+                            <>
+                                <p className="text-gray-400 line-through text-sm">₹{mrp}</p>
+                                <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded">
+                                    Save ₹{mrp - displayPrice}
+                                </span>
+                            </>
                         )}
                     </div>
                     
                     {/* Quantity Selector */}
-                    <div className="flex items-center gap-2 mb-3">
-                        <label className="text-sm text-gray-700">Quantity:</label>
-                        <div className="flex items-center border border-gray-300 rounded">
+                    <div className="flex items-center gap-2 mb-4">
+                        <label className="text-sm font-medium text-gray-700">Qty:</label>
+                        <div className="flex items-center border-2 border-gray-200 rounded-lg overflow-hidden focus-within:border-indigo-500 transition-colors">
                             <button
                                 onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
                                     handleQuantityChange(product.id, -1);
                                 }}
-                                className="px-3 py-1 hover:bg-gray-100 transition-colors"
+                                className="px-3 py-1.5 hover:bg-gray-100 active:bg-gray-200 transition-colors font-semibold text-gray-700"
                             >
-                                -
+                                −
                             </button>
                             <input
                                 type="number"
@@ -289,7 +302,7 @@ export default function Home() {
                                     e.preventDefault();
                                     e.stopPropagation();
                                 }}
-                                className="w-16 px-2 py-1 text-center border-x border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                className="w-16 px-2 py-1.5 text-center border-x-2 border-gray-200 focus:outline-none focus:ring-0 font-semibold text-gray-900"
                             />
                             <button
                                 onClick={(e) => {
@@ -297,7 +310,7 @@ export default function Home() {
                                     e.stopPropagation();
                                     handleQuantityChange(product.id, 1);
                                 }}
-                                className="px-3 py-1 hover:bg-gray-100 transition-colors"
+                                className="px-3 py-1.5 hover:bg-gray-100 active:bg-gray-200 transition-colors font-semibold text-gray-700"
                             >
                                 +
                             </button>
@@ -309,22 +322,29 @@ export default function Home() {
                         <button
                             onClick={(e) => handleAddToCart(e, product)}
                             disabled={isAdding || (product.total_quantity !== null && product.total_quantity === 0)}
-                            className="flex-1 bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-4 py-3 rounded-lg font-bold hover:from-indigo-700 hover:to-indigo-800 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 shadow-md hover:shadow-lg"
                         >
-                            {isAdding ? 'Adding...' : 'ADD TO CART'}
+                            {isAdding ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                    Adding...
+                                </span>
+                            ) : (
+                                'ADD TO CART'
+                            )}
                         </button>
                         <button
                             onClick={(e) => handleToggleWishlist(e, product.id)}
                             disabled={isToggling}
-                            className={`px-4 py-2 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                            className={`px-4 py-3 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 ${
                                 isInWishlist
-                                    ? 'bg-red-600 text-white hover:bg-red-700'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-md hover:shadow-lg'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-gray-200'
                             }`}
                             title={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
                         >
                             {isToggling ? (
-                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current"></div>
+                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-current border-t-transparent"></div>
                             ) : isInWishlist ? (
                                 <HeartIconSolid className="h-5 w-5" />
                             ) : (
@@ -339,90 +359,84 @@ export default function Home() {
 
     return (
         <AppLayout>
-            <Container className="py-8">             
-
-                {loading ? (
-                    <div className="text-center py-12 text-gray-500">Loading...</div>
-                ) : (
-                    <>
-                        {/* Featured Categories */}
-                        {featuredCategories.length > 0 && (
-                            <div className="mb-12">
-                                {/* <h2 className="text-2xl font-bold mb-6">Shop by Category</h2> */}
-                                <div className="flex overflow-x-auto gap-8 pb-4 scrollbar-hide">
-                                    {featuredCategories.map((category) => (
-                                        <button
-                                            key={category.id}
-                                            onClick={(e) => handleCategoryClick(e, category)}
-                                            className="flex flex-col items-center flex-shrink-0 group cursor-pointer"
-                                        >
-                                            <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-2 shadow-md group-hover:shadow-lg transition-all group-hover:scale-105 border border-gray-200">
-                                                <CategoryIcon 
-                                                    icon={category.icon} 
-                                                    className="h-8 w-8 text-purple-600"
-                                                />
-                                            </div>
-                                            <span className="text-sm font-medium text-gray-800 text-center max-w-[80px] line-clamp-2">
-                                                {category.name}
-                                            </span>
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Specific Categories Section - Sarees and Kurtas & Suits */}
-                        {specificCategories.length > 0 && (
-                            <div className="mb-12">
-                                <div className="flex gap-8">
-                                    {specificCategories.map((category) => (
-                                        <Link
-                                            key={category.id}
-                                            href={`/categories/${category.slug}`}
-                                            className="flex flex-col items-center flex-shrink-0 group cursor-pointer"
-                                        >
-                                            <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center mb-3 shadow-md group-hover:shadow-lg transition-all group-hover:scale-110 border-2 border-indigo-200 group-hover:border-indigo-400">
-                                                <CategoryIcon 
-                                                    icon={category.icon} 
-                                                    className="h-10 w-10 text-indigo-600"
-                                                />
-                                            </div>
-                                            <span className="text-base font-semibold text-gray-800 text-center max-w-[120px] line-clamp-2 group-hover:text-indigo-600 transition-colors">
-                                                {category.name}
-                                            </span>
-                                        </Link>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                     
-
-                        {/* Featured Products */}
-                        {products.length > 0 && (
-                            <div>
-                                <h2 className="text-2xl font-bold mb-6">Featured Products</h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    {products.map((product: any) => renderProductCard(product))}
-                                </div>
-                                
-                                {/* Pagination */}
-                                {pagination && pagination.last_page > 1 && (
-                                    <div className="mt-8">
-                                        <Pagination 
-                                            data={pagination} 
-                                            baseUrl="/"
-                                        />
+            <CategoriesHeader />
+            <div className="min-h-screen bg-gray-50">
+                <Container className="py-8">
+                    {loading ? (
+                        <div className="text-center py-20">
+                            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent"></div>
+                            <p className="mt-4 text-gray-600 text-lg">Loading...</p>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Featured Collections */}
+                            {specificCategories.length > 0 && (
+                                <div className="mb-10">
+                                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Featured Collections</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {specificCategories.map((category) => (
+                                            <Link
+                                                key={category.id}
+                                                href={`/categories/${category.slug}`}
+                                                className="group relative overflow-hidden rounded-lg bg-indigo-600 p-6 text-white hover:bg-indigo-700 transition-colors"
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-16 h-16 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                                                        <CategoryIcon 
+                                                            icon={category.icon} 
+                                                            className="h-8 w-8 text-white"
+                                                        />
+                                                    </div>
+                                                    <div className="flex-1">
+                                                        <h3 className="text-xl font-bold mb-1">{category.name}</h3>
+                                                        <p className="text-indigo-100 text-sm mb-2">Explore our exclusive collection</p>
+                                                        <span className="text-sm font-medium inline-flex items-center">
+                                                            Shop Now →
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </Link>
+                                        ))}
                                     </div>
-                                )}
-                            </div>
-                        )}
+                                </div>
+                            )}
 
-                        {/* Recently Viewed Products */}
-                        <RecentlyViewedProducts limit={4} showMoreLink={true} />
-                    </>
-                )}
-            </Container>
+                            {/* Featured Products */}
+                            {products.length > 0 && (
+                                <div className="mb-10">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h2 className="text-2xl font-bold text-gray-900">Featured Products</h2>
+                                        <Link 
+                                            href="/products" 
+                                            className="text-indigo-600 hover:text-indigo-700 font-medium text-sm flex items-center gap-1"
+                                        >
+                                            View All →
+                                        </Link>
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                        {products.map((product: any) => renderProductCard(product))}
+                                    </div>
+                                    
+                                    {/* Pagination */}
+                                    {pagination && pagination.last_page > 1 && (
+                                        <div className="mt-8">
+                                            <Pagination 
+                                                data={pagination} 
+                                                baseUrl="/"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+
+                            {/* Recently Viewed Products */}
+                            <div className="mb-10">
+                                <RecentlyViewedProducts limit={4} showMoreLink={true} />
+                            </div>
+                        </>
+                    )}
+                </Container>
+            </div>
 
             {/* Category Modal */}
             <CategoryModal

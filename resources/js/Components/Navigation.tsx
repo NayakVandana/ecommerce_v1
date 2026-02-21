@@ -171,12 +171,14 @@ export default function Navigation() {
     };
 
     return (
-        <nav className="bg-white shadow-sm sticky top-0 z-40">
+        <nav className="bg-white/95 backdrop-blur-md shadow-md sticky top-0 z-40 border-b border-gray-100">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between h-16">
+                <div className="flex justify-between h-20">
                     <div className="flex">
-                        <Link href="/" className="flex items-center">
-                            <span className="text-2xl font-bold text-indigo-600">Ecommerce</span>
+                        <Link href="/" className="flex items-center group">
+                            <span className="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent group-hover:from-indigo-700 group-hover:to-purple-700 transition-all">
+                                Ecommerce
+                            </span>
                         </Link>
                         <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                             {navigation.map((item) => {
@@ -201,23 +203,23 @@ export default function Navigation() {
                     <div className="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
                         <Link
                             href="/wishlist"
-                            className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
+                            className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-red-600 transition-all rounded-lg hover:bg-red-50"
                             title="Wishlist"
                         >
                             <HeartIcon className="h-6 w-6" />
                             {wishlistCount > 0 && (
-                                <span className="absolute -top-1 -right-1 block min-w-[1rem] h-4 px-1 rounded-full bg-red-600 text-white text-xs flex items-center justify-center">
+                                <span className="absolute -top-1 -right-1 block min-w-[1.25rem] h-5 px-1.5 rounded-full bg-gradient-to-r from-red-500 to-red-600 text-white text-xs font-bold flex items-center justify-center shadow-lg">
                                     {wishlistCount > 99 ? '99+' : wishlistCount}
                                 </span>
                             )}
                         </Link>
                         <Link
                             href="/cart"
-                            className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors"
+                            className="relative inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:text-indigo-600 transition-all rounded-lg hover:bg-indigo-50"
                         >
                             <ShoppingCartIcon className="h-6 w-6" />
                             {cartCount > 0 && (
-                                <span className="absolute -top-1 -right-1 block min-w-[1rem] h-4 px-1 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center">
+                                <span className="absolute -top-1 -right-1 block min-w-[1.25rem] h-5 px-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white text-xs font-bold flex items-center justify-center shadow-lg">
                                     {cartCount > 99 ? '99+' : cartCount}
                                 </span>
                             )}
@@ -304,12 +306,12 @@ export default function Navigation() {
                                 </div>
                             </div>
                         ) : (
-                            <Link
-                                href="/login"
-                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors"
-                            >
-                                Login
-                            </Link>
+                        <Link
+                            href="/login"
+                            className="inline-flex items-center px-6 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg transform hover:scale-105"
+                        >
+                            Login
+                        </Link>
                         )}
                     </div>
                     <div className="sm:hidden flex items-center">
