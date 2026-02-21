@@ -156,131 +156,181 @@ export default function ProductIndex() {
                     </div>
                 ) : (
                     <div className="bg-white shadow rounded-lg overflow-hidden">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Product
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Price
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Status
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Stock
-                                    </th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Actions
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {products.length > 0 ? (
-                                    products.map((product: any) => (
-                                        <tr key={product.id} className="hover:bg-gray-50">
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center">
-                                                    <Link href={`/admin/products/${product.id}`} className="flex-shrink-0 h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity">
-                                                        {(() => {
-                                                            // Get primary image first, or first image, or first media
-                                                            const primaryMedia = product.media?.find((m: any) => m.is_primary && m.type === 'image');
-                                                            const firstImage = product.media?.find((m: any) => m.type === 'image');
-                                                            const displayMedia = primaryMedia || firstImage || product.media?.[0];
-                                                            
-                                                            if (displayMedia?.url || displayMedia?.file_path) {
-                                                                const imageUrl = displayMedia.url || displayMedia.file_path;
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
+                                    <tr>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                                            Product
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            MRP
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Price
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Discount %
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            GST %
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Total with GST
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Commission
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Comm. GST
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Total
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Final Price
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Status
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Stock
+                                        </th>
+                                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider sticky right-0 bg-gray-50 z-10">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {products.length > 0 ? (
+                                        products.map((product: any) => (
+                                            <tr key={product.id} className="hover:bg-gray-50">
+                                                <td className="px-4 py-4 whitespace-nowrap sticky left-0 bg-white z-10">
+                                                    <div className="flex items-center">
+                                                        <Link href={`/admin/products/${product.id}`} className="flex-shrink-0 h-10 w-10 cursor-pointer hover:opacity-80 transition-opacity">
+                                                            {(() => {
+                                                                // Get primary image first, or first image, or first media
+                                                                const primaryMedia = product.media?.find((m: any) => m.is_primary && m.type === 'image');
+                                                                const firstImage = product.media?.find((m: any) => m.type === 'image');
+                                                                const displayMedia = primaryMedia || firstImage || product.media?.[0];
+                                                                
+                                                                if (displayMedia?.url || displayMedia?.file_path) {
+                                                                    const imageUrl = displayMedia.url || displayMedia.file_path;
+                                                                    return (
+                                                                        <img
+                                                                            className="h-10 w-10 rounded-md object-cover border border-gray-200"
+                                                                            src={imageUrl}
+                                                                            alt={product.product_name}
+                                                                            onError={(e) => {
+                                                                                // Fallback if image fails to load
+                                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                                                (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                                                                            }}
+                                                                        />
+                                                                    );
+                                                                }
                                                                 return (
-                                                                    <img
-                                                                        className="h-10 w-10 rounded-md object-cover border border-gray-200"
-                                                                        src={imageUrl}
-                                                                        alt={product.product_name}
-                                                                        onError={(e) => {
-                                                                            // Fallback if image fails to load
-                                                                            (e.target as HTMLImageElement).style.display = 'none';
-                                                                            (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                                                                        }}
-                                                                    />
+                                                                    <div className="h-10 w-10 rounded-md bg-gray-200 flex items-center justify-center border border-gray-300">
+                                                                        <span className="text-gray-400 text-xs">No Image</span>
+                                                                    </div>
                                                                 );
-                                                            }
-                                                            return (
-                                                                <div className="h-10 w-10 rounded-md bg-gray-200 flex items-center justify-center border border-gray-300">
-                                                                    <span className="text-gray-400 text-xs">No Image</span>
-                                                                </div>
-                                                            );
-                                                        })()}
-                                                    </Link>
-                                                    <div className="ml-4">
-                                                        <Link 
-                                                            href={`/admin/products/${product.id}`}
-                                                            className="text-sm font-medium text-gray-900 hover:text-indigo-600 cursor-pointer"
-                                                        >
-                                                            {product.product_name}
+                                                            })()}
                                                         </Link>
-                                                        <div className="text-sm text-gray-500">
-                                                            SKU: {product.sku || 'N/A'}
+                                                        <div className="ml-4">
+                                                            <Link 
+                                                                href={`/admin/products/${product.id}`}
+                                                                className="text-sm font-medium text-gray-900 hover:text-indigo-600 cursor-pointer"
+                                                            >
+                                                                {product.product_name}
+                                                            </Link>
+                                                            <div className="text-xs text-gray-500">
+                                                                SKU: {product.sku || 'N/A'}
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                ₹{product.final_price || product.price}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <button
-                                                    onClick={() => handleToggleStatus(product.id)}
-                                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                                        product.is_approve === 1
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-red-100 text-red-800'
-                                                    }`}
-                                                >
-                                                    {product.is_approve === 1 ? (
-                                                        <>
-                                                            <CheckCircleIcon className="h-4 w-4 mr-1" />
-                                                            Approved
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            <XCircleIcon className="h-4 w-4 mr-1" />
-                                                            Pending
-                                                        </>
-                                                    )}
-                                                </button>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                {product.total_quantity || 0}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <div className="flex justify-end space-x-2">
-                                                    <Link
-                                                        href={`/admin/products/${product.id}/edit`}
-                                                        className="text-indigo-600 hover:text-indigo-900"
-                                                        title="Edit"
-                                                    >
-                                                        <PencilIcon className="h-5 w-5" />
-                                                    </Link>
+                                                </td>
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    ₹{parseFloat(product.mrp || product.price || 0).toFixed(2)}
+                                                </td>
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                                                    ₹{parseFloat(product.price || 0).toFixed(2)}
+                                                </td>
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {parseFloat(product.discount_percent || 0).toFixed(2)}%
+                                                </td>
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    {parseInt(product.gst || 0)}%
+                                                </td>
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    ₹{parseFloat(product.total_with_gst || product.price || 0).toFixed(2)}
+                                                </td>
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    ₹{parseFloat(product.commission || 0).toFixed(2)}
+                                                </td>
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                    ₹{parseFloat(product.commission_gst_amount || 0).toFixed(2)}
+                                                </td>
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                                                    ₹{parseFloat(product.total || product.price || 0).toFixed(2)}
+                                                </td>
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-indigo-600 font-semibold">
+                                                    ₹{parseFloat(product.final_price || product.price || 0).toFixed(2)}
+                                                </td>
+                                                <td className="px-4 py-4 whitespace-nowrap">
                                                     <button
-                                                        onClick={() => handleDeleteClick(product.id)}
-                                                        className="text-red-600 hover:text-red-900"
-                                                        title="Delete"
+                                                        onClick={() => handleToggleStatus(product.id)}
+                                                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                            product.is_approve === 1
+                                                                ? 'bg-green-100 text-green-800'
+                                                                : 'bg-red-100 text-red-800'
+                                                        }`}
                                                     >
-                                                        <TrashIcon className="h-5 w-5" />
+                                                        {product.is_approve === 1 ? (
+                                                            <>
+                                                                <CheckCircleIcon className="h-4 w-4 mr-1" />
+                                                                Approved
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <XCircleIcon className="h-4 w-4 mr-1" />
+                                                                Pending
+                                                            </>
+                                                        )}
                                                     </button>
-                                                </div>
+                                                </td>
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                    {product.total_quantity || 0}
+                                                </td>
+                                                <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium sticky right-0 bg-white z-10">
+                                                    <div className="flex justify-end space-x-2">
+                                                        <Link
+                                                            href={`/admin/products/${product.id}/edit`}
+                                                            className="text-indigo-600 hover:text-indigo-900"
+                                                            title="Edit"
+                                                        >
+                                                            <PencilIcon className="h-5 w-5" />
+                                                        </Link>
+                                                        <button
+                                                            onClick={() => handleDeleteClick(product.id)}
+                                                            className="text-red-600 hover:text-red-900"
+                                                            title="Delete"
+                                                        >
+                                                            <TrashIcon className="h-5 w-5" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan={13} className="px-6 py-4 text-center text-sm text-gray-500">
+                                                No products found
                                             </td>
                                         </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
-                                            No products found
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                         
                         {/* Pagination */}
                         {pagination && pagination.last_page > 1 && (

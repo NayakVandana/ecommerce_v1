@@ -20,12 +20,14 @@ export default function ProductCreate() {
     const [selectedMainCategory, setSelectedMainCategory] = useState<string>('');
     const [selectedSubCategory, setSelectedSubCategory] = useState<string>('');
     const [selectedSubSubCategory, setSelectedSubSubCategory] = useState<string>('');
+    const [selectedCategoryPath, setSelectedCategoryPath] = useState<string[]>([]); // Track full category path
     const [product, setProduct] = useState<any>(null);
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         product_name: '',
         description: '',
         price: '',
+        discount_percent: '',
         category: '',
         total_quantity: '',
         is_approve: 0,
@@ -84,6 +86,7 @@ export default function ProductCreate() {
                 product_name: product.product_name || '',
                 description: product.description || '',
                 price: product.price || '',
+                discount_percent: product.discount_percent || '',
                 category: product.category || '',
                 total_quantity: product.total_quantity || '',
                 is_approve: product.is_approve || 0,
@@ -395,21 +398,20 @@ export default function ProductCreate() {
             }
         }
         
-        if (name === 'sub_sub_category') {
-            setSelectedSubSubCategory(value);
-            setFormData(prev => ({ ...prev, category: value }));
-        }
-        
+        // Helper function to check if a category has children
+        const hasChildren = (categoryId: number) => {
+            return categories.some((c: any) => c.parent_id === categoryId);
+        };
+
         // Handle cascading category selection
         if (name === 'main_category') {
             setSelectedMainCategory(value);
             setSelectedSubCategory('');
             setSelectedSubSubCategory('');
-            // Set the final category to main category if no subcategories
+            setSelectedCategoryPath([]);
             const mainCat = categories.find((c: any) => c.id === parseInt(value));
             if (mainCat) {
-                const hasSubcategories = categories.some((c: any) => c.parent_id === mainCat.id);
-                if (!hasSubcategories) {
+                if (!hasChildren(mainCat.id)) {
                     setFormData(prev => ({ ...prev, category: value }));
                 } else {
                     setFormData(prev => ({ ...prev, category: '' }));
@@ -420,11 +422,10 @@ export default function ProductCreate() {
         if (name === 'sub_category') {
             setSelectedSubCategory(value);
             setSelectedSubSubCategory('');
-            // Set the final category to subcategory if no sub-subcategories
+            setSelectedCategoryPath([]);
             const subCat = categories.find((c: any) => c.id === parseInt(value));
             if (subCat) {
-                const hasSubSubcategories = categories.some((c: any) => c.parent_id === subCat.id);
-                if (!hasSubSubcategories) {
+                if (!hasChildren(subCat.id)) {
                     setFormData(prev => ({ ...prev, category: value }));
                 } else {
                     setFormData(prev => ({ ...prev, category: '' }));
@@ -434,7 +435,36 @@ export default function ProductCreate() {
         
         if (name === 'sub_sub_category') {
             setSelectedSubSubCategory(value);
-            setFormData(prev => ({ ...prev, category: value }));
+            setSelectedCategoryPath([]);
+            const subSubCat = categories.find((c: any) => c.id === parseInt(value));
+            if (subSubCat) {
+                if (!hasChildren(subSubCat.id)) {
+                    setFormData(prev => ({ ...prev, category: value }));
+                } else {
+                    setFormData(prev => ({ ...prev, category: '' }));
+                }
+            }
+        }
+
+        // Handle deeper category levels dynamically
+        if (name.startsWith('category_level_')) {
+            const level = parseInt(name.replace('category_level_', ''));
+            // Update the category path for this level
+            const newPath = [...selectedCategoryPath];
+            const pathIndex = level - 3;
+            newPath[pathIndex] = value;
+            // Remove any deeper levels when a new selection is made
+            newPath.splice(pathIndex + 1);
+            setSelectedCategoryPath(newPath);
+            
+            const selectedCat = categories.find((c: any) => c.id === parseInt(value));
+            if (selectedCat) {
+                if (!hasChildren(selectedCat.id)) {
+                    setFormData(prev => ({ ...prev, category: value }));
+                } else {
+                    setFormData(prev => ({ ...prev, category: '' }));
+                }
+            }
         }
     };
 
@@ -581,17 +611,12 @@ export default function ProductCreate() {
                 }
             }
             
-            // Priority 3: Use manual mediaColor state (only if no variation is selected)
-            if (!colorToUse && !variationId) {
-                colorToUse = mediaColor || null;
-            }
-            
-            // Send color if we have one (from variation or manual), or empty string for general media without color
-            if (colorToUse) {
+            // Only send color if it's from a variation (not for general media)
+            // General product media should not have color
+            if (colorToUse && variationId) {
                 formData.append('color', colorToUse);
-            } else {
-                formData.append('color', ''); // Empty string for general media without color
             }
+            // Don't send color for general media (when variationId is null)
             
             files.forEach((file) => {
                 formData.append('files[]', file);
@@ -612,7 +637,6 @@ export default function ProductCreate() {
                     formattedMedia[0].is_primary = true;
                 }
                 setMedia((prevMedia) => [...prevMedia, ...formattedMedia]);
-                setMediaColor('');
                 setSelectedVariationForMedia(null);
                 toast({ message: 'Media uploaded successfully', type: 'success' });
             }
@@ -628,9 +652,7 @@ export default function ProductCreate() {
         if (pendingMediaFiles.length > 0 && savedProductId) {
             const formData = new FormData();
             formData.append('product_id', savedProductId.toString());
-            if (mediaColor) {
-                formData.append('color', mediaColor);
-            }
+            // Don't send color for general product media
             // Note: variation_id will be set after variations are created
             // For now, upload as general media
             
@@ -653,7 +675,6 @@ export default function ProductCreate() {
                 setPendingMediaFiles([]);
                 setPendingImages([]);
                 setPendingVideos([]);
-                setMediaColor('');
                 setSelectedVariationForMedia(null);
                 return true;
             }
@@ -978,10 +999,27 @@ export default function ProductCreate() {
         }
 
         try {
+                // Build category path for subcategory fields
+                const categoryPath: (number | null)[] = [];
+                if (selectedMainCategory) categoryPath.push(parseInt(selectedMainCategory));
+                if (selectedSubCategory) categoryPath.push(parseInt(selectedSubCategory));
+                if (selectedSubSubCategory) categoryPath.push(parseInt(selectedSubSubCategory));
+                selectedCategoryPath.forEach((catId: string) => {
+                    if (catId) categoryPath.push(parseInt(catId));
+                });
+                
+                // Fill subcategory_1 through subcategory_6 from category path
+                const subcategoryFields: any = {};
+                for (let i = 0; i < 6; i++) {
+                    subcategoryFields[`subcategory_${i + 1}`] = categoryPath[i + 1] || null; // Skip index 0 (main category)
+                }
+
                 const submitData: any = {
                 ...formData,
                 price: parseFloat(formData.price),
+                discount_percent: formData.discount_percent ? parseFloat(formData.discount_percent) : 0,
                 category: parseInt(formData.category),
+                ...subcategoryFields, // Add subcategory_1 through subcategory_6
                 total_quantity: parseInt(formData.total_quantity),
                 is_approve: formData.is_approve,
                 is_returnable: formData.is_returnable !== undefined ? formData.is_returnable : false,
@@ -1346,37 +1384,72 @@ export default function ProductCreate() {
                                         </div>
                                     )}
                                     
-                                    {/* Sub-Sub Category */}
-                                    {selectedSubCategory && (
-                                        <div>
-                                            <label className="block text-xs font-medium text-gray-600 mb-1">
-                                                Sub-Sub Category
-                                            </label>
-                                            <select
-                                                name="sub_sub_category"
-                                                value={selectedSubSubCategory}
-                                                onChange={handleInputChange}
-                                                className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm ${
-                                                    errors.category ? 'border-red-300' : 'border-gray-300'
-                                                }`}
-                                            >
-                                                <option value="">Select sub-sub category (optional)</option>
-                                                {categories
-                                                    .filter((cat: any) => cat.parent_id === parseInt(selectedSubCategory))
-                                                    .sort((a: any, b: any) => {
-                                                        if (a.sort_order !== b.sort_order) {
-                                                            return (a.sort_order || 0) - (b.sort_order || 0);
-                                                        }
-                                                        return (a.name || '').localeCompare(b.name || '');
-                                                    })
-                                                    .map((category: any) => (
-                                                        <option key={category.id} value={category.id}>
-                                                            {category.name}
-                                                        </option>
-                                                    ))}
-                                            </select>
-                                        </div>
-                                    )}
+                                    {/* Sub-Sub Category and deeper levels */}
+                                    {selectedSubCategory && (() => {
+                                        // Helper function to get children of a category
+                                        const getChildren = (parentId: number) => {
+                                            return categories
+                                                .filter((cat: any) => cat.parent_id === parentId)
+                                                .sort((a: any, b: any) => {
+                                                    if (a.sort_order !== b.sort_order) {
+                                                        return (a.sort_order || 0) - (b.sort_order || 0);
+                                                    }
+                                                    return (a.name || '').localeCompare(b.name || '');
+                                                });
+                                        };
+
+                                        // Helper function to check if a category has children
+                                        const hasChildren = (categoryId: number) => {
+                                            return categories.some((c: any) => c.parent_id === categoryId);
+                                        };
+
+                                        // Render category dropdowns recursively
+                                        const renderCategoryLevel = (level: number, parentId: number, selectedValue: string): any => {
+                                            const children = getChildren(parentId);
+                                            if (children.length === 0) return null;
+
+                                            const levelName = level === 2 ? 'sub_sub_category' : `category_level_${level}`;
+                                            const levelLabel = level === 2 ? 'Sub-Sub Category' : `Level ${level + 1} Category`;
+                                            
+                                            // Get the selected value for this level
+                                            let currentSelectedValue = '';
+                                            if (level === 2) {
+                                                currentSelectedValue = selectedSubSubCategory;
+                                            } else {
+                                                const pathIndex = level - 3;
+                                                currentSelectedValue = selectedCategoryPath[pathIndex] || '';
+                                            }
+
+                                            return (
+                                                <div key={level}>
+                                                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                                                        {levelLabel}
+                                                    </label>
+                                                    <select
+                                                        name={levelName}
+                                                        value={currentSelectedValue}
+                                                        onChange={handleInputChange}
+                                                        className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm ${
+                                                            errors.category ? 'border-red-300' : 'border-gray-300'
+                                                        }`}
+                                                    >
+                                                        <option value="">Select {levelLabel.toLowerCase()} (optional)</option>
+                                                        {children.map((category: any) => (
+                                                            <option key={category.id} value={category.id}>
+                                                                {category.name}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    {/* Recursively render next level if current selection has children */}
+                                                    {currentSelectedValue && hasChildren(parseInt(currentSelectedValue)) && 
+                                                        renderCategoryLevel(level + 1, parseInt(currentSelectedValue), '')
+                                                    }
+                                                </div>
+                                            );
+                                        };
+
+                                        return renderCategoryLevel(2, parseInt(selectedSubCategory), selectedSubSubCategory);
+                                    })()}
                                     
                                     {/* Hidden input for final category selection */}
                                     <input type="hidden" name="category" value={formData.category} />
@@ -1419,6 +1492,32 @@ export default function ProductCreate() {
                                     {errors.price && (
                                         <p className="mt-1 text-sm text-red-600">{errors.price}</p>
                                     )}
+                                </div>
+
+                                {/* Discount Percent */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Discount Percent (%)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        name="discount_percent"
+                                        value={formData.discount_percent}
+                                        onChange={handleInputChange}
+                                        min="0"
+                                        max="100"
+                                        step="0.01"
+                                        className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                            errors.discount_percent ? 'border-red-300' : 'border-gray-300'
+                                        }`}
+                                        placeholder="0.00"
+                                    />
+                                    {errors.discount_percent && (
+                                        <p className="mt-1 text-sm text-red-600">{errors.discount_percent}</p>
+                                    )}
+                                    <p className="mt-1 text-xs text-gray-500">
+                                        Enter discount percentage (0-100)
+                                    </p>
                                 </div>
                             </div>
 
@@ -1546,7 +1645,7 @@ export default function ProductCreate() {
                                         <div className="mb-4">
                                             <h3 className="text-lg font-medium text-gray-900">Product Media</h3>
                                             <p className="text-sm text-gray-500 mt-1">
-                                                General product media (not linked to any variation). Optional color can be assigned.
+                                                General product media (not linked to any variation).
                                             </p>
                                         </div>
                                         
@@ -1758,99 +1857,6 @@ export default function ProductCreate() {
                                             )}
                                         </div>
                                         
-                                        {/* Color Picker - Only show if no variation is selected */}
-                                        {selectedVariationForMedia === null && (
-                                        <div className="mt-4">
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Available Colors
-                                            </label>
-                                            <div className="flex items-center space-x-2 flex-wrap gap-2 mb-3">
-                                                {[
-                                                    { name: 'Red', value: '#D0021B' },
-                                                    { name: 'Orange', value: '#ff9900' },
-                                                    { name: 'Blue', value: '#0000ff' },
-                                                    { name: 'Purple', value: '#800080' },
-                                                    { name: 'Pink', value: '#ff1493' },
-                                                    { name: 'Yellow', value: '#ffff00' },
-                                                    { name: 'Green', value: '#00ff00' },
-                                                    { name: 'Skyblue', value: '#87CEEB' },
-                                                    { name: 'Brown', value: '#8b4513' },
-                                                    { name: 'Black', value: '#000000' },
-                                                    { name: 'Gray', value: '#808080' },
-                                                    { name: 'White', value: '#ffffff' },
-                                                ].map((color) => (
-                                                    <button
-                                                        key={color.value}
-                                                        type="button"
-                                                        onClick={() => setMediaColor(color.value)}
-                                                        className={`w-10 h-10 rounded-full border-2 transition-all ${
-                                                            mediaColor === color.value
-                                                                ? 'border-blue-500 ring-2 ring-blue-300'
-                                                                : 'border-gray-300 hover:border-gray-400'
-                                                        }`}
-                                                        style={{ backgroundColor: color.value }}
-                                                        title={color.name}
-                                                    />
-                                                ))}
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowColorPicker(!showColorPicker)}
-                                                    className="w-10 h-10 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-gray-400 transition-colors"
-                                                    title="Custom Color"
-                                                >
-                                                    <PlusIcon className="h-5 w-5 text-gray-400" />
-                                                </button>
-                                            </div>
-                                            {showColorPicker && (
-                                                <div className="absolute z-10 mt-2">
-                                                    <div className="fixed inset-0" onClick={() => setShowColorPicker(false)}></div>
-                                                    <div className="relative">
-                                                        <SketchPicker
-                                                            color={mediaColor || '#ffffff'}
-                                                            onChange={handleColorChange}
-                                                            width="220px"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
-                                            <div className="flex items-center space-x-2">
-                                                <span className="text-sm text-gray-700">Selected Color:</span>
-                                                {mediaColor ? (
-                                                    <>
-                                                        <div
-                                                            className="w-5 h-5 rounded-full border border-gray-300"
-                                                            style={{ backgroundColor: mediaColor }}
-                                                        />
-                                                        <span className="text-sm text-gray-700">
-                                                            {[
-                                                                { name: 'Red', value: '#D0021B' },
-                                                                { name: 'Orange', value: '#ff9900' },
-                                                                { name: 'Blue', value: '#0000ff' },
-                                                                { name: 'Purple', value: '#800080' },
-                                                                { name: 'Pink', value: '#ff1493' },
-                                                                { name: 'Yellow', value: '#ffff00' },
-                                                                { name: 'Green', value: '#00ff00' },
-                                                                { name: 'Skyblue', value: '#87CEEB' },
-                                                                { name: 'Brown', value: '#8b4513' },
-                                                                { name: 'Black', value: '#000000' },
-                                                                { name: 'Gray', value: '#808080' },
-                                                                { name: 'White', value: '#ffffff' },
-                                                            ].find(c => c.value === mediaColor)?.name || mediaColor}
-                                                        </span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setMediaColor('')}
-                                                            className="text-xs text-red-600 hover:text-red-800 ml-2"
-                                                        >
-                                                            Clear
-                                                        </button>
-                                                    </>
-                                                ) : (
-                                                    <span className="text-sm text-gray-400">No color selected</span>
-                                                )}
-                                            </div>
-                                        </div>
-                                        )}
                                         {uploadingMedia && (
                                             <p className="text-sm text-gray-500">Uploading...</p>
                                         )}

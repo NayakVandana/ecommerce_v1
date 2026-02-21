@@ -746,6 +746,16 @@ export default function Index() {
                                             const primaryImage = product?.media?.find((m: any) => m.is_primary) || product?.media?.[0];
                                             const imageUrl = primaryImage?.url || primaryImage?.file_path || '';
                                             
+                                            // Calculate pricing details
+                                            const mrp = parseFloat(product?.mrp || product?.price || 0);
+                                            const finalPrice = parseFloat(product?.final_price || product?.price || 0);
+                                            const discountPercent = parseFloat(product?.discount_percent || 0);
+                                            const unitPrice = finalPrice;
+                                            const itemSubtotal = item.subtotal || (unitPrice * item.quantity);
+                                            const itemMrpTotal = mrp * item.quantity;
+                                            const itemSavings = itemMrpTotal - itemSubtotal;
+                                            const hasDiscount = discountPercent > 0 && mrp > finalPrice;
+                                            
                                             return (
                                                 <div key={item.id} className="flex gap-4 pb-4 border-b last:border-b-0">
                                                     <div className="flex-shrink-0">
@@ -775,14 +785,46 @@ export default function Index() {
                                                                 {variation.color && `Color: ${variation.color}`}
                                                             </p>
                                                         )}
-                                                        <p className="text-sm text-gray-600 mt-1">
-                                                            Quantity: {item.quantity} × ₹{((item.subtotal || 0) / item.quantity).toFixed(2)}
-                                                        </p>
+                                                        
+                                                        {/* Pricing Details */}
+                                                        <div className="mt-2 space-y-1">
+                                                            <div className="flex items-center gap-2 flex-wrap">
+                                                                {hasDiscount && (
+                                                                    <>
+                                                                        <span className="text-sm text-gray-400 line-through">
+                                                                            ₹{mrp.toFixed(2)}
+                                                                        </span>
+                                                                        <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-medium">
+                                                                            {discountPercent.toFixed(0)}% OFF
+                                                                        </span>
+                                                                    </>
+                                                                )}
+                                                                <span className={`text-sm font-semibold ${hasDiscount ? 'text-indigo-600' : 'text-gray-700'}`}>
+                                                                    ₹{unitPrice.toFixed(2)}
+                                                                </span>
+                                                                <span className="text-xs text-gray-500">per item</span>
+                                                            </div>
+                                                            <p className="text-sm text-gray-600">
+                                                                Quantity: {item.quantity} × ₹{unitPrice.toFixed(2)}
+                                                            </p>
+                                                            {hasDiscount && itemSavings > 0 && (
+                                                                <p className="text-xs text-green-600 font-medium">
+                                                                    You save ₹{itemSavings.toFixed(2)} on this item
+                                                                </p>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                     
                                                     <div className="text-right">
-                                                        <p className="font-bold text-indigo-600">
-                                                            ₹{(item.subtotal || 0).toFixed(2)}
+                                                        {hasDiscount && (
+                                                            <div className="mb-1">
+                                                                <p className="text-xs text-gray-400 line-through">
+                                                                    ₹{itemMrpTotal.toFixed(2)}
+                                                                </p>
+                                                            </div>
+                                                        )}
+                                                        <p className="font-bold text-indigo-600 text-lg">
+                                                            ₹{itemSubtotal.toFixed(2)}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -790,6 +832,45 @@ export default function Index() {
                                         })}
                                     </div>
                                 </div>
+                                        
+                                        {/* Discount Summary */}
+                                        {(() => {
+                                            const totalMrp = items.reduce((sum: number, item: any) => {
+                                                const product = item.product;
+                                                const mrp = parseFloat(product?.mrp || product?.price || 0);
+                                                return sum + (mrp * item.quantity);
+                                            }, 0);
+                                            const totalSavings = totalMrp - subtotal;
+                                            const hasAnyDiscount = items.some((item: any) => {
+                                                const product = item.product;
+                                                const discountPercent = parseFloat(product?.discount_percent || 0);
+                                                const mrp = parseFloat(product?.mrp || product?.price || 0);
+                                                const finalPrice = parseFloat(product?.final_price || product?.price || 0);
+                                                return discountPercent > 0 && mrp > finalPrice;
+                                            });
+                                            
+                                            if (hasAnyDiscount && totalSavings > 0) {
+                                                return (
+                                                    <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                                                        <div className="flex items-center justify-between">
+                                                            <div className="flex items-center gap-2">
+                                                                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                </svg>
+                                                                <span className="text-sm font-semibold text-green-800">Total Savings on Products</span>
+                                                            </div>
+                                                            <span className="text-lg font-bold text-green-600">
+                                                                ₹{totalSavings.toFixed(2)}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-xs text-green-700 mt-1">
+                                                            You're saving {((totalSavings / totalMrp) * 100).toFixed(1)}% on your order!
+                                                        </p>
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        })()}
                                         
                                         {/* Shipping Information Review */}
                                         <div className="border-t pt-6 mt-6">

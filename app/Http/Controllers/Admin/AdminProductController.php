@@ -52,7 +52,14 @@ class AdminProductController extends Controller
             'product_name' => 'required|string|max:255',
             'description' => 'required|string',
             'price' => 'required|numeric|min:0',
+            'discount_percent' => 'sometimes|numeric|min:0|max:100',
             'category' => 'required|exists:categories,id',
+            'subcategory_1' => 'sometimes|nullable|exists:categories,id',
+            'subcategory_2' => 'sometimes|nullable|exists:categories,id',
+            'subcategory_3' => 'sometimes|nullable|exists:categories,id',
+            'subcategory_4' => 'sometimes|nullable|exists:categories,id',
+            'subcategory_5' => 'sometimes|nullable|exists:categories,id',
+            'subcategory_6' => 'sometimes|nullable|exists:categories,id',
             'total_quantity' => 'required|integer|min:0',
             'is_approve' => 'sometimes|integer|in:0,1',
             'is_returnable' => 'sometimes|boolean',
@@ -64,15 +71,51 @@ class AdminProductController extends Controller
         $productData['uuid'] = Str::uuid()->toString();
         $productData['user_id'] = auth()->id();
         
-        // Set default values for required fields that don't have defaults
-        $productData['gst'] = $productData['gst'] ?? 0;
-        $productData['total_with_gst'] = $productData['total_with_gst'] ?? $productData['price'];
-        $productData['commission'] = $productData['commission'] ?? 0;
-        $productData['commission_gst_amount'] = $productData['commission_gst_amount'] ?? 0;
-        $productData['total'] = $productData['total'] ?? $productData['price'];
-        $productData['final_price'] = $productData['final_price'] ?? $productData['price'];
-        $productData['mrp'] = $productData['mrp'] ?? $productData['price'];
-        $productData['discount_percent'] = $productData['discount_percent'] ?? 0;
+        // Calculate pricing fields according to ProductSeeder logic
+        $price = floatval($productData['price'] ?? 0);
+        $discountPercent = floatval($productData['discount_percent'] ?? 0);
+        // $gst = intval($productData['gst'] ?? 18); // Default 18% GST like seeder
+        $gst = intval($productData['gst'] ?? 0); // Default 18% GST like seeder
+        
+        // Calculate MRP: If discount_percent is provided, calculate MRP from price
+        // MRP = price / (1 - discount_percent/100)
+        if ($discountPercent > 0 && $discountPercent < 100) {
+            $productData['mrp'] = round($price / (1 - ($discountPercent / 100)), 2);
+        } else {
+            // If no discount, MRP = price (or use provided MRP)
+            $productData['mrp'] = floatval($productData['mrp'] ?? $price);
+        }
+        
+        // Calculate GST amount and total with GST
+        $gstAmount = ($price * $gst) / 100;
+        $productData['total_with_gst'] = round($price + $gstAmount, 2);
+        
+        // Calculate commission (5% of price like seeder)
+        $commission = ($price * 5) / 100;
+        $productData['commission'] = round($commission, 2);
+        
+        // Calculate commission GST
+        $commissionGst = ($commission * $gst) / 100;
+        $productData['commission_gst_amount'] = round($commissionGst, 2);
+        
+        // Calculate total
+        $productData['total'] = round($productData['total_with_gst'] + $commission + $commissionGst, 2);
+        
+        // Final price is the selling price (after discount if any)
+        $productData['final_price'] = $price;
+        
+        // Ensure discount_percent is set
+        if (!isset($productData['discount_percent']) || $productData['discount_percent'] == 0) {
+            // Calculate discount_percent from MRP and price if MRP > price
+            if ($productData['mrp'] > $price) {
+                $productData['discount_percent'] = round((($productData['mrp'] - $price) / $productData['mrp']) * 100, 2);
+            } else {
+                $productData['discount_percent'] = 0;
+            }
+        }
+        
+        // Set GST
+        $productData['gst'] = $gst;
         
         $product = Product::create($productData);
 
@@ -124,7 +167,14 @@ class AdminProductController extends Controller
             'product_name' => 'sometimes|string|max:255',
             'description' => 'sometimes|string',
             'price' => 'sometimes|numeric|min:0',
+            'discount_percent' => 'sometimes|numeric|min:0|max:100',
             'category' => 'sometimes|exists:categories,id',
+            'subcategory_1' => 'sometimes|nullable|exists:categories,id',
+            'subcategory_2' => 'sometimes|nullable|exists:categories,id',
+            'subcategory_3' => 'sometimes|nullable|exists:categories,id',
+            'subcategory_4' => 'sometimes|nullable|exists:categories,id',
+            'subcategory_5' => 'sometimes|nullable|exists:categories,id',
+            'subcategory_6' => 'sometimes|nullable|exists:categories,id',
             'total_quantity' => 'sometimes|integer|min:0',
             'is_approve' => 'sometimes|integer|in:0,1',
             'is_returnable' => 'sometimes|boolean',
@@ -138,6 +188,51 @@ class AdminProductController extends Controller
             // IMPORTANT: Media is managed separately and should NEVER be deleted during product update
             // Only update product fields, exclude media, variations, and fabrics from update
             $updateData = $request->except(['id', 'variations', 'media', 'fabrics']);
+            
+            // Recalculate pricing fields if price or discount_percent changed (like ProductSeeder)
+            if (isset($updateData['price']) || isset($updateData['discount_percent'])) {
+                $price = floatval($updateData['price'] ?? $product->price);
+                $discountPercent = floatval($updateData['discount_percent'] ?? $product->discount_percent ?? 0);
+                $gst = intval($updateData['gst'] ?? $product->gst ?? 18);
+                
+                // Calculate MRP: If discount_percent is provided, calculate MRP from price
+                if ($discountPercent > 0 && $discountPercent < 100) {
+                    $updateData['mrp'] = round($price / (1 - ($discountPercent / 100)), 2);
+                } else {
+                    $updateData['mrp'] = floatval($updateData['mrp'] ?? $product->mrp ?? $price);
+                }
+                
+                // Calculate GST amount and total with GST
+                $gstAmount = ($price * $gst) / 100;
+                $updateData['total_with_gst'] = round($price + $gstAmount, 2);
+                
+                // Calculate commission (5% of price like seeder)
+                $commission = ($price * 5) / 100;
+                $updateData['commission'] = round($commission, 2);
+                
+                // Calculate commission GST
+                $commissionGst = ($commission * $gst) / 100;
+                $updateData['commission_gst_amount'] = round($commissionGst, 2);
+                
+                // Calculate total
+                $updateData['total'] = round($updateData['total_with_gst'] + $commission + $commissionGst, 2);
+                
+                // Final price is the selling price
+                $updateData['final_price'] = $price;
+                
+                // Ensure discount_percent is set
+                if (!isset($updateData['discount_percent']) || $updateData['discount_percent'] == 0) {
+                    if ($updateData['mrp'] > $price) {
+                        $updateData['discount_percent'] = round((($updateData['mrp'] - $price) / $updateData['mrp']) * 100, 2);
+                    } else {
+                        $updateData['discount_percent'] = 0;
+                    }
+                }
+                
+                // Set GST
+                $updateData['gst'] = $gst;
+            }
+            
             $product->update($updateData);
 
             // Handle variations if provided
@@ -344,6 +439,10 @@ class AdminProductController extends Controller
             }
         }
 
+        // For general media (no variation_id), don't set color
+        // Only set color for variation-specific media
+        $finalColor = ($variationId && $color) ? $color : null;
+
         try {
             foreach ($request->file('files') as $index => $file) {
                 $path = $file->store("products/{$product->id}", 'public');
@@ -362,7 +461,7 @@ class AdminProductController extends Controller
                     'url' => $url,
                     'sort_order' => $index,
                     'is_primary' => $index === 0 && !$variationId, // Only set primary if not variation-specific
-                    'color' => $color,
+                    'color' => $finalColor, // null for general media, color value for variation media
                 ]);
 
                 $uploadedMedia[] = $media;
