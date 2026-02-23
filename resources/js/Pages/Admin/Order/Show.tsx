@@ -452,6 +452,42 @@ export default function OrderShow() {
         }
     };
 
+    const handleEditPaymentStatus = () => {
+        if (order) {
+            setPaymentStatusForm({
+                payment_method: order.payment_method || 'CASH_ON_DELIVERY',
+                payment_type: order.payment_type || 'CASH',
+            });
+            setShowPaymentStatusModal(true);
+        }
+    };
+
+    const handleUpdatePaymentStatus = async () => {
+        if (!order) return;
+        
+        try {
+            setUpdatingPaymentStatus(true);
+            const response = await useOrderStore.updatePaymentStatus({
+                id: order.id,
+                payment_method: paymentStatusForm.payment_method,
+                payment_type: paymentStatusForm.payment_type,
+            });
+            
+            if (response.data?.status) {
+                await fetchOrder();
+                setShowPaymentStatusModal(false);
+                toast({ type: 'success', message: 'Payment status updated successfully' });
+            } else {
+                toast({ type: 'error', message: response.data?.message || 'Failed to update payment status' });
+            }
+        } catch (error: any) {
+            console.error('Error updating payment status:', error);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to update payment status' });
+        } finally {
+            setUpdatingPaymentStatus(false);
+        }
+    };
+
     const handleEditDeliveryDate = () => {
         if (order?.delivery_date) {
             const date = new Date(order.delivery_date);

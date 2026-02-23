@@ -169,11 +169,6 @@
                 <h2>INVOICE</h2>
                 <p><strong>Invoice #:</strong> {{ $order->order_number ?? '#' . $order->id }}</p>
                 <p><strong>Date:</strong> {{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y') }}</p>
-                <p><strong>Status:</strong> 
-                    <span class="status-badge status-{{ $order->status }}">
-                        {{ ucfirst(str_replace('_', ' ', $order->status)) }}
-                    </span>
-                </p>
             </td>
         </tr>
     </table>
@@ -219,10 +214,6 @@
                 {{ $order->state }}, 
                 @endif
                 {{ $order->country }}
-                @if($order->delivery_date)
-                <br><br>
-                <strong>Expected Delivery:</strong> {{ \Carbon\Carbon::parse($order->delivery_date)->format('M d, Y') }}
-                @endif
             </td>
         </tr>
     </table>
@@ -253,8 +244,8 @@
                 </td>
                 <td>{{ $item->product_sku ?? ($item->product->sku ?? 'N/A') }}</td>
                 <td class="text-right">{{ $item->quantity }}</td>
-                <td class="text-right">${{ number_format($item->price, 2) }}</td>
-                <td class="text-right">${{ number_format($item->subtotal, 2) }}</td>
+                <td class="text-right">₹{{ number_format($item->price, 2) }}</td>
+                <td class="text-right">₹{{ number_format($item->subtotal, 2) }}</td>
             </tr>
             @endforeach
         </tbody>
@@ -264,29 +255,29 @@
     <table class="summary-table">
         <tr>
             <td class="label-cell">Subtotal:</td>
-            <td class="value-cell">${{ number_format($order->subtotal ?? $order->total, 2) }}</td>
+            <td class="value-cell">₹{{ number_format($order->subtotal ?? $order->total, 2) }}</td>
         </tr>
         @if($order->discount > 0 && $order->couponCode)
         <tr>
             <td class="label-cell">Discount ({{ $order->couponCode->code }}):</td>
-            <td class="value-cell" style="color: #059669;">-${{ number_format($order->discount, 2) }}</td>
+            <td class="value-cell" style="color: #059669;">-₹{{ number_format($order->discount, 2) }}</td>
         </tr>
         @endif
         @if($order->tax > 0)
         <tr>
             <td class="label-cell">Tax:</td>
-            <td class="value-cell">${{ number_format($order->tax, 2) }}</td>
+            <td class="value-cell">₹{{ number_format($order->tax, 2) }}</td>
         </tr>
         @endif
         @if($order->shipping > 0)
         <tr>
             <td class="label-cell">Shipping:</td>
-            <td class="value-cell">${{ number_format($order->shipping, 2) }}</td>
+            <td class="value-cell">₹{{ number_format($order->shipping, 2) }}</td>
         </tr>
         @endif
         <tr class="total-row">
             <td class="label-cell">Total:</td>
-            <td class="value-cell">${{ number_format($order->total, 2) }}</td>
+            <td class="value-cell">₹{{ number_format($order->total, 2) }}</td>
         </tr>
     </table>
 
