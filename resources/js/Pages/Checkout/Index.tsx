@@ -403,27 +403,139 @@ export default function Index() {
                 ) : (
                     <form onSubmit={handleSubmit}>
                         {/* Checkout Steps Indicator */}
-                        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                            <div className="flex items-center justify-center space-x-4">
-                                <div className={`flex items-center ${currentStep >= 1 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 1 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
+                            {/* Mobile Layout - Vertical */}
+                            <div className="block sm:hidden">
+                                <div className="space-y-4">
+                                    {/* Step 1: Shipping */}
+                                    <div className={`flex items-center gap-3 ${currentStep >= 1 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all flex-shrink-0 ${
+                                            currentStep === 1 
+                                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' 
+                                                : currentStep > 1
+                                                ? 'bg-green-500 text-white border-green-500'
+                                                : 'bg-gray-200 text-gray-600 border-gray-300'
+                                        }`}>
+                                            {currentStep > 1 ? '✓' : '1'}
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className={`text-sm font-semibold ${currentStep === 1 ? 'text-indigo-600' : currentStep > 1 ? 'text-green-600' : 'text-gray-400'}`}>
+                                                Step 1: Shipping
+                                            </div>
+                                            {currentStep === 1 && (
+                                                <div className="text-xs text-gray-500 mt-0.5">Fill in your delivery details</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Connector Line - Vertical */}
+                                    <div className={`w-0.5 h-6 ml-5 transition-colors ${
+                                        currentStep >= 2 ? 'bg-indigo-600' : 'bg-gray-300'
+                                    }`}></div>
+                                    
+                                    {/* Step 2: Review */}
+                                    <div className={`flex items-center gap-3 ${currentStep >= 2 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all flex-shrink-0 ${
+                                            currentStep === 2 
+                                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' 
+                                                : currentStep > 2
+                                                ? 'bg-green-500 text-white border-green-500'
+                                                : 'bg-gray-200 text-gray-600 border-gray-300'
+                                        }`}>
+                                            {currentStep > 2 ? '✓' : '2'}
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className={`text-sm font-semibold ${currentStep === 2 ? 'text-indigo-600' : currentStep > 2 ? 'text-green-600' : 'text-gray-400'}`}>
+                                                Step 2: Review
+                                            </div>
+                                            {currentStep === 2 && (
+                                                <div className="text-xs text-gray-500 mt-0.5">Review your order details</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Connector Line - Vertical */}
+                                    <div className={`w-0.5 h-6 ml-5 transition-colors ${
+                                        currentStep >= 3 ? 'bg-indigo-600' : 'bg-gray-300'
+                                    }`}></div>
+                                    
+                                    {/* Step 3: Payment */}
+                                    <div className={`flex items-center gap-3 ${currentStep >= 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all flex-shrink-0 ${
+                                            currentStep === 3 
+                                                ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' 
+                                                : 'bg-gray-200 text-gray-600 border-gray-300'
+                                        }`}>
+                                            3
+                                        </div>
+                                        <div className="flex-1">
+                                            <div className={`text-sm font-semibold ${currentStep === 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                                Step 3: Payment
+                                            </div>
+                                            {currentStep === 3 && (
+                                                <div className="text-xs text-gray-500 mt-0.5">Complete your payment</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Desktop Layout - Horizontal */}
+                            <div className="hidden sm:flex items-center justify-center gap-3 md:gap-6">
+                                {/* Step 1: Shipping */}
+                                <div className={`flex flex-col items-center ${currentStep >= 1 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                    <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center font-bold text-base md:text-lg border-2 transition-all ${
+                                        currentStep === 1 
+                                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg scale-110' 
+                                            : currentStep > 1
+                                            ? 'bg-green-500 text-white border-green-500'
+                                            : 'bg-gray-200 text-gray-600 border-gray-300'
+                                    }`}>
                                         {currentStep > 1 ? '✓' : '1'}
                                     </div>
-                                    <span className="ml-2 font-medium hidden sm:inline">Shipping</span>
+                                    <span className={`mt-2 text-sm md:text-base font-semibold ${currentStep === 1 ? 'text-indigo-600' : currentStep > 1 ? 'text-green-600' : 'text-gray-400'}`}>
+                                        Shipping
+                                    </span>
                                 </div>
-                                <div className="w-16 h-0.5 bg-gray-300"></div>
-                                <div className={`flex items-center ${currentStep >= 2 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 2 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                                
+                                {/* Connector Line */}
+                                <div className={`flex-1 h-0.5 min-w-[30px] md:min-w-[80px] transition-colors ${
+                                    currentStep >= 2 ? 'bg-indigo-600' : 'bg-gray-300'
+                                }`}></div>
+                                
+                                {/* Step 2: Review */}
+                                <div className={`flex flex-col items-center ${currentStep >= 2 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                    <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center font-bold text-base md:text-lg border-2 transition-all ${
+                                        currentStep === 2 
+                                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg scale-110' 
+                                            : currentStep > 2
+                                            ? 'bg-green-500 text-white border-green-500'
+                                            : 'bg-gray-200 text-gray-600 border-gray-300'
+                                    }`}>
                                         {currentStep > 2 ? '✓' : '2'}
                                     </div>
-                                    <span className="ml-2 font-medium hidden sm:inline">Review</span>
+                                    <span className={`mt-2 text-sm md:text-base font-semibold ${currentStep === 2 ? 'text-indigo-600' : currentStep > 2 ? 'text-green-600' : 'text-gray-400'}`}>
+                                        Review
+                                    </span>
                                 </div>
-                                <div className="w-16 h-0.5 bg-gray-300"></div>
-                                <div className={`flex items-center ${currentStep >= 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= 3 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                                
+                                {/* Connector Line */}
+                                <div className={`flex-1 h-0.5 min-w-[30px] md:min-w-[80px] transition-colors ${
+                                    currentStep >= 3 ? 'bg-indigo-600' : 'bg-gray-300'
+                                }`}></div>
+                                
+                                {/* Step 3: Payment */}
+                                <div className={`flex flex-col items-center ${currentStep >= 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                    <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center font-bold text-base md:text-lg border-2 transition-all ${
+                                        currentStep === 3 
+                                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg scale-110' 
+                                            : 'bg-gray-200 text-gray-600 border-gray-300'
+                                    }`}>
                                         3
                                     </div>
-                                    <span className="ml-2 font-medium hidden sm:inline">Payment</span>
+                                    <span className={`mt-2 text-sm md:text-base font-semibold ${currentStep === 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                        Payment
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -705,27 +817,6 @@ export default function Index() {
                                             error={errors.notes}
                                             rows={3}
                                         />
-                                        
-                                        <div className="flex justify-end mt-6">
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    if (validateForm()) {
-                                                        setCurrentStep(2);
-                                                    } else {
-                                                        toast({ type: 'error', message: 'Please fill in all required fields correctly' });
-                                                        // Scroll to first error
-                                                        const firstErrorElement = document.querySelector('.text-red-600');
-                                                        if (firstErrorElement) {
-                                                            firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                                        }
-                                                    }
-                                                }}
-                                                className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition"
-                                            >
-                                                Continue to Review →
-                                            </button>
-                                        </div>
                                     </div>
                                 </div>
                                 )}
@@ -912,23 +1003,6 @@ export default function Index() {
                                                     <p><span className="font-semibold">Notes:</span> {formData.notes}</p>
                                                 )}
                                             </div>
-                                            
-                                            <div className="flex justify-between mt-6">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setCurrentStep(1)}
-                                                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
-                                                >
-                                                    ← Back to Shipping
-                                                </button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setCurrentStep(3)}
-                                                    className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition"
-                                                >
-                                                    Continue to Payment →
-                                                </button>
-                                            </div>
                                         </div>
                                     </div>
                                 )}
@@ -968,16 +1042,6 @@ export default function Index() {
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                            
-                                            <div className="flex justify-between mt-6">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setCurrentStep(2)}
-                                                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
-                                                >
-                                                    ← Back to Review
-                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -1050,10 +1114,37 @@ export default function Index() {
                                     )}
                                     
                                     <div className="space-y-3 mb-4">
-                                        <div className="flex justify-between text-sm text-gray-700">
-                                            <span>Subtotal ({items.length} items)</span>
-                                            <span>₹{subtotal.toFixed(2)}</span>
-                                        </div>
+                                        {/* Calculate product discounts */}
+                                        {(() => {
+                                            const totalMrp = items.reduce((sum: number, item: any) => {
+                                                const product = item.product;
+                                                const mrp = parseFloat(product?.mrp || product?.price || 0);
+                                                return sum + (mrp * item.quantity);
+                                            }, 0);
+                                            const productSavings = totalMrp - subtotal;
+                                            const hasProductDiscount = productSavings > 0;
+                                            
+                                            return (
+                                                <>
+                                                    {hasProductDiscount && (
+                                                        <div className="flex justify-between text-sm text-gray-500">
+                                                            <span>Total MRP</span>
+                                                            <span className="line-through">₹{totalMrp.toFixed(2)}</span>
+                                                        </div>
+                                                    )}
+                                                    <div className="flex justify-between text-sm text-gray-700">
+                                                        <span>Subtotal ({items.length} items)</span>
+                                                        <span>₹{subtotal.toFixed(2)}</span>
+                                                    </div>
+                                                    {hasProductDiscount && (
+                                                        <div className="flex justify-between text-sm">
+                                                            <span className="text-green-600 font-medium">Product Discount</span>
+                                                            <span className="text-green-600 font-semibold">-₹{productSavings.toFixed(2)}</span>
+                                                        </div>
+                                                    )}
+                                                </>
+                                            );
+                                        })()}
                                         
                                         {couponDiscount > 0 && (
                                             <div className="flex justify-between text-sm">
@@ -1092,32 +1183,64 @@ export default function Index() {
                                     </div>
                                     
                                     {/* Savings Summary */}
-                                    {(couponDiscount > 0 || shipping === 0) && (
-                                        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-                                            <div className="flex items-center justify-between">
-                                                <span className="text-sm font-medium text-green-800">Total Savings</span>
-                                                <span className="text-base font-bold text-green-600">
-                                                    ₹{(couponDiscount + (shipping === 0 ? 40 : 0)).toFixed(2)}
-                                                </span>
+                                    {(() => {
+                                        const totalMrp = items.reduce((sum: number, item: any) => {
+                                            const product = item.product;
+                                            const mrp = parseFloat(product?.mrp || product?.price || 0);
+                                            return sum + (mrp * item.quantity);
+                                        }, 0);
+                                        const productSavings = totalMrp - subtotal;
+                                        const totalSavings = productSavings + couponDiscount + (shipping === 0 ? 40 : 0);
+                                        const hasAnySavings = totalSavings > 0;
+                                        
+                                        if (!hasAnySavings) return null;
+                                        
+                                        return (
+                                            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-sm font-medium text-green-800">Total Savings</span>
+                                                    <span className="text-base font-bold text-green-600">
+                                                        ₹{totalSavings.toFixed(2)}
+                                                    </span>
+                                                </div>
+                                                <div className="mt-1 text-xs text-green-700 space-y-0.5">
+                                                    {productSavings > 0 && (
+                                                        <div>Product Discount: ₹{productSavings.toFixed(2)}</div>
+                                                    )}
+                                                    {couponDiscount > 0 && (
+                                                        <div>Coupon: ₹{couponDiscount.toFixed(2)}</div>
+                                                    )}
+                                                    {shipping === 0 && (
+                                                        <div>Free Delivery: ₹40</div>
+                                                    )}
+                                                </div>
                                             </div>
-                                            <div className="mt-1 text-xs text-green-700">
-                                                {couponDiscount > 0 && `Coupon: ₹${couponDiscount.toFixed(2)}`}
-                                                {couponDiscount > 0 && shipping === 0 && ' + '}
-                                                {shipping === 0 && 'Free Delivery: ₹40'}
-                                            </div>
-                                        </div>
-                                    )}
+                                        );
+                                    })()}
                                     
                                     <div className="border-t pt-4 mb-4">
                                         <div className="flex justify-between items-center">
                                             <span className="text-lg font-bold text-gray-900">Total Amount</span>
                                             <span className="text-2xl font-bold text-indigo-600">₹{finalTotal.toFixed(2)}</span>
                                         </div>
-                                        {(couponDiscount > 0 || shipping === 0) && (
-                                            <div className="mt-2 text-xs text-green-600 text-right">
-                                                You saved ₹{(couponDiscount + (shipping === 0 ? 40 : 0)).toFixed(2)} on this order! 🎉
-                                            </div>
-                                        )}
+                                        {(() => {
+                                            const totalMrp = items.reduce((sum: number, item: any) => {
+                                                const product = item.product;
+                                                const mrp = parseFloat(product?.mrp || product?.price || 0);
+                                                return sum + (mrp * item.quantity);
+                                            }, 0);
+                                            const productSavings = totalMrp - subtotal;
+                                            const totalSavings = productSavings + couponDiscount + (shipping === 0 ? 40 : 0);
+                                            
+                                            if (totalSavings > 0) {
+                                                return (
+                                                    <div className="mt-2 text-xs text-green-600 text-right">
+                                                        You saved ₹{totalSavings.toFixed(2)} on this order! 🎉
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        })()}
                                     </div>
                                     
                                     {/* Payment Method - Show only on step 3 */}
@@ -1140,23 +1263,77 @@ export default function Index() {
                                         </div>
                                     )}
                                     
-                                    {/* Place Order Button - Only show on step 3 */}
-                                    {currentStep === 3 && (
-                                        <Button
-                                            type="submit"
-                                            disabled={processing}
-                                            className="w-full"
-                                        >
-                                            {processing ? 'Processing...' : 'Place Order'}
-                                        </Button>
-                                    )}
-                                    
-                                    {/* Show step navigation message */}
-                                    {currentStep < 3 && (
-                                        <div className="text-center text-sm text-gray-500 mt-4">
-                                            Complete all steps to place your order
-                                        </div>
-                                    )}
+                                    {/* Navigation and Action Buttons */}
+                                    <div className="space-y-3 mt-6">
+                                        {/* Step 1: Continue to Review */}
+                                        {currentStep === 1 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    if (validateForm()) {
+                                                        setCurrentStep(2);
+                                                    } else {
+                                                        toast({ type: 'error', message: 'Please fill in all required fields correctly' });
+                                                        // Scroll to first error
+                                                        const firstErrorElement = document.querySelector('.text-red-600');
+                                                        if (firstErrorElement) {
+                                                            firstErrorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                                        }
+                                                    }
+                                                }}
+                                                className="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-md"
+                                            >
+                                                Continue to Review →
+                                            </button>
+                                        )}
+
+                                        {/* Step 2: Back to Shipping and Continue to Payment */}
+                                        {currentStep === 2 && (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCurrentStep(1)}
+                                                    className="w-full px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
+                                                >
+                                                    ← Back to Shipping
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCurrentStep(3)}
+                                                    className="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-md"
+                                                >
+                                                    Continue to Payment →
+                                                </button>
+                                            </>
+                                        )}
+
+                                        {/* Step 3: Back to Review and Place Order */}
+                                        {currentStep === 3 && (
+                                            <>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setCurrentStep(2)}
+                                                    className="w-full px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
+                                                >
+                                                    ← Back to Review
+                                                </button>
+                                                <Button
+                                                    type="submit"
+                                                    disabled={processing}
+                                                    className="w-full"
+                                                >
+                                                    {processing ? 'Processing...' : 'Place Order'}
+                                                </Button>
+                                            </>
+                                        )}
+
+                                        {/* Show step navigation message for steps 1 and 2 */}
+                                        {currentStep < 3 && (
+                                            <div className="text-center text-xs text-gray-500 pt-2">
+                                                Complete all steps to place your order
+                                            </div>
+                                        )}
+                                    </div>
                                     
                                     <Link
                                         href="/cart"
