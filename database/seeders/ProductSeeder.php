@@ -45,7 +45,11 @@ class ProductSeeder extends Seeder
                     
                     // Generate realistic pricing
                     $basePrice = $this->getBasePrice($category->name);
-                    $mrp = $basePrice * (1 + (rand(20, 50) / 100)); // MRP is 20-50% higher
+                    // Cost price is what you paid to purchase (50-70% of base price)
+                    $costPrice = $basePrice * (rand(50, 70) / 100);
+                    // MRP is the selling price (20-50% higher than base price)
+                    $mrp = $basePrice * (1 + (rand(20, 50) / 100));
+                    // Price is the final selling price after discount
                     $price = $basePrice;
                     $gst = 18; // 18% GST
                     $gstAmount = ($price * $gst) / 100;
@@ -75,6 +79,7 @@ class ProductSeeder extends Seeder
                             'Easy to Use',
                             'Premium Material'
                         ]),
+                        'cost_price' => round($costPrice, 2),
                         'price' => $price,
                         'gst' => $gst,
                         'total_with_gst' => $totalWithGst,
