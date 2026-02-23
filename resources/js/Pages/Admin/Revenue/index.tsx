@@ -58,12 +58,17 @@ export default function RevenueIndex() {
     };
 
     const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('en-US', {
+        return new Intl.NumberFormat('en-IN', {
             style: 'currency',
-            currency: 'USD',
+            currency: 'INR',
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
         }).format(amount || 0);
+    };
+    
+    const formatCurrencySimple = (amount: number | string | null | undefined) => {
+        const numAmount = typeof amount === 'string' ? parseFloat(amount) : (amount || 0);
+        return `₹${Number(numAmount).toFixed(2)}`;
     };
 
     const calculateGrowth = (current: number, previous: number) => {
@@ -179,13 +184,31 @@ export default function RevenueIndex() {
                     {/* Today Revenue */}
                     <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg p-6 text-white shadow-lg">
                         <div className="flex items-center justify-between mb-2">
-                            <p className="text-sm font-medium opacity-90">Today</p>
+                            <p className="text-sm font-medium opacity-90">Today Revenue</p>
                             <CurrencyDollarIcon className="h-5 w-5 opacity-75" />
                         </div>
                         <p className="text-3xl font-bold mb-1">
-                            {formatCurrency(revenueData.today_revenue || 0)}
+                            {formatCurrencySimple(revenueData.today_revenue || 0)}
                         </p>
-                        <div className="flex items-center space-x-2">
+                        <div className="space-y-1 mt-2 pt-2 border-t border-indigo-400/30">
+                            <div className="flex justify-between text-xs">
+                                <span className="opacity-75">Cost:</span>
+                                <span className="font-medium">{formatCurrencySimple(revenueData.today_cost || 0)}</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="opacity-75">Profit:</span>
+                                <span className={`font-semibold ${(revenueData.today_profit || 0) >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                                    {formatCurrencySimple(revenueData.today_profit || 0)}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="opacity-75">Margin:</span>
+                                <span className={`font-semibold ${(revenueData.today_profit_margin || 0) >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                                    {(revenueData.today_profit_margin || 0).toFixed(2)}%
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-2 mt-2 pt-2 border-t border-indigo-400/30">
                             <ShoppingBagIcon className="h-4 w-4 opacity-75" />
                             <p className="text-xs opacity-75">{revenueData.today_orders || 0} orders</p>
                         </div>
@@ -198,9 +221,27 @@ export default function RevenueIndex() {
                             <CurrencyDollarIcon className="h-5 w-5 opacity-75" />
                         </div>
                         <p className="text-3xl font-bold mb-1">
-                            {formatCurrency(revenueData.week_revenue || 0)}
+                            {formatCurrencySimple(revenueData.week_revenue || 0)}
                         </p>
-                        <div className="flex items-center justify-between">
+                        <div className="space-y-1 mt-2 pt-2 border-t border-blue-400/30">
+                            <div className="flex justify-between text-xs">
+                                <span className="opacity-75">Cost:</span>
+                                <span className="font-medium">{formatCurrencySimple(revenueData.week_cost || 0)}</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="opacity-75">Profit:</span>
+                                <span className={`font-semibold ${(revenueData.week_profit || 0) >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                                    {formatCurrencySimple(revenueData.week_profit || 0)}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="opacity-75">Margin:</span>
+                                <span className={`font-semibold ${(revenueData.week_profit_margin || 0) >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                                    {(revenueData.week_profit_margin || 0).toFixed(2)}%
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-blue-400/30">
                             <div className="flex items-center space-x-2">
                                 <ShoppingBagIcon className="h-4 w-4 opacity-75" />
                                 <p className="text-xs opacity-75">{revenueData.week_orders || 0} orders</p>
@@ -225,9 +266,27 @@ export default function RevenueIndex() {
                             <CurrencyDollarIcon className="h-5 w-5 opacity-75" />
                         </div>
                         <p className="text-3xl font-bold mb-1">
-                            {formatCurrency(revenueData.month_revenue || 0)}
+                            {formatCurrencySimple(revenueData.month_revenue || 0)}
                         </p>
-                        <div className="flex items-center justify-between">
+                        <div className="space-y-1 mt-2 pt-2 border-t border-green-400/30">
+                            <div className="flex justify-between text-xs">
+                                <span className="opacity-75">Cost:</span>
+                                <span className="font-medium">{formatCurrencySimple(revenueData.month_cost || 0)}</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="opacity-75">Profit:</span>
+                                <span className={`font-semibold ${(revenueData.month_profit || 0) >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                                    {formatCurrencySimple(revenueData.month_profit || 0)}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="opacity-75">Margin:</span>
+                                <span className={`font-semibold ${(revenueData.month_profit_margin || 0) >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                                    {(revenueData.month_profit_margin || 0).toFixed(2)}%
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-green-400/30">
                             <div className="flex items-center space-x-2">
                                 <ShoppingBagIcon className="h-4 w-4 opacity-75" />
                                 <p className="text-xs opacity-75">{revenueData.month_orders || 0} orders</p>
@@ -252,9 +311,27 @@ export default function RevenueIndex() {
                             <CurrencyDollarIcon className="h-5 w-5 opacity-75" />
                         </div>
                         <p className="text-3xl font-bold mb-1">
-                            {formatCurrency(revenueData.year_revenue || 0)}
+                            {formatCurrencySimple(revenueData.year_revenue || 0)}
                         </p>
-                        <div className="flex items-center justify-between">
+                        <div className="space-y-1 mt-2 pt-2 border-t border-purple-400/30">
+                            <div className="flex justify-between text-xs">
+                                <span className="opacity-75">Cost:</span>
+                                <span className="font-medium">{formatCurrencySimple(revenueData.year_cost || 0)}</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="opacity-75">Profit:</span>
+                                <span className={`font-semibold ${(revenueData.year_profit || 0) >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                                    {formatCurrencySimple(revenueData.year_profit || 0)}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="opacity-75">Margin:</span>
+                                <span className={`font-semibold ${(revenueData.year_profit_margin || 0) >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                                    {(revenueData.year_profit_margin || 0).toFixed(2)}%
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-purple-400/30">
                             <div className="flex items-center space-x-2">
                                 <ShoppingBagIcon className="h-4 w-4 opacity-75" />
                                 <p className="text-xs opacity-75">{revenueData.year_orders || 0} orders</p>
@@ -279,9 +356,27 @@ export default function RevenueIndex() {
                             <CurrencyDollarIcon className="h-5 w-5 opacity-75" />
                         </div>
                         <p className="text-3xl font-bold mb-1">
-                            {formatCurrency(revenueData.total_revenue || 0)}
+                            {formatCurrencySimple(revenueData.total_revenue || 0)}
                         </p>
-                        <div className="flex items-center space-x-2">
+                        <div className="space-y-1 mt-2 pt-2 border-t border-gray-500/30">
+                            <div className="flex justify-between text-xs">
+                                <span className="opacity-75">Cost:</span>
+                                <span className="font-medium">{formatCurrencySimple(revenueData.total_cost || 0)}</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="opacity-75">Profit:</span>
+                                <span className={`font-semibold ${(revenueData.total_profit || 0) >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                                    {formatCurrencySimple(revenueData.total_profit || 0)}
+                                </span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                                <span className="opacity-75">Margin:</span>
+                                <span className={`font-semibold ${(revenueData.total_profit_margin || 0) >= 0 ? 'text-green-200' : 'text-red-200'}`}>
+                                    {(revenueData.total_profit_margin || 0).toFixed(2)}%
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-2 mt-2 pt-2 border-t border-gray-500/30">
                             <ShoppingBagIcon className="h-4 w-4 opacity-75" />
                             <p className="text-xs opacity-75">{revenueData.total_orders || 0} orders</p>
                         </div>
@@ -310,7 +405,7 @@ export default function RevenueIndex() {
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="font-medium text-gray-700">{item.month}</span>
                                                 <span className="font-semibold text-gray-900">
-                                                    {formatCurrency(item.revenue || 0)}
+                                                    {formatCurrencySimple(item.revenue || 0)}
                                                 </span>
                                             </div>
                                             <div className="bg-gray-200 rounded-full h-4 overflow-hidden">
@@ -320,7 +415,7 @@ export default function RevenueIndex() {
                                                 >
                                                     {percentage > 15 && (
                                                         <span className="text-xs text-white font-medium">
-                                                            {formatCurrency(item.revenue || 0)}
+                                                            {formatCurrencySimple(item.revenue || 0)}
                                                         </span>
                                                     )}
                                                 </div>
@@ -364,7 +459,7 @@ export default function RevenueIndex() {
                                                 {/* Tooltip on hover */}
                                                 <div className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10 shadow-lg">
                                                     <div className="font-semibold">{item.day}</div>
-                                                    <div>{formatCurrency(item.revenue || 0)}</div>
+                                                    <div>{formatCurrencySimple(item.revenue || 0)}</div>
                                                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                                                 </div>
                                             </div>
@@ -386,35 +481,35 @@ export default function RevenueIndex() {
                             <p className="text-sm text-gray-500">Average Order Value</p>
                             <p className="text-2xl font-bold text-gray-900 mt-1">
                                 {revenueData.total_orders > 0
-                                    ? formatCurrency((revenueData.total_revenue || 0) / revenueData.total_orders)
-                                    : formatCurrency(0)}
+                                    ? formatCurrencySimple((revenueData.total_revenue || 0) / revenueData.total_orders)
+                                    : formatCurrencySimple(0)}
                             </p>
                         </div>
                         <div className="border-l-4 border-blue-500 pl-4">
                             <p className="text-sm text-gray-500">Average Daily Revenue (This Month)</p>
                             <p className="text-2xl font-bold text-gray-900 mt-1">
                                 {revenueData.month_orders > 0
-                                    ? formatCurrency((revenueData.month_revenue || 0) / new Date().getDate())
-                                    : formatCurrency(0)}
+                                    ? formatCurrencySimple((revenueData.month_revenue || 0) / new Date().getDate())
+                                    : formatCurrencySimple(0)}
                             </p>
                         </div>
                         <div className="border-l-4 border-green-500 pl-4">
                             <p className="text-sm text-gray-500">Average Weekly Revenue</p>
                             <p className="text-2xl font-bold text-gray-900 mt-1">
                                 {revenueData.week_orders > 0
-                                    ? formatCurrency((revenueData.week_revenue || 0) / 7)
-                                    : formatCurrency(0)}
+                                    ? formatCurrencySimple((revenueData.week_revenue || 0) / 7)
+                                    : formatCurrencySimple(0)}
                             </p>
                         </div>
                         <div className="border-l-4 border-purple-500 pl-4">
                             <p className="text-sm text-gray-500">Average Monthly Revenue</p>
                             <p className="text-2xl font-bold text-gray-900 mt-1">
                                 {revenueData.monthly_revenue && revenueData.monthly_revenue.length > 0
-                                    ? formatCurrency(
+                                    ? formatCurrencySimple(
                                           revenueData.monthly_revenue.reduce((sum: number, m: any) => sum + (m.revenue || 0), 0) /
                                               revenueData.monthly_revenue.length
                                       )
-                                    : formatCurrency(0)}
+                                    : formatCurrencySimple(0)}
                             </p>
                         </div>
                     </div>

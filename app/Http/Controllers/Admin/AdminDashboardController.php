@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -154,6 +155,70 @@ class AdminDashboardController extends Controller
 
         $revenueData['monthly_revenue'] = $monthlyRevenue;
         $revenueData['daily_revenue'] = $dailyRevenue;
+
+        // Calculate cost, profit, and profit margin
+        // Helper function to calculate cost for order IDs
+        $calculateCost = function($orderIds) {
+            if (empty($orderIds)) return 0;
+            
+            $totalCost = OrderItem::whereIn('order_id', $orderIds)
+                ->with('product:id,cost_price')
+                ->get()
+                ->sum(function($item) {
+                    $costPrice = $item->product->cost_price ?? 0;
+                    return $costPrice * $item->quantity;
+                });
+            
+            return $totalCost;
+        };
+
+        // Get order IDs for different periods
+        $allOrderIds = Order::where('status', 'completed')->pluck('id')->toArray();
+        $todayOrderIds = (clone $baseQuery)->whereDate('created_at', today())->pluck('id')->toArray();
+        $weekOrderIds = (clone $baseQuery)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->pluck('id')->toArray();
+        $monthOrderIds = (clone $baseQuery)->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)->pluck('id')->toArray();
+        $yearOrderIds = (clone $baseQuery)->whereYear('created_at', now()->year)->pluck('id')->toArray();
+
+        $revenueData['total_cost'] = $calculateCost($allOrderIds);
+        $revenueData['today_cost'] = $calculateCost($todayOrderIds);
+        $revenueData['week_cost'] = $calculateCost($weekOrderIds);
+        $revenueData['month_cost'] = $calculateCost($monthOrderIds);
+        $revenueData['year_cost'] = $calculateCost($yearOrderIds);
+
+        // Calculate profits
+        $revenueData['total_profit'] = $revenueData['total_revenue'] - $revenueData['total_cost'];
+        $revenueData['today_profit'] = $revenueData['today_revenue'] - $revenueData['today_cost'];
+        $revenueData['week_profit'] = $revenueData['week_revenue'] - $revenueData['week_cost'];
+        $revenueData['month_profit'] = $revenueData['month_revenue'] - $revenueData['month_cost'];
+        $revenueData['year_profit'] = $revenueData['year_revenue'] - $revenueData['year_cost'];
+
+        // Calculate profit margins (profit / revenue * 100)
+        $revenueData['total_profit_margin'] = $revenueData['total_revenue'] > 0 
+            ? round(($revenueData['total_profit'] / $revenueData['total_revenue']) * 100, 2) 
+            : 0;
+        $revenueData['today_profit_margin'] = $revenueData['today_revenue'] > 0 
+            ? round(($revenueData['today_profit'] / $revenueData['today_revenue']) * 100, 2) 
+            : 0;
+        $revenueData['week_profit_margin'] = $revenueData['week_revenue'] > 0 
+            ? round(($revenueData['week_profit'] / $revenueData['week_revenue']) * 100, 2) 
+            : 0;
+        $revenueData['month_profit_margin'] = $revenueData['month_revenue'] > 0 
+            ? round(($revenueData['month_profit'] / $revenueData['month_revenue']) * 100, 2) 
+            : 0;
+        $revenueData['year_profit_margin'] = $revenueData['year_revenue'] > 0 
+            ? round(($revenueData['year_profit'] / $revenueData['year_revenue']) * 100, 2) 
+            : 0;
+
+        // Calculate filtered cost and profit if date range is provided
+        if ($startDate && $endDate) {
+            $filteredOrderIds = $filteredQuery->pluck('id')->toArray();
+            $revenueData['filtered_cost'] = $calculateCost($filteredOrderIds);
+            $revenueData['filtered_profit'] = $revenueData['filtered_revenue'] - $revenueData['filtered_cost'];
+            $revenueData['filtered_profit_margin'] = $revenueData['filtered_revenue'] > 0 
+                ? round(($revenueData['filtered_profit'] / $revenueData['filtered_revenue']) * 100, 2) 
+                : 0;
+        }
 
         return $this->sendJsonResponse(true, 'Revenue data fetched successfully', $revenueData, 200);
     }
