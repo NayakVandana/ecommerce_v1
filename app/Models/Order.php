@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentMethod;
+use App\Enums\PaymentType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -32,6 +34,8 @@ class Order extends Model
         'delivery_area',
         'address_type',
         'total',
+        'payment_method',
+        'payment_type',
         'subtotal',
         'tax',
         'shipping',
@@ -81,10 +85,78 @@ class Order extends Model
         'cancelled_at' => 'datetime',
     ];
 
-    // Accessor for payment_method (always cash on delivery, not stored in DB)
-    public function getPaymentMethodAttribute()
+    /**
+     * Get the payment method attribute
+     */
+    public function getPaymentMethodAttribute($value)
     {
-        return 'cash_on_delivery';
+        if (is_null($value)) {
+            return PaymentMethod::default()->value;
+        }
+        
+        // Try to get enum from value, fallback to default if invalid
+        try {
+            $enum = PaymentMethod::tryFrom($value);
+            return $enum ? $enum->value : PaymentMethod::default()->value;
+        } catch (\Exception $e) {
+            return PaymentMethod::default()->value;
+        }
+    }
+
+    /**
+     * Set the payment method attribute
+     */
+    public function setPaymentMethodAttribute($value)
+    {
+        if (is_null($value)) {
+            $this->attributes['payment_method'] = PaymentMethod::default()->value;
+            return;
+        }
+        
+        // Try to get enum from value, fallback to default if invalid
+        try {
+            $enum = PaymentMethod::tryFrom($value);
+            $this->attributes['payment_method'] = $enum ? $enum->value : PaymentMethod::default()->value;
+        } catch (\Exception $e) {
+            $this->attributes['payment_method'] = PaymentMethod::default()->value;
+        }
+    }
+
+    /**
+     * Get the payment type attribute
+     */
+    public function getPaymentTypeAttribute($value)
+    {
+        if (is_null($value)) {
+            return PaymentType::default()->value;
+        }
+        
+        // Try to get enum from value, fallback to default if invalid
+        try {
+            $enum = PaymentType::tryFrom($value);
+            return $enum ? $enum->value : PaymentType::default()->value;
+        } catch (\Exception $e) {
+            return PaymentType::default()->value;
+        }
+    }
+
+    /**
+     * Set the payment type attribute
+     */
+    public function setPaymentTypeAttribute($value)
+    {
+        if (is_null($value)) {
+            $this->attributes['payment_type'] = PaymentType::default()->value;
+            return;
+        }
+        
+        // Try to get enum from value, fallback to default if invalid
+        try {
+            $enum = PaymentType::tryFrom($value);
+            $this->attributes['payment_type'] = $enum ? $enum->value : PaymentType::default()->value;
+        } catch (\Exception $e) {
+            $this->attributes['payment_type'] = PaymentType::default()->value;
+        }
     }
 
     public function user()
