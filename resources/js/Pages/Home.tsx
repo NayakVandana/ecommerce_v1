@@ -25,7 +25,6 @@ export default function Home() {
     const [pagination, setPagination] = useState<any>(null);
     const [featuredCategories, setFeaturedCategories] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
     const [addingToCart, setAddingToCart] = useState<{ [key: number]: boolean }>({});
     const [wishlistStatus, setWishlistStatus] = useState<{ [key: number]: boolean }>({});
     const [togglingWishlist, setTogglingWishlist] = useState<{ [key: number]: boolean }>({});
@@ -92,19 +91,11 @@ export default function Home() {
         }
     };
 
-    const handleQuantityChange = (productId: number, change: number) => {
-        setQuantities(prev => {
-            const current = prev[productId] || 1;
-            const newQuantity = Math.max(1, current + change);
-            return { ...prev, [productId]: newQuantity };
-        });
-    };
-
     const handleAddToCart = async (e: React.MouseEvent, product: any) => {
         e.preventDefault();
         e.stopPropagation();
         
-        const quantity = quantities[product.id] || 1;
+        const quantity = 1;
         
         // Check stock availability
         if (product.total_quantity !== null && product.total_quantity < quantity) {
@@ -214,7 +205,6 @@ export default function Home() {
         const mrp = product.mrp;
         const discount = product.discount_percent;
         
-        const quantity = quantities[product.id] || 1;
         const isAdding = addingToCart[product.id] || false;
         const isInWishlist = wishlistStatus[product.id] || false;
         const isToggling = togglingWishlist[product.id] || false;
@@ -254,92 +244,55 @@ export default function Home() {
                         </button>
                     </div>
                 </Link>
-                <div className="p-5 flex-1 flex flex-col bg-white">
-                    <Link href={`/products/${product.id}`} className="flex-1">
+                <div className="p-4 sm:p-5 flex-1 flex flex-col bg-white">
+                    <Link href={`/products/${product.id}`} className="flex-1 mb-3">
                         {product.brand && (
-                            <p className="text-xs font-medium text-indigo-600 uppercase tracking-wide mb-1">{product.brand}</p>
+                            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1.5">{product.brand}</p>
                         )}
-                        <h3 className="font-bold text-lg mb-2 line-clamp-2 hover:text-indigo-600 transition-colors text-gray-900 leading-tight">
+                        <h3 className="font-bold text-base sm:text-lg mb-2 line-clamp-2 hover:text-indigo-600 transition-colors text-gray-900 leading-snug">
                             {product.product_name}
                         </h3>
-                        <p className="text-gray-500 text-sm mb-3 line-clamp-2 leading-relaxed">{product.description}</p>
+                        {product.description && (
+                            <p className="text-gray-500 text-xs sm:text-sm mb-3 line-clamp-2 leading-relaxed">{product.description}</p>
+                        )}
                     </Link>
-                    <div className="flex items-baseline gap-2 mb-4">
-                        <p className="text-2xl font-bold text-gray-900">₹{displayPrice}</p>
+                    <div className="flex items-center flex-wrap gap-2 mb-4">
+                        <p className="text-xl sm:text-2xl font-bold text-gray-900">₹{Number(displayPrice).toFixed(2)}</p>
                         {mrp && mrp > displayPrice && (
                             <>
-                                <p className="text-gray-400 line-through text-sm">₹{mrp}</p>
-                                <span className="text-xs font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded">
-                                    Save ₹{mrp - displayPrice}
+                                <p className="text-gray-400 line-through text-sm">₹{Number(mrp).toFixed(2)}</p>
+                                <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded-md">
+                                    Save ₹{Number(mrp - displayPrice).toFixed(2)}
                                 </span>
                             </>
                         )}
                     </div>
                     
-                    {/* Quantity Selector */}
-                    <div className="flex items-center gap-2 mb-4">
-                        <label className="text-sm font-medium text-gray-700">Qty:</label>
-                        <div className="flex items-center border-2 border-gray-200 rounded-lg overflow-hidden focus-within:border-indigo-500 transition-colors">
-                            <button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleQuantityChange(product.id, -1);
-                                }}
-                                className="px-3 py-1.5 hover:bg-gray-100 active:bg-gray-200 transition-colors font-semibold text-gray-700"
-                            >
-                                −
-                            </button>
-                            <input
-                                type="number"
-                                min="1"
-                                value={quantity}
-                                onChange={(e) => {
-                                    const val = parseInt(e.target.value) || 1;
-                                    setQuantities(prev => ({ ...prev, [product.id]: Math.max(1, val) }));
-                                }}
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                }}
-                                className="w-16 px-2 py-1.5 text-center border-x-2 border-gray-200 focus:outline-none focus:ring-0 font-semibold text-gray-900"
-                            />
-                            <button
-                                onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleQuantityChange(product.id, 1);
-                                }}
-                                className="px-3 py-1.5 hover:bg-gray-100 active:bg-gray-200 transition-colors font-semibold text-gray-700"
-                            >
-                                +
-                            </button>
-                        </div>
-                    </div>
-                    
                     {/* Add to Cart Button */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 mt-auto">
                         <button
                             onClick={(e) => handleAddToCart(e, product)}
                             disabled={isAdding || (product.total_quantity !== null && product.total_quantity === 0)}
-                            className="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-4 py-3 rounded-lg font-bold hover:from-indigo-700 hover:to-indigo-800 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 shadow-md hover:shadow-lg"
+                            className="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-4 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base hover:from-indigo-700 hover:to-indigo-800 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 shadow-sm hover:shadow-md"
                         >
                             {isAdding ? (
                                 <span className="flex items-center justify-center gap-2">
                                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                                    Adding...
+                                    <span className="hidden sm:inline">Adding...</span>
+                                    <span className="sm:hidden">...</span>
                                 </span>
                             ) : (
-                                'ADD TO CART'
+                                <span className="hidden sm:inline">ADD TO CART</span>
                             )}
+                            {!isAdding && <span className="sm:hidden">ADD</span>}
                         </button>
                         <button
                             onClick={(e) => handleToggleWishlist(e, product.id)}
                             disabled={isToggling}
-                            className={`px-4 py-3 rounded-lg font-semibold transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 ${
+                            className={`px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 flex items-center justify-center ${
                                 isInWishlist
-                                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-md hover:shadow-lg'
-                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-2 border-gray-200'
+                                    ? 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-sm hover:shadow-md'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
                             }`}
                             title={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
                         >
