@@ -17,8 +17,23 @@ class TrackSession
      */
     public function handle(Request $request, Closure $next): Response
     {
+        // Skip session tracking for admin users
+        $user = $request->user();
+        if ($user && $user->role === 'admin') {
+            // Admin users don't need session tracking
+            $request->merge(['session_id' => null]);
+            return $next($request);
+        }
+        
+        // Skip session tracking for admin routes (additional safety check)
+        // Admin routes are prefixed with /api/admin
+        if ($request->is('api/admin*') || str_starts_with($request->path(), 'api/admin')) {
+            $request->merge(['session_id' => null]);
+            return $next($request);
+        }
+        
         // Get or create session (works for both authenticated users and guests)
-        $userId = $request->user()?->id;
+        $userId = $user?->id;
         $session = SessionTrackingService::getOrCreateSession($request, $userId);
         
         // For authenticated users, do NOT merge session_id into request
