@@ -39,6 +39,7 @@ Route::post('/reset-password', [AuthApiController::class, 'resetPassword']);
 Route::post('/products', [ProductApiController::class, 'index']);
 Route::post('/products/show', [ProductApiController::class, 'show']);
 Route::post('/products/search', [ProductApiController::class, 'search']);
+Route::post('/products/search-suggestions', [ProductApiController::class, 'searchSuggestions']);
 Route::post('/products/filter-options', [ProductApiController::class, 'getFilterOptions']);
 
 // Public Category Routes

@@ -192,15 +192,85 @@ class ProductApiController extends Controller
                 $q->where('is_primary', true)->orWhere('type', 'image')->orderBy('sort_order');
             }])
             ->where(function($q) use ($request) {
-                $q->where('product_name', 'like', '%' . $request->query . '%')
-                  ->orWhere('description', 'like', '%' . $request->query . '%')
-                  ->orWhere('brand', 'like', '%' . $request->query . '%')
-                  ->orWhere('hashtags', 'like', '%' . $request->query . '%');
+                $query = $request->input('query');
+                $q->where('product_name', 'like', '%' . $query . '%')
+                  ->orWhere('description', 'like', '%' . $query . '%')
+                  ->orWhere('brand', 'like', '%' . $query . '%')
+                  ->orWhere('hashtags', 'like', '%' . $query . '%');
             })
             ->orderBy('created_at', 'desc')
             ->paginate(12);
 
         return $this->sendJsonResponse(true, 'Products searched successfully', $products, 200);
+    }
+
+    public function searchSuggestions(Request $request)
+    {
+        $request->validate([
+            'query' => 'required|string|min:2',
+        ]);
+
+        $query = $request->input('query');
+        $limit = $request->input('limit', 10);
+
+        // Get product name suggestions
+        $productSuggestions = Product::where('is_approve', 1)
+            ->where('product_name', 'like', '%' . $query . '%')
+            ->select('product_name', 'id')
+            ->distinct()
+            ->limit($limit)
+            ->get()
+            ->map(function($product) {
+                return [
+                    'type' => 'product',
+                    'text' => $product->product_name,
+                    'id' => $product->id,
+                ];
+            });
+
+        // Get brand suggestions
+        $brandSuggestions = Product::where('is_approve', 1)
+            ->where('brand', 'like', '%' . $query . '%')
+            ->whereNotNull('brand')
+            ->select('brand')
+            ->distinct()
+            ->limit(5)
+            ->get()
+            ->map(function($product) {
+                return [
+                    'type' => 'brand',
+                    'text' => $product->brand,
+                ];
+            });
+
+        // Get category suggestions
+        $categorySuggestions = Category::where('name', 'like', '%' . $query . '%')
+            ->select('name', 'id', 'slug')
+            ->limit(5)
+            ->get()
+            ->map(function($category) {
+                return [
+                    'type' => 'category',
+                    'text' => $category->name,
+                    'id' => $category->id,
+                    'slug' => $category->slug,
+                ];
+            });
+
+        // Combine all suggestions
+        $suggestions = [
+            ...$productSuggestions->toArray(),
+            ...$brandSuggestions->toArray(),
+            ...$categorySuggestions->toArray(),
+        ];
+
+        // Limit total suggestions
+        $suggestions = array_slice($suggestions, 0, $limit);
+
+        return $this->sendJsonResponse(true, 'Search suggestions fetched successfully', [
+            'suggestions' => $suggestions,
+            'query' => $query,
+        ], 200);
     }
 
     /**

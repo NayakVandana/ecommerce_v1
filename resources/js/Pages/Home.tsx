@@ -1,14 +1,14 @@
 import AppLayout from './Layouts/AppLayout';
 import Container from '../Components/Container';
 import Card from '../Components/Card';
-import { Link, usePage } from '@inertiajs/react';
-import { useEffect, useState } from 'react';
+import { Link, usePage, router } from '@inertiajs/react';
+import { useEffect, useState, useRef } from 'react';
 import { useProductStore } from './Products/useProductStore';
 import { useCategoryStore } from './Categories/useCategoryStore';
 import { useCartStore } from './Cart/useCartStore';
 import { useWishlistStore } from './Wishlist/useWishlistStore';
 import toast from '../utils/toast';
-import { HeartIcon } from '@heroicons/react/24/outline';
+import { HeartIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import RecentlyViewedProducts from '../Components/RecentlyViewedProducts';
 import Pagination from '../Components/Pagination';
@@ -32,10 +32,78 @@ export default function Home() {
     const [selectedCategoryForModal, setSelectedCategoryForModal] = useState<any>(null);
     const [allCategoriesForModal, setAllCategoriesForModal] = useState<any[]>([]);
     const [specificCategories, setSpecificCategories] = useState<any[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [isSearching, setIsSearching] = useState(false);
+    const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+    const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const searchInputRef = useRef<HTMLInputElement>(null);
+    const suggestionsRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         fetchData();
     }, [currentPage]);
+
+    // Fetch search suggestions as user types
+    useEffect(() => {
+        if (searchTerm.trim().length >= 2) {
+            // Clear previous timeout
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+            }
+            
+            // Set new timeout for debounced search
+            searchTimeoutRef.current = setTimeout(async () => {
+                try {
+                    setLoadingSuggestions(true);
+                    const response = await useProductStore.searchSuggestions({ 
+                        query: searchTerm.trim(),
+                        limit: 10 
+                    });
+                    
+                    if (response.data?.status && response.data?.data?.suggestions) {
+                        setSearchSuggestions(response.data.data.suggestions);
+                        setShowSuggestions(true);
+                    }
+                } catch (error) {
+                    console.error('Error fetching search suggestions:', error);
+                    setSearchSuggestions([]);
+                } finally {
+                    setLoadingSuggestions(false);
+                }
+            }, 300); // 300ms debounce
+        } else {
+            setSearchSuggestions([]);
+            setShowSuggestions(false);
+        }
+
+        // Cleanup timeout on unmount or when searchTerm changes
+        return () => {
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
+            }
+        };
+    }, [searchTerm]);
+
+    // Close suggestions when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                suggestionsRef.current &&
+                !suggestionsRef.current.contains(event.target as Node) &&
+                searchInputRef.current &&
+                !searchInputRef.current.contains(event.target as Node)
+            ) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
 
     useEffect(() => {
         // Check wishlist status for all products
@@ -150,11 +218,89 @@ export default function Home() {
         setSpecificCategories(found);
     };
 
+    const handleSearch = async (e?: React.FormEvent, searchQuery?: string) => {
+        if (e) {
+            e.preventDefault();
+        }
+        
+        const query = searchQuery || searchTerm.trim();
+        
+        if (!query) {
+            // If search is empty, fetch normal products
+            fetchData();
+            setShowSuggestions(false);
+            return;
+        }
+        
+        try {
+            setIsSearching(true);
+            setLoading(true);
+            setShowSuggestions(false);
+            setSearchTerm(query);
+            
+            const response = await useProductStore.search({ query: query });
+            
+            if (response.data?.status && response.data?.data) {
+                setProducts(response.data.data.data || []);
+                setPagination(response.data.data);
+            }
+        } catch (error) {
+            console.error('Error searching products:', error);
+            toast({ type: 'error', message: 'Failed to search products' });
+        } finally {
+            setLoading(false);
+            setIsSearching(false);
+        }
+    };
+
+    const handleSuggestionClick = (suggestion: any) => {
+        setSearchTerm(suggestion.text);
+        setShowSuggestions(false);
+        
+        // Navigate based on suggestion type
+        if (suggestion.type === 'category') {
+            // Navigate to category page
+            if (suggestion.slug) {
+                router.visit(`/categories/${suggestion.slug}`);
+            } else if (suggestion.id) {
+                router.visit(`/categories/${suggestion.id}`);
+            } else {
+                // Fallback to search if no slug or id
+                handleSearch(undefined, suggestion.text);
+            }
+        } else if (suggestion.type === 'product') {
+            // Navigate to product page
+            if (suggestion.id) {
+                router.visit(`/products/${suggestion.id}`);
+            } else {
+                // Fallback to search if no id
+                handleSearch(undefined, suggestion.text);
+            }
+        } else {
+            // For brand or other types, perform search
+            handleSearch(undefined, suggestion.text);
+        }
+    };
+
+    const handleClearSearch = () => {
+        setSearchTerm('');
+        setSearchSuggestions([]);
+        setShowSuggestions(false);
+        fetchData();
+    };
+
     const fetchData = async () => {
         try {
             setLoading(true);
+            const searchParams: any = { page: currentPage, per_page: 8 };
+            
+            // Add search term if it exists
+            if (searchTerm.trim()) {
+                searchParams.search = searchTerm.trim();
+            }
+            
             const [productsRes, categoriesRes, allCategoriesRes] = await Promise.all([
-                useProductStore.list({ page: currentPage, per_page: 8 }),
+                useProductStore.list(searchParams),
                 useCategoryStore.home(), // Use home API for minimal data (parent categories only)
                 useCategoryStore.list(), // Fetch all categories with hierarchy for modal
             ]);
@@ -322,8 +468,110 @@ export default function Home() {
                         </div>
                     ) : (
                         <>
-                            {/* Featured Collections */}
-                            {specificCategories.length > 0 && (
+                            {/* Search Bar */}
+                            <div className="mb-8 relative max-w-2xl mx-auto">
+                                <form onSubmit={handleSearch} className="relative">
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                                        </div>
+                                        <input
+                                            ref={searchInputRef}
+                                            type="text"
+                                            value={searchTerm}
+                                            onChange={(e) => {
+                                                setSearchTerm(e.target.value);
+                                                if (e.target.value.trim().length >= 2) {
+                                                    setShowSuggestions(true);
+                                                }
+                                            }}
+                                            onFocus={() => {
+                                                if (searchSuggestions.length > 0) {
+                                                    setShowSuggestions(true);
+                                                }
+                                            }}
+                                            placeholder="Search for products, brands, or keywords..."
+                                            className="block w-full pl-12 pr-12 py-4 border-2 border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                                        />
+                                        {searchTerm && (
+                                            <button
+                                                type="button"
+                                                onClick={handleClearSearch}
+                                                className="absolute inset-y-0 right-12 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                            >
+                                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        )}
+                                        <button
+                                            type="submit"
+                                            disabled={isSearching}
+                                            className="absolute inset-y-0 right-0 px-6 py-2 bg-indigo-600 text-white rounded-r-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                                        >
+                                            {isSearching ? 'Searching...' : 'Search'}
+                                        </button>
+                                    </div>
+                                </form>
+
+                                {/* Search Suggestions Dropdown */}
+                                {showSuggestions && (searchSuggestions.length > 0 || loadingSuggestions) && (
+                                    <div
+                                        ref={suggestionsRef}
+                                        className="absolute z-50 w-full mt-2 bg-white border-2 border-gray-200 rounded-lg shadow-xl max-h-96 overflow-y-auto"
+                                    >
+                                        {loadingSuggestions ? (
+                                            <div className="p-4 text-center text-gray-500">
+                                                <div className="inline-block animate-spin rounded-full h-5 w-5 border-2 border-indigo-600 border-t-transparent"></div>
+                                                <span className="ml-2">Searching...</span>
+                                            </div>
+                                        ) : (
+                                            <div className="py-2">
+                                                <div className="px-4 py-2 bg-gray-50 border-b border-gray-200">
+                                                    <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Suggestions</p>
+                                                </div>
+                                                {searchSuggestions.map((suggestion, index) => (
+                                                    <button
+                                                        key={index}
+                                                        type="button"
+                                                        onClick={() => handleSuggestionClick(suggestion)}
+                                                        className="w-full text-left px-4 py-3 hover:bg-indigo-50 transition-colors border-b border-gray-100 last:border-b-0"
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <MagnifyingGlassIcon className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                                                            <span className="text-sm text-gray-900 flex-1">{suggestion.text}</span>
+                                                            {suggestion.type === 'product' && (
+                                                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Product</span>
+                                                            )}
+                                                            {suggestion.type === 'brand' && (
+                                                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Brand</span>
+                                                            )}
+                                                            {suggestion.type === 'category' && (
+                                                                <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">Category</span>
+                                                            )}
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Search Results Header */}
+                            {searchTerm && (
+                                <div className="mb-6">
+                                    <h2 className="text-xl font-semibold text-gray-900">
+                                        {products.length > 0 
+                                            ? `Search Results for "${searchTerm}" (${pagination?.total || products.length} found)`
+                                            : `No products found for "${searchTerm}"`
+                                        }
+                                    </h2>
+                                </div>
+                            )}
+
+                            {/* Featured Collections - Only show when not searching */}
+                            {!searchTerm && specificCategories.length > 0 && (
                                 <div className="mb-10">
                                     <h2 className="text-2xl font-bold text-gray-900 mb-4">Featured Collections</h2>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -354,10 +602,12 @@ export default function Home() {
                                 </div>
                             )}
 
-                            {/* Featured Products */}
+                            {/* Featured Products / Search Results */}
                             {products.length > 0 && (
                                 <div className="mb-10">
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Products</h2>
+                                    {!searchTerm && (
+                                        <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Products</h2>
+                                    )}
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                                         {products.map((product: any) => renderProductCard(product))}
                                     </div>
