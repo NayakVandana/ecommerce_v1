@@ -164,6 +164,9 @@ export default function ProductIndex() {
                                             Product
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Cost Price
+                                        </th>
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             MRP
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -249,6 +252,9 @@ export default function ProductIndex() {
                                                         </div>
                                                     </div>
                                                 </td>
+                                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700">
+                                                    ₹{parseFloat(product.cost_price || 0).toFixed(2)}
+                                                </td>
                                                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
                                                     ₹{parseFloat(product.mrp || product.price || 0).toFixed(2)}
                                                 </td>
@@ -323,7 +329,7 @@ export default function ProductIndex() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan={13} className="px-6 py-4 text-center text-sm text-gray-500">
+                                            <td colSpan={14} className="px-6 py-4 text-center text-sm text-gray-500">
                                                 No products found
                                             </td>
                                         </tr>

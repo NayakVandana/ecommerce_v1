@@ -28,6 +28,7 @@ class Product extends Model
         'hsn_code',
         'features',
         'price',
+        'cost_price',
         'gst',
         'total_with_gst',
         'commission',
@@ -45,6 +46,7 @@ class Product extends Model
 
     protected $casts = [
         'price' => 'decimal:2',
+        'cost_price' => 'decimal:2',
         'total_with_gst' => 'decimal:2',
         'commission' => 'decimal:2',
         'commission_gst_amount' => 'decimal:2',

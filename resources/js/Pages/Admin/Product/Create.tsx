@@ -27,6 +27,8 @@ export default function ProductCreate() {
         product_name: '',
         description: '',
         price: '',
+        cost_price: '',
+        mrp: '',
         discount_percent: '',
         category: '',
         total_quantity: '',
@@ -86,6 +88,8 @@ export default function ProductCreate() {
                 product_name: product.product_name || '',
                 description: product.description || '',
                 price: product.price || '',
+                cost_price: product.cost_price || '',
+                mrp: product.mrp || '',
                 discount_percent: product.discount_percent || '',
                 category: product.category || '',
                 total_quantity: product.total_quantity || '',
@@ -470,26 +474,55 @@ export default function ProductCreate() {
 
     // Check if current category is Fashion (including parent categories)
     const isFashionCategory = () => {
-        const selectedCategory = categories.find((cat: any) => cat.id === parseInt(formData.category));
-        if (!selectedCategory) return false;
-        
-        // Check if category name is Fashion (case-insensitive)
-        if (selectedCategory.name.toLowerCase() === 'fashion') {
-            return true;
-        }
-        
-        // Also check if parent category is Fashion (for subcategories)
-        if (selectedCategory.parent_id) {
-            const parent = categories.find((c: any) => c.id === selectedCategory.parent_id);
-            if (parent && parent.name.toLowerCase() === 'fashion') {
+        // First check if main category is Fashion
+        if (selectedMainCategory) {
+            const mainCat = categories.find((c: any) => c.id === parseInt(selectedMainCategory));
+            if (mainCat && mainCat.name.toLowerCase() === 'fashion') {
                 return true;
             }
-            
-            // Check grandparent if exists
-            if (parent && parent.parent_id) {
-                const grandParent = categories.find((c: any) => c.id === parent.parent_id);
-                if (grandParent && grandParent.name.toLowerCase() === 'fashion') {
+        }
+        
+        // Then check if final selected category is Fashion or has Fashion as parent
+        if (formData.category) {
+            const selectedCategory = categories.find((cat: any) => cat.id === parseInt(formData.category));
+            if (selectedCategory) {
+                // Check if category name is Fashion (case-insensitive)
+                if (selectedCategory.name.toLowerCase() === 'fashion') {
                     return true;
+                }
+                
+                // Also check if parent category is Fashion (for subcategories)
+                if (selectedCategory.parent_id) {
+                    const parent = categories.find((c: any) => c.id === selectedCategory.parent_id);
+                    if (parent && parent.name.toLowerCase() === 'fashion') {
+                        return true;
+                    }
+                    
+                    // Check grandparent if exists
+                    if (parent && parent.parent_id) {
+                        const grandParent = categories.find((c: any) => c.id === parent.parent_id);
+                        if (grandParent && grandParent.name.toLowerCase() === 'fashion') {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Also check selected subcategory
+        if (selectedSubCategory) {
+            const subCat = categories.find((c: any) => c.id === parseInt(selectedSubCategory));
+            if (subCat) {
+                // Check if subcategory name is Fashion
+                if (subCat.name.toLowerCase() === 'fashion') {
+                    return true;
+                }
+                // Check if parent is Fashion
+                if (subCat.parent_id) {
+                    const parent = categories.find((c: any) => c.id === subCat.parent_id);
+                    if (parent && parent.name.toLowerCase() === 'fashion') {
+                        return true;
+                    }
                 }
             }
         }
@@ -1014,10 +1047,20 @@ export default function ProductCreate() {
                     subcategoryFields[`subcategory_${i + 1}`] = categoryPath[i + 1] || null; // Skip index 0 (main category)
                 }
 
+                // Calculate price from MRP and discount
+                const mrp = parseFloat(formData.mrp || 0);
+                const discountPercent = formData.discount_percent ? parseFloat(formData.discount_percent) : 0;
+                let calculatedPrice = mrp;
+                if (discountPercent > 0 && discountPercent < 100) {
+                    calculatedPrice = mrp * (1 - discountPercent / 100);
+                }
+
                 const submitData: any = {
                 ...formData,
-                price: parseFloat(formData.price),
-                discount_percent: formData.discount_percent ? parseFloat(formData.discount_percent) : 0,
+                mrp: mrp,
+                cost_price: parseFloat(formData.cost_price || 0),
+                price: calculatedPrice, // Price is calculated from MRP - discount
+                discount_percent: discountPercent,
                 category: parseInt(formData.category),
                 ...subcategoryFields, // Add subcategory_1 through subcategory_6
                 total_quantity: parseInt(formData.total_quantity),
@@ -1471,53 +1514,155 @@ export default function ProductCreate() {
                                     )}
                                 </div>
 
-                                {/* Price */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Price <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="price"
-                                        value={formData.price}
-                                        onChange={handleInputChange}
-                                        required
-                                        min="0"
-                                        step="0.01"
-                                        className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                                            errors.price ? 'border-red-300' : 'border-gray-300'
-                                        }`}
-                                        placeholder="0.00"
-                                    />
-                                    {errors.price && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.price}</p>
-                                    )}
-                                </div>
+                                {/* Pricing Section */}
+                                <div className="space-y-6">
+                                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border-2 border-indigo-200">
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                            <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Pricing & Profit
+                                        </h3>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {/* Cost Price (Purchase Price) */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Cost Price (Purchase Price) <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    name="cost_price"
+                                                    value={formData.cost_price}
+                                                    onChange={handleInputChange}
+                                                    required
+                                                    min="0"
+                                                    step="0.01"
+                                                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                                        errors.cost_price ? 'border-red-300' : 'border-gray-300'
+                                                    }`}
+                                                    placeholder="0.00"
+                                                />
+                                                <p className="mt-1 text-xs text-gray-500">What you paid to purchase this product</p>
+                                                {errors.cost_price && (
+                                                    <p className="mt-1 text-sm text-red-600">{errors.cost_price}</p>
+                                                )}
+                                            </div>
 
-                                {/* Discount Percent */}
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Discount Percent (%)
-                                    </label>
-                                    <input
-                                        type="number"
-                                        name="discount_percent"
-                                        value={formData.discount_percent}
-                                        onChange={handleInputChange}
-                                        min="0"
-                                        max="100"
-                                        step="0.01"
-                                        className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                                            errors.discount_percent ? 'border-red-300' : 'border-gray-300'
-                                        }`}
-                                        placeholder="0.00"
-                                    />
-                                    {errors.discount_percent && (
-                                        <p className="mt-1 text-sm text-red-600">{errors.discount_percent}</p>
-                                    )}
-                                    <p className="mt-1 text-xs text-gray-500">
-                                        Enter discount percentage (0-100)
-                                    </p>
+                                            {/* MRP (Selling Price) */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    MRP (Selling Price) <span className="text-red-500">*</span>
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    name="mrp"
+                                                    value={formData.mrp || ''}
+                                                    onChange={handleInputChange}
+                                                    required
+                                                    min="0"
+                                                    step="0.01"
+                                                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                                        errors.mrp ? 'border-red-300' : 'border-gray-300'
+                                                    }`}
+                                                    placeholder="0.00"
+                                                />
+                                                <p className="mt-1 text-xs text-gray-500">Maximum Retail Price (what you sell it for)</p>
+                                                {errors.mrp && (
+                                                    <p className="mt-1 text-sm text-red-600">{errors.mrp}</p>
+                                                )}
+                                            </div>
+
+                                            {/* Discount Percent */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Discount Percent (%)
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    name="discount_percent"
+                                                    value={formData.discount_percent}
+                                                    onChange={handleInputChange}
+                                                    min="0"
+                                                    max="100"
+                                                    step="0.01"
+                                                    className={`w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                                                        errors.discount_percent ? 'border-red-300' : 'border-gray-300'
+                                                    }`}
+                                                    placeholder="0.00"
+                                                />
+                                                <p className="mt-1 text-xs text-gray-500">Optional discount applied to MRP</p>
+                                                {errors.discount_percent && (
+                                                    <p className="mt-1 text-sm text-red-600">{errors.discount_percent}</p>
+                                                )}
+                                            </div>
+
+                                            {/* Final Price (Calculated) */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    Final Selling Price
+                                                </label>
+                                                <div className="w-full px-4 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 font-semibold">
+                                                    ₹{(() => {
+                                                        const mrp = parseFloat(formData.mrp || 0);
+                                                        const discount = parseFloat(formData.discount_percent || 0);
+                                                        if (discount > 0 && discount < 100) {
+                                                            return ((mrp * (1 - discount / 100))).toFixed(2);
+                                                        }
+                                                        return mrp.toFixed(2);
+                                                    })()}
+                                                </div>
+                                                <p className="mt-1 text-xs text-gray-500">MRP - Discount (calculated automatically)</p>
+                                            </div>
+                                        </div>
+
+                                        {/* Profit & Revenue Summary */}
+                                        {(() => {
+                                            const costPrice = parseFloat(formData.cost_price || 0);
+                                            const mrp = parseFloat(formData.mrp || 0);
+                                            const discount = parseFloat(formData.discount_percent || 0);
+                                            const finalPrice = discount > 0 && discount < 100 ? (mrp * (1 - discount / 100)) : mrp;
+                                            const profit = finalPrice - costPrice;
+                                            // Profit Margin = (Profit / Final Selling Price) × 100
+                                            const profitMargin = finalPrice > 0 ? ((profit / finalPrice) * 100) : 0;
+                                            // Markup = (Profit / Cost Price) × 100
+                                            const markup = costPrice > 0 ? ((profit / costPrice) * 100) : 0;
+                                            
+                                            return (
+                                                <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                                                    <div className="bg-white rounded-lg p-3 border border-gray-200">
+                                                        <p className="text-xs text-gray-500 mb-1">Cost Price</p>
+                                                        <p className="text-lg font-bold text-gray-700">₹{costPrice.toFixed(2)}</p>
+                                                    </div>
+                                                    <div className="bg-white rounded-lg p-3 border border-gray-200">
+                                                        <p className="text-xs text-gray-500 mb-1">Final Selling Price</p>
+                                                        <p className="text-lg font-bold text-indigo-600">₹{finalPrice.toFixed(2)}</p>
+                                                    </div>
+                                                    <div className={`bg-white rounded-lg p-3 border-2 ${
+                                                        profit >= 0 ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'
+                                                    }`}>
+                                                        <p className="text-xs text-gray-600 mb-1">Profit per Unit</p>
+                                                        <p className={`text-lg font-bold ${
+                                                            profit >= 0 ? 'text-green-600' : 'text-red-600'
+                                                        }`}>
+                                                            ₹{profit.toFixed(2)}
+                                                        </p>
+                                                    </div>
+                                                    <div className={`bg-white rounded-lg p-3 border-2 ${
+                                                        profitMargin >= 0 ? 'border-green-300 bg-green-50' : 'border-red-300 bg-red-50'
+                                                    }`}>
+                                                        <p className="text-xs text-gray-600 mb-1">Profit Margin</p>
+                                                        <p className={`text-lg font-bold ${
+                                                            profitMargin >= 0 ? 'text-green-600' : 'text-red-600'
+                                                        }`}>
+                                                            {profitMargin.toFixed(2)}%
+                                                        </p>
+                                                        <p className="text-xs text-gray-500 mt-1">of selling price</p>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
                                 </div>
                             </div>
 

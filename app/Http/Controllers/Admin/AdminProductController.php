@@ -51,7 +51,9 @@ class AdminProductController extends Controller
         $request->validate([
             'product_name' => 'required|string|max:255',
             'description' => 'required|string',
-            'price' => 'required|numeric|min:0',
+            'cost_price' => 'required|numeric|min:0',
+            'mrp' => 'required|numeric|min:0',
+            'price' => 'sometimes|numeric|min:0',
             'discount_percent' => 'sometimes|numeric|min:0|max:100',
             'category' => 'required|exists:categories,id',
             'subcategory_1' => 'sometimes|nullable|exists:categories,id',
@@ -71,20 +73,23 @@ class AdminProductController extends Controller
         $productData['uuid'] = Str::uuid()->toString();
         $productData['user_id'] = auth()->id();
         
-        // Calculate pricing fields according to ProductSeeder logic
-        $price = floatval($productData['price'] ?? 0);
+        // Pricing logic: Cost Price → MRP (selling price) → Price (after discount)
+        $costPrice = floatval($productData['cost_price'] ?? 0);
+        $mrp = floatval($productData['mrp'] ?? 0); // MRP is the selling price
         $discountPercent = floatval($productData['discount_percent'] ?? 0);
         // $gst = intval($productData['gst'] ?? 18); // Default 18% GST like seeder
         $gst = intval($productData['gst'] ?? 0); // Default 18% GST like seeder
         
-        // Calculate MRP: If discount_percent is provided, calculate MRP from price
-        // MRP = price / (1 - discount_percent/100)
+        // Calculate price from MRP and discount
+        // Price = MRP * (1 - discount_percent/100)
         if ($discountPercent > 0 && $discountPercent < 100) {
-            $productData['mrp'] = round($price / (1 - ($discountPercent / 100)), 2);
+            $price = round($mrp * (1 - ($discountPercent / 100)), 2);
         } else {
-            // If no discount, MRP = price (or use provided MRP)
-            $productData['mrp'] = floatval($productData['mrp'] ?? $price);
+            // If no discount, price = MRP
+            $price = $mrp;
         }
+        $productData['price'] = $price;
+        $productData['mrp'] = $mrp; // Ensure MRP is set
         
         // Calculate GST amount and total with GST
         $gstAmount = ($price * $gst) / 100;
@@ -107,8 +112,8 @@ class AdminProductController extends Controller
         // Ensure discount_percent is set
         if (!isset($productData['discount_percent']) || $productData['discount_percent'] == 0) {
             // Calculate discount_percent from MRP and price if MRP > price
-            if ($productData['mrp'] > $price) {
-                $productData['discount_percent'] = round((($productData['mrp'] - $price) / $productData['mrp']) * 100, 2);
+            if ($mrp > $price) {
+                $productData['discount_percent'] = round((($mrp - $price) / $mrp) * 100, 2);
             } else {
                 $productData['discount_percent'] = 0;
             }
@@ -166,6 +171,8 @@ class AdminProductController extends Controller
             'id' => 'required|exists:products,id',
             'product_name' => 'sometimes|string|max:255',
             'description' => 'sometimes|string',
+            'cost_price' => 'sometimes|required|numeric|min:0',
+            'mrp' => 'sometimes|required|numeric|min:0',
             'price' => 'sometimes|numeric|min:0',
             'discount_percent' => 'sometimes|numeric|min:0|max:100',
             'category' => 'sometimes|exists:categories,id',
@@ -189,18 +196,21 @@ class AdminProductController extends Controller
             // Only update product fields, exclude media, variations, and fabrics from update
             $updateData = $request->except(['id', 'variations', 'media', 'fabrics']);
             
-            // Recalculate pricing fields if price or discount_percent changed (like ProductSeeder)
-            if (isset($updateData['price']) || isset($updateData['discount_percent'])) {
-                $price = floatval($updateData['price'] ?? $product->price);
+            // Recalculate pricing fields if MRP, cost_price, or discount_percent changed
+            if (isset($updateData['mrp']) || isset($updateData['cost_price']) || isset($updateData['discount_percent'])) {
+                $mrp = floatval($updateData['mrp'] ?? $product->mrp ?? 0);
                 $discountPercent = floatval($updateData['discount_percent'] ?? $product->discount_percent ?? 0);
-                $gst = intval($updateData['gst'] ?? $product->gst ?? 18);
+                $gst = intval($updateData['gst'] ?? $product->gst ?? 0);
                 
-                // Calculate MRP: If discount_percent is provided, calculate MRP from price
+                // Calculate price from MRP and discount
+                // Price = MRP * (1 - discount_percent/100)
                 if ($discountPercent > 0 && $discountPercent < 100) {
-                    $updateData['mrp'] = round($price / (1 - ($discountPercent / 100)), 2);
+                    $price = round($mrp * (1 - ($discountPercent / 100)), 2);
                 } else {
-                    $updateData['mrp'] = floatval($updateData['mrp'] ?? $product->mrp ?? $price);
+                    $price = $mrp;
                 }
+                $updateData['price'] = $price;
+                $updateData['mrp'] = $mrp; // Ensure MRP is set
                 
                 // Calculate GST amount and total with GST
                 $gstAmount = ($price * $gst) / 100;
@@ -222,8 +232,8 @@ class AdminProductController extends Controller
                 
                 // Ensure discount_percent is set
                 if (!isset($updateData['discount_percent']) || $updateData['discount_percent'] == 0) {
-                    if ($updateData['mrp'] > $price) {
-                        $updateData['discount_percent'] = round((($updateData['mrp'] - $price) / $updateData['mrp']) * 100, 2);
+                    if ($mrp > $price) {
+                        $updateData['discount_percent'] = round((($mrp - $price) / $mrp) * 100, 2);
                     } else {
                         $updateData['discount_percent'] = 0;
                     }
