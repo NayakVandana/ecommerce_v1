@@ -48,6 +48,8 @@ export default function DirectOrderModal({
         notes: '',
         coupon_code: '',
         custom_total_amount: '',
+        payment_method: 'CASH_ON_DELIVERY',
+        payment_type: 'CASH',
     });
 
     useEffect(() => {
@@ -104,6 +106,31 @@ export default function DirectOrderModal({
         Daman: ['moti_daman', 'nani_daman', 'daman_fort'],
     };
 
+    // Helper function to get payment method display label
+    const getPaymentMethodLabel = (value: string) => {
+        const labels: any = {
+            'CASH_ON_DELIVERY': 'Cash on Delivery',
+            'ONLINE_PAYMENT': 'Online Payment',
+            'BANK_TRANSFER': 'Bank Transfer',
+            'UPI': 'UPI',
+            'CREDIT_CARD': 'Credit Card',
+            'DEBIT_CARD': 'Debit Card',
+            'WALLET': 'Wallet',
+            'OTHER': 'Other',
+        };
+        return labels[value] || value;
+    };
+
+    // Helper function to get payment type display label
+    const getPaymentTypeLabel = (value: string) => {
+        const labels: any = {
+            'CASH': 'Cash',
+            'ONLINE': 'Online',
+            'OTHER': 'Other',
+        };
+        return labels[value] || value;
+    };
+
     const cities = {
         Valsad: ['Vapi', 'Pardi', 'Valsad City', 'Dharampur'],
         Daman: ['Moti Daman', 'Nani Daman', 'Daman Fort Area'],
@@ -153,6 +180,8 @@ export default function DirectOrderModal({
                     notes: '',
                     coupon_code: '',
                     custom_total_amount: '',
+                    payment_method: 'CASH_ON_DELIVERY',
+                    payment_type: 'CASH',
                 });
             } else {
                 toast({ type: 'error', message: response.data?.message || 'Failed to create direct order' });
@@ -527,6 +556,76 @@ export default function DirectOrderModal({
                                             </option>
                                         ))}
                                     </select>
+                                </div>
+                            </div>
+
+                            {/* Payment Method & Type */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Payment Method *
+                                    </label>
+                                    <select
+                                        name="payment_method"
+                                        value={formData.payment_method}
+                                        onChange={handleInputChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                        required
+                                    >
+                                        <option value="CASH_ON_DELIVERY">Cash on Delivery</option>
+                                        <option value="ONLINE_PAYMENT">Online Payment</option>
+                                        <option value="BANK_TRANSFER">Bank Transfer</option>
+                                        <option value="UPI">UPI</option>
+                                        <option value="CREDIT_CARD">Credit Card</option>
+                                        <option value="DEBIT_CARD">Debit Card</option>
+                                        <option value="WALLET">Wallet</option>
+                                        <option value="OTHER">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Payment Type *
+                                    </label>
+                                    <div className="flex gap-2 flex-wrap">
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({ ...prev, payment_type: 'CASH' }))}
+                                            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                                formData.payment_type === 'CASH'
+                                                    ? 'bg-green-600 text-white'
+                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            }`}
+                                        >
+                                            Cash
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({ ...prev, payment_type: 'ONLINE' }))}
+                                            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                                formData.payment_type === 'ONLINE'
+                                                    ? 'bg-blue-600 text-white'
+                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            }`}
+                                        >
+                                            Online
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData(prev => ({ ...prev, payment_type: 'OTHER' }))}
+                                            className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                                formData.payment_type === 'OTHER'
+                                                    ? 'bg-purple-600 text-white'
+                                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            }`}
+                                        >
+                                            Other
+                                        </button>
+                                    </div>
+                                    <input
+                                        type="hidden"
+                                        name="payment_type"
+                                        value={formData.payment_type}
+                                    />
                                 </div>
                             </div>
 

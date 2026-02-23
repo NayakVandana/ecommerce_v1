@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Enums\PaymentMethod;
+use App\Enums\PaymentType;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -188,6 +190,33 @@ class AdminOrderController extends Controller
         $order->update($updateData);
 
         return $this->sendJsonResponse(true, 'Order status updated successfully', $order->fresh(), 200);
+    }
+
+    public function updatePaymentStatus(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:orders,id',
+            'payment_method' => 'nullable|string|in:' . implode(',', PaymentMethod::values()),
+            'payment_type' => 'nullable|string|in:' . implode(',', PaymentType::values()),
+        ]);
+
+        $order = Order::findOrFail($request->id);
+        
+        $updateData = [];
+        
+        if ($request->has('payment_method')) {
+            $updateData['payment_method'] = $request->payment_method ?? PaymentMethod::default()->value;
+        }
+        
+        if ($request->has('payment_type')) {
+            $updateData['payment_type'] = $request->payment_type ?? PaymentType::default()->value;
+        }
+        
+        if (!empty($updateData)) {
+            $order->update($updateData);
+        }
+
+        return $this->sendJsonResponse(true, 'Payment status updated successfully', $order->fresh(), 200);
     }
 
     public function cancel(Request $request)
@@ -1016,6 +1045,8 @@ class AdminOrderController extends Controller
             'notes' => 'nullable|string|max:1000',
             'coupon_code' => 'nullable|string',
             'custom_total_amount' => 'nullable|numeric|min:0',
+            'payment_method' => 'nullable|string|in:' . implode(',', PaymentMethod::values()),
+            'payment_type' => 'nullable|string|in:' . implode(',', PaymentType::values()),
         ], [
             'product_id.required' => 'Product is required.',
             'product_id.exists' => 'Selected product does not exist.',
@@ -1130,6 +1161,8 @@ class AdminOrderController extends Controller
                 'discount' => $isCustomAmount ? ($discount + $customDiscount) : $discount, // Include custom discount
                 'coupon_code_id' => $couponCodeId,
                 'total' => $total,
+                'payment_method' => $request->payment_method ?? PaymentMethod::default()->value,
+                'payment_type' => $request->payment_type ?? PaymentType::default()->value,
                 'status' => 'pending',
                 'notes' => $isCustomAmount 
                     ? ($request->notes ? $request->notes . ' | Custom/Bargained Amount Applied' : 'Custom/Bargained Amount Applied')

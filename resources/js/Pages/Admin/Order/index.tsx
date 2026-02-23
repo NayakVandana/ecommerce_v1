@@ -21,7 +21,8 @@ import {
     ExclamationTriangleIcon,
     StarIcon,
     UserIcon,
-    XMarkIcon
+    XMarkIcon,
+    PencilIcon
 } from '@heroicons/react/24/outline';
 
 export default function OrderIndex() {
@@ -52,6 +53,13 @@ export default function OrderIndex() {
     const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{ orderId: number; newStatus: string; actionType: string } | null>(null);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [pendingCancelOrderId, setPendingCancelOrderId] = useState<number | null>(null);
+    const [showPaymentStatusModal, setShowPaymentStatusModal] = useState(false);
+    const [editingPaymentOrder, setEditingPaymentOrder] = useState<any>(null);
+    const [paymentStatusForm, setPaymentStatusForm] = useState({
+        payment_method: 'CASH_ON_DELIVERY',
+        payment_type: 'CASH',
+    });
+    const [updatingPaymentStatus, setUpdatingPaymentStatus] = useState(false);
     const [cancelling, setCancelling] = useState(false);
     const [processingReturn, setProcessingReturn] = useState<number | null>(null);
     const [processingReplacement, setProcessingReplacement] = useState<number | null>(null);
@@ -313,6 +321,48 @@ export default function OrderIndex() {
             setShowAlert(true);
         } finally {
             setProcessingReplacement(null);
+        }
+    };
+
+    const handleEditPaymentStatus = (order: any) => {
+        setEditingPaymentOrder(order);
+        setPaymentStatusForm({
+            payment_method: order.payment_method || 'CASH_ON_DELIVERY',
+            payment_type: order.payment_type || 'CASH',
+        });
+        setShowPaymentStatusModal(true);
+    };
+
+    const handleUpdatePaymentStatus = async () => {
+        if (!editingPaymentOrder) return;
+        
+        try {
+            setUpdatingPaymentStatus(true);
+            const response = await useOrderStore.updatePaymentStatus({
+                id: editingPaymentOrder.id,
+                payment_method: paymentStatusForm.payment_method,
+                payment_type: paymentStatusForm.payment_type,
+            });
+            
+            if (response.data?.status) {
+                loadOrders();
+                setShowPaymentStatusModal(false);
+                setEditingPaymentOrder(null);
+                setAlertMessage('Payment status updated successfully');
+                setAlertType('success');
+                setShowAlert(true);
+            } else {
+                setAlertMessage(response.data?.message || 'Failed to update payment status');
+                setAlertType('error');
+                setShowAlert(true);
+            }
+        } catch (error: any) {
+            console.error('Error updating payment status:', error);
+            setAlertMessage(error.response?.data?.message || 'Failed to update payment status');
+            setAlertType('error');
+            setShowAlert(true);
+        } finally {
+            setUpdatingPaymentStatus(false);
         }
     };
 
@@ -701,11 +751,50 @@ export default function OrderIndex() {
         );
     };
 
-    const getPaymentStatusBadge = (paymentStatus: string) => {
+    // Helper function to get payment method display label
+    const getPaymentMethodLabel = (value: string) => {
+        const labels: any = {
+            'CASH_ON_DELIVERY': 'Cash on Delivery',
+            'ONLINE_PAYMENT': 'Online Payment',
+            'BANK_TRANSFER': 'Bank Transfer',
+            'UPI': 'UPI',
+            'CREDIT_CARD': 'Credit Card',
+            'DEBIT_CARD': 'Debit Card',
+            'WALLET': 'Wallet',
+            'OTHER': 'Other',
+        };
+        return labels[value] || value;
+    };
+
+    // Helper function to get payment type display label
+    const getPaymentTypeLabel = (value: string) => {
+        const labels: any = {
+            'CASH': 'Cash',
+            'ONLINE': 'Online',
+            'OTHER': 'Other',
+        };
+        return labels[value] || value;
+    };
+
+    const getPaymentStatusBadge = (order: any) => {
+        const paymentMethod = order.payment_method || 'CASH_ON_DELIVERY';
+        const paymentType = order.payment_type || 'CASH';
+        
+        const typeColors: any = {
+            'CASH': 'bg-green-100 text-green-800',
+            'ONLINE': 'bg-blue-100 text-blue-800',
+            'OTHER': 'bg-purple-100 text-purple-800',
+        };
+        
         return (
-            <span className="text-sm text-gray-700">
-                {paymentStatus || 'ONLINE'}
-            </span>
+            <div className="flex flex-col gap-1">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${typeColors[paymentType] || 'bg-gray-100 text-gray-800'}`}>
+                    {getPaymentTypeLabel(paymentType)}
+                </span>
+                <span className="text-xs text-gray-600">
+                    {getPaymentMethodLabel(paymentMethod)}
+                </span>
+            </div>
         );
     };
 
@@ -906,7 +995,16 @@ export default function OrderIndex() {
                                                     {getDeliveryStatusBadge(order.status)}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    {getPaymentStatusBadge('ONLINE')}
+                                                    <div className="flex items-center gap-2">
+                                                        {getPaymentStatusBadge(order)}
+                                                        <button
+                                                            onClick={() => handleEditPaymentStatus(order)}
+                                                            className="p-1 text-indigo-600 hover:text-indigo-900 hover:bg-indigo-50 rounded"
+                                                            title="Edit Payment Status"
+                                                        >
+                                                            <PencilIcon className="h-4 w-4" />
+                                                        </button>
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                                     {order.delivery_boy ? (
@@ -1250,6 +1348,121 @@ export default function OrderIndex() {
                 </div>
             )}
 
+            {/* Payment Status Edit Modal */}
+            {showPaymentStatusModal && editingPaymentOrder && (
+                <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                    <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                        <div
+                            className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                            onClick={() => setShowPaymentStatusModal(false)}
+                        ></div>
+
+                        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
+                            <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-semibold text-gray-900">Edit Payment Status</h3>
+                                    <button
+                                        onClick={() => setShowPaymentStatusModal(false)}
+                                        className="text-gray-400 hover:text-gray-500"
+                                    >
+                                        <XMarkIcon className="h-6 w-6" />
+                                    </button>
+                                </div>
+
+                                <div className="mb-4">
+                                    <p className="text-sm text-gray-600">
+                                        Order: <span className="font-medium">{editingPaymentOrder.order_number || `#${editingPaymentOrder.id}`}</span>
+                                    </p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Payment Method *
+                                        </label>
+                                        <select
+                                            value={paymentStatusForm.payment_method}
+                                            onChange={(e) => setPaymentStatusForm(prev => ({ ...prev, payment_method: e.target.value }))}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            required
+                                        >
+                                            <option value="CASH_ON_DELIVERY">Cash on Delivery</option>
+                                            <option value="ONLINE_PAYMENT">Online Payment</option>
+                                            <option value="BANK_TRANSFER">Bank Transfer</option>
+                                            <option value="UPI">UPI</option>
+                                            <option value="CREDIT_CARD">Credit Card</option>
+                                            <option value="DEBIT_CARD">Debit Card</option>
+                                            <option value="WALLET">Wallet</option>
+                                            <option value="OTHER">Other</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Payment Type *
+                                        </label>
+                                        <div className="flex gap-2 flex-wrap">
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaymentStatusForm(prev => ({ ...prev, payment_type: 'CASH' }))}
+                                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                                    paymentStatusForm.payment_type === 'CASH'
+                                                        ? 'bg-green-600 text-white'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                            >
+                                                Cash
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaymentStatusForm(prev => ({ ...prev, payment_type: 'ONLINE' }))}
+                                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                                    paymentStatusForm.payment_type === 'ONLINE'
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                            >
+                                                Online
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaymentStatusForm(prev => ({ ...prev, payment_type: 'OTHER' }))}
+                                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                                    paymentStatusForm.payment_type === 'OTHER'
+                                                        ? 'bg-purple-600 text-white'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                            >
+                                                Other
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-5 sm:mt-6 flex justify-end gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPaymentStatusModal(false)}
+                                        disabled={updatingPaymentStatus}
+                                        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleUpdatePaymentStatus}
+                                        disabled={updatingPaymentStatus}
+                                        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                                    >
+                                        {updatingPaymentStatus ? 'Updating...' : 'Update Payment Status'}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Delivery Date Modal */}
             {showDeliveryDateModal && (
                 <div className="fixed inset-0 z-[9999] overflow-y-auto">
@@ -1311,6 +1524,121 @@ export default function OrderIndex() {
                                         className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
                                     >
                                         Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Payment Status Edit Modal */}
+            {showPaymentStatusModal && editingPaymentOrder && (
+                <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                    <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                        <div
+                            className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                            onClick={() => setShowPaymentStatusModal(false)}
+                        ></div>
+
+                        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
+                            <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-semibold text-gray-900">Edit Payment Status</h3>
+                                    <button
+                                        onClick={() => setShowPaymentStatusModal(false)}
+                                        className="text-gray-400 hover:text-gray-500"
+                                    >
+                                        <XMarkIcon className="h-6 w-6" />
+                                    </button>
+                                </div>
+
+                                <div className="mb-4">
+                                    <p className="text-sm text-gray-600">
+                                        Order: <span className="font-medium">{editingPaymentOrder.order_number || `#${editingPaymentOrder.id}`}</span>
+                                    </p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Payment Method *
+                                        </label>
+                                        <select
+                                            value={paymentStatusForm.payment_method}
+                                            onChange={(e) => setPaymentStatusForm(prev => ({ ...prev, payment_method: e.target.value }))}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                            required
+                                        >
+                                            <option value="CASH_ON_DELIVERY">Cash on Delivery</option>
+                                            <option value="ONLINE_PAYMENT">Online Payment</option>
+                                            <option value="BANK_TRANSFER">Bank Transfer</option>
+                                            <option value="UPI">UPI</option>
+                                            <option value="CREDIT_CARD">Credit Card</option>
+                                            <option value="DEBIT_CARD">Debit Card</option>
+                                            <option value="WALLET">Wallet</option>
+                                            <option value="OTHER">Other</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            Payment Type *
+                                        </label>
+                                        <div className="flex gap-2 flex-wrap">
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaymentStatusForm(prev => ({ ...prev, payment_type: 'CASH' }))}
+                                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                                    paymentStatusForm.payment_type === 'CASH'
+                                                        ? 'bg-green-600 text-white'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                            >
+                                                Cash
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaymentStatusForm(prev => ({ ...prev, payment_type: 'ONLINE' }))}
+                                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                                    paymentStatusForm.payment_type === 'ONLINE'
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                            >
+                                                Online
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPaymentStatusForm(prev => ({ ...prev, payment_type: 'OTHER' }))}
+                                                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                                                    paymentStatusForm.payment_type === 'OTHER'
+                                                        ? 'bg-purple-600 text-white'
+                                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                                }`}
+                                            >
+                                                Other
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="mt-5 sm:mt-6 flex justify-end gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPaymentStatusModal(false)}
+                                        disabled={updatingPaymentStatus}
+                                        className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={handleUpdatePaymentStatus}
+                                        disabled={updatingPaymentStatus}
+                                        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                                    >
+                                        {updatingPaymentStatus ? 'Updating...' : 'Update Payment Status'}
                                     </button>
                                 </div>
                             </div>
