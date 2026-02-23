@@ -1024,6 +1024,21 @@ export default function OrderIndex() {
                                                             </button>
                                                         )}
                                                         
+                                                        {/* Direct Order - Mark as Delivered (available for multiple statuses) */}
+                                                        {order.is_direct_order && 
+                                                         order.status !== 'delivered' && 
+                                                         order.status !== 'completed' && 
+                                                         order.status !== 'cancelled' && (
+                                                            <button
+                                                                onClick={() => handleStatusUpdate(order.id, 'delivered', 'deliver')}
+                                                                className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700 flex items-center gap-1"
+                                                                title="Mark Direct Order as Delivered"
+                                                            >
+                                                                <CheckCircleIcon className="h-3 w-3" />
+                                                                Mark as Delivered
+                                                            </button>
+                                                        )}
+                                                        
                                                         {/* Failed Delivery Actions - Can retry or cancel */}
                                                         {normalizedSection === 'failed-delivery' && order.status === 'cancelled' && (
                                                             <button

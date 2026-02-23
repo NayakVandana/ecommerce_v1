@@ -1015,6 +1015,7 @@ class AdminOrderController extends Controller
             ],
             'notes' => 'nullable|string|max:1000',
             'coupon_code' => 'nullable|string',
+            'custom_total_amount' => 'nullable|numeric|min:0',
         ], [
             'product_id.required' => 'Product is required.',
             'product_id.exists' => 'Selected product does not exist.',
@@ -1073,7 +1074,24 @@ class AdminOrderController extends Controller
                 }
             }
 
-            $total = $subtotal + $tax + $shipping - $discount;
+            // Calculate base total
+            $calculatedTotal = $subtotal + $tax + $shipping - $discount;
+            
+            // Check if custom/bargained amount is provided
+            $customTotalAmount = $request->input('custom_total_amount');
+            $isCustomAmount = false;
+            $customDiscount = 0;
+            
+            if ($customTotalAmount && $customTotalAmount > 0) {
+                $customTotalAmount = floatval($customTotalAmount);
+                $isCustomAmount = true;
+                // Calculate the discount/adjustment from custom amount
+                $customDiscount = $calculatedTotal - $customTotalAmount;
+                $total = $customTotalAmount;
+            } else {
+                $total = $calculatedTotal;
+            }
+            
             if ($total < 0) {
                 $total = 0;
             }
@@ -1109,14 +1127,25 @@ class AdminOrderController extends Controller
                 'subtotal' => $subtotal,
                 'tax' => $tax,
                 'shipping' => $shipping,
-                'discount' => $discount,
+                'discount' => $isCustomAmount ? ($discount + $customDiscount) : $discount, // Include custom discount
                 'coupon_code_id' => $couponCodeId,
                 'total' => $total,
                 'status' => 'pending',
-                'notes' => $request->notes,
+                'notes' => $isCustomAmount 
+                    ? ($request->notes ? $request->notes . ' | Custom/Bargained Amount Applied' : 'Custom/Bargained Amount Applied')
+                    : $request->notes,
                 'delivery_date' => $request->delivery_date ?? $defaultDeliveryDate,
             ]);
 
+            // Calculate adjusted price per unit if custom amount is used
+            $itemPrice = $price;
+            $itemSubtotal = $subtotal;
+            if ($isCustomAmount && $quantity > 0) {
+                // Adjust price per unit based on custom total
+                $itemPrice = $total / $quantity;
+                $itemSubtotal = $total;
+            }
+            
             // Create order item
             \App\Models\OrderItem::create([
                 'order_id' => $order->id,
@@ -1127,8 +1156,8 @@ class AdminOrderController extends Controller
                 'size' => $variation ? $variation->size : null,
                 'color' => $variation ? $variation->color : null,
                 'quantity' => $quantity,
-                'price' => $price,
-                'subtotal' => $subtotal,
+                'price' => round($itemPrice, 2), // Adjusted price per unit
+                'subtotal' => round($itemSubtotal, 2), // Adjusted subtotal
                 'is_returnable' => $product->is_returnable ?? false,
                 'is_replaceable' => $product->is_replaceable ?? false,
             ]);

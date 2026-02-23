@@ -278,6 +278,20 @@ export default function OrderShow() {
             );
         }
 
+        // Add "Mark as Delivered" for direct orders (available for multiple statuses)
+        if (order.is_direct_order && 
+            currentStatus !== 'delivered' && 
+            currentStatus !== 'completed' && 
+            currentStatus !== 'cancelled') {
+            // Check if "Mark as Delivered" is not already in actions
+            const hasDeliveredAction = actions.some(action => action.status === 'delivered' || action.status === 'completed');
+            if (!hasDeliveredAction) {
+                actions.push(
+                    { label: 'Mark as Delivered', status: 'delivered', color: 'green', icon: CheckCircleIcon }
+                );
+            }
+        }
+
         return actions;
     };
 

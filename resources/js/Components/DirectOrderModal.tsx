@@ -23,6 +23,7 @@ export default function DirectOrderModal({
     onSuccess,
 }: DirectOrderModalProps) {
     const [loading, setLoading] = useState(false);
+    const [useCustomAmount, setUseCustomAmount] = useState(false);
     const [formData, setFormData] = useState({
         product_id: product?.id || null,
         variation_id: selectedVariation?.id || null,
@@ -46,6 +47,7 @@ export default function DirectOrderModal({
         delivery_area: '',
         notes: '',
         coupon_code: '',
+        custom_total_amount: '',
     });
 
     useEffect(() => {
@@ -126,6 +128,7 @@ export default function DirectOrderModal({
                     onSuccess();
                 }
                 // Reset form
+                setUseCustomAmount(false);
                 setFormData({
                     product_id: product?.id || null,
                     variation_id: selectedVariation?.id || null,
@@ -149,6 +152,7 @@ export default function DirectOrderModal({
                     delivery_area: '',
                     notes: '',
                     coupon_code: '',
+                    custom_total_amount: '',
                 });
             } else {
                 toast({ type: 'error', message: response.data?.message || 'Failed to create direct order' });
@@ -186,21 +190,153 @@ export default function DirectOrderModal({
                             </button>
                         </div>
 
-                        {product && (
-                            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                                <p className="text-sm font-medium text-gray-900">{product.product_name}</p>
-                                {selectedVariation && (
-                                    <p className="text-xs text-gray-600">
-                                        {selectedVariation.color && `Color: ${selectedVariation.color}`}
-                                        {selectedVariation.size && ` | Size: ${selectedVariation.size}`}
-                                    </p>
-                                )}
-                                <p className="text-sm text-gray-700">Quantity: {formData.quantity}</p>
-                                <p className="text-sm font-semibold text-indigo-600">
-                                    ₹{Number(product.final_price || product.price || 0).toFixed(2)} × {formData.quantity} = ₹{((product.final_price || product.price || 0) * formData.quantity).toFixed(2)}
-                                </p>
-                            </div>
-                        )}
+                        {product && (() => {
+                            const unitPrice = Number(product.final_price || product.price || 0);
+                            const costPrice = Number(product.cost_price || 0);
+                            const calculatedTotal = unitPrice * formData.quantity;
+                            const totalCostPrice = costPrice * formData.quantity;
+                            const customAmount = parseFloat(formData.custom_total_amount || '0');
+                            const finalAmount = useCustomAmount && customAmount > 0 ? customAmount : calculatedTotal;
+                            
+                            // Calculate profit and profit margin when custom amount is used
+                            const profit = useCustomAmount && customAmount > 0 ? customAmount - totalCostPrice : calculatedTotal - totalCostPrice;
+                            const profitMargin = finalAmount > 0 ? (profit / finalAmount) * 100 : 0;
+                            
+                            return (
+                                <div className="mb-4 p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg border-2 border-indigo-200">
+                                    <p className="text-sm font-medium text-gray-900 mb-2">{product.product_name}</p>
+                                    {selectedVariation && (
+                                        <p className="text-xs text-gray-600 mb-1">
+                                            {selectedVariation.color && `Color: ${selectedVariation.color}`}
+                                            {selectedVariation.size && ` | Size: ${selectedVariation.size}`}
+                                        </p>
+                                    )}
+                                    <div className="space-y-2">
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-gray-600">Unit Price:</span>
+                                            <span className="font-medium">₹{unitPrice.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm">
+                                            <span className="text-gray-600">Quantity:</span>
+                                            <span className="font-medium">{formData.quantity}</span>
+                                        </div>
+                                        <div className="flex justify-between text-sm border-t pt-2">
+                                            <span className="text-gray-700 font-medium">Calculated Total:</span>
+                                            <span className="font-semibold text-indigo-600">₹{calculatedTotal.toFixed(2)}</span>
+                                        </div>
+                                        
+                                        {/* Custom Amount Toggle */}
+                                        <div className="flex items-center gap-2 pt-2 border-t">
+                                            <input
+                                                type="checkbox"
+                                                id="useCustomAmount"
+                                                checked={useCustomAmount}
+                                                onChange={(e) => {
+                                                    setUseCustomAmount(e.target.checked);
+                                                    if (!e.target.checked) {
+                                                        setFormData(prev => ({ ...prev, custom_total_amount: '' }));
+                                                    }
+                                                }}
+                                                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                            />
+                                            <label htmlFor="useCustomAmount" className="text-sm font-medium text-gray-700 cursor-pointer">
+                                                Use Custom/Bargained Amount
+                                            </label>
+                                        </div>
+                                        
+                                        {useCustomAmount && (
+                                            <div className="pt-2 space-y-2">
+                                                {/* Cost Price Information - Always show when custom amount is enabled */}
+                                                {costPrice > 0 && (
+                                                    <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                                                        <p className="text-xs font-semibold text-blue-800 mb-2 uppercase tracking-wide">Cost Information</p>
+                                                        <div className="space-y-1.5">
+                                                            <div className="flex justify-between text-sm">
+                                                                <span className="text-gray-700">Unit Cost Price:</span>
+                                                                <span className="font-medium text-gray-900">₹{costPrice.toFixed(2)}</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-sm">
+                                                                <span className="text-gray-700">Quantity:</span>
+                                                                <span className="font-medium text-gray-900">{formData.quantity}</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-sm pt-1 border-t border-blue-300">
+                                                                <span className="text-gray-800 font-semibold">Total Cost Price:</span>
+                                                                <span className="font-bold text-blue-700">₹{totalCostPrice.toFixed(2)}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                        Custom Payment Amount <span className="text-red-500">*</span>
+                                                    </label>
+                                                    <input
+                                                        type="number"
+                                                        name="custom_total_amount"
+                                                        value={formData.custom_total_amount}
+                                                        onChange={handleInputChange}
+                                                        min="0"
+                                                        step="0.01"
+                                                        required={useCustomAmount}
+                                                        className="w-full px-3 py-2 border-2 border-indigo-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                                                        placeholder="Enter bargained amount"
+                                                    />
+                                                    <p className="text-xs text-gray-500 mt-1">
+                                                        Enter the final amount after bargaining/negotiation
+                                                    </p>
+                                                </div>
+                                                
+                                                {/* Cost Price & Profit Information - Show when custom amount is entered */}
+                                                {costPrice > 0 && customAmount > 0 && (
+                                                    <div className="mt-2 p-3 bg-white rounded-lg border border-gray-200">
+                                                        <p className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">Profit Analysis</p>
+                                                        <div className="space-y-1.5">
+                                                            <div className="flex justify-between text-sm">
+                                                                <span className="text-gray-600">Cost Price (Total):</span>
+                                                                <span className="font-medium text-gray-900">₹{totalCostPrice.toFixed(2)}</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-sm">
+                                                                <span className="text-gray-600">Selling Price:</span>
+                                                                <span className="font-medium text-indigo-600">₹{customAmount.toFixed(2)}</span>
+                                                            </div>
+                                                            <div className="flex justify-between text-sm pt-1 border-t">
+                                                                <span className="text-gray-700 font-medium">Profit:</span>
+                                                                <span className={`font-semibold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                                    {profit >= 0 ? '+' : ''}₹{profit.toFixed(2)}
+                                                                </span>
+                                                            </div>
+                                                            <div className="flex justify-between text-sm">
+                                                                <span className="text-gray-700 font-medium">Profit Margin:</span>
+                                                                <span className={`font-semibold ${profitMargin >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                                                    {profitMargin >= 0 ? '+' : ''}{profitMargin.toFixed(2)}%
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                        
+                                        <div className="flex justify-between items-center pt-2 border-t-2 border-indigo-300">
+                                            <span className="text-base font-bold text-gray-900">Final Amount:</span>
+                                            <span className={`text-2xl font-bold ${useCustomAmount && customAmount !== calculatedTotal ? 'text-green-600' : 'text-indigo-600'}`}>
+                                                ₹{finalAmount.toFixed(2)}
+                                            </span>
+                                        </div>
+                                        {useCustomAmount && customAmount !== calculatedTotal && (
+                                            <div className="text-xs text-center pt-1">
+                                                <span className={`font-medium ${customAmount < calculatedTotal ? 'text-green-600' : 'text-orange-600'}`}>
+                                                    {customAmount < calculatedTotal 
+                                                        ? `Discount: ₹${(calculatedTotal - customAmount).toFixed(2)}` 
+                                                        : `Additional: ₹${(customAmount - calculatedTotal).toFixed(2)}`}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })()}
 
                         <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
