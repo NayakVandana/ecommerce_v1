@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useCartStore } from './useCartStore';
 import toast from '../../utils/toast';
 import ConfirmationModal from '../../Components/ConfirmationModal';
+import CartSkeleton from '../../Components/Skeleton/CartSkeleton';
 import { EyeIcon } from '@heroicons/react/24/outline';
 import { isAuthenticated } from '../../utils/sessionStorage';
 
@@ -110,9 +111,7 @@ export default function Index() {
     if (loading) {
         return (
             <AppLayout>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <p className="text-center text-gray-500">Loading cart...</p>
-                </div>
+                <CartSkeleton />
             </AppLayout>
         );
     }

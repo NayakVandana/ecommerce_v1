@@ -6,6 +6,7 @@ import { useProductStore } from '../Products/useProductStore';
 import { ShoppingBagIcon, ArrowLeftIcon, TagIcon, HeartIcon, ChevronDownIcon, ChevronUpIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import Pagination from '../../Components/Pagination';
+import { ProductCardSkeleton, CategoryPageSkeleton } from '../../Components/Skeleton';
 import axios from 'axios';
 
 export default function Show() {
@@ -292,14 +293,7 @@ export default function Show() {
     if (loading) {
         return (
             <AppLayout>
-                <div className="min-h-screen bg-gray-50">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                        <div className="text-center py-20">
-                            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-200 border-t-indigo-600"></div>
-                            <p className="text-gray-500 text-lg mt-4 font-medium">Loading category...</p>
-                        </div>
-                    </div>
-                </div>
+                <CategoryPageSkeleton />
             </AppLayout>
         );
     }
@@ -676,10 +670,7 @@ export default function Show() {
                     </div>
 
                     {productsLoading ? (
-                        <div className="text-center py-20">
-                            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-200 border-t-indigo-600"></div>
-                            <p className="text-gray-500 text-lg mt-4 font-medium">Loading products...</p>
-                        </div>
+                        <ProductCardSkeleton count={9} />
                     ) : products && products.data && products.data.length > 0 ? (
                         <>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">

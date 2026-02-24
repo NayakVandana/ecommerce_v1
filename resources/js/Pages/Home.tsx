@@ -15,6 +15,7 @@ import Pagination from '../Components/Pagination';
 import CategoryIcon from '../Components/CategoryIcon';
 import CategoryModal from '../Components/CategoryModal';
 import CategoriesHeader from '../Components/CategoriesHeader';
+import { ProductCardSkeleton } from '../Components/Skeleton';
 
 export default function Home() {
     const { url } = usePage();
@@ -462,10 +463,7 @@ export default function Home() {
             <div className="min-h-screen bg-gray-50">
                 <Container className="py-8">
                     {loading ? (
-                        <div className="text-center py-20">
-                            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-600 border-t-transparent"></div>
-                            <p className="mt-4 text-gray-600 text-lg">Loading...</p>
-                        </div>
+                        <ProductCardSkeleton count={8} />
                     ) : (
                         <>
                             {/* Search Bar */}

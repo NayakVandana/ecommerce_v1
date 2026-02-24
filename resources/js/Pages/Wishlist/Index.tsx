@@ -5,6 +5,7 @@ import { useWishlistStore } from './useWishlistStore';
 import { useCartStore } from '../Cart/useCartStore';
 import toast from '../../utils/toast';
 import ConfirmationModal from '../../Components/ConfirmationModal';
+import WishlistSkeleton from '../../Components/Skeleton/WishlistSkeleton';
 import { HeartIcon, TrashIcon, ShoppingCartIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 
@@ -110,11 +111,7 @@ export default function Index() {
     if (loading) {
         return (
             <AppLayout>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="flex justify-center items-center h-64">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                    </div>
-                </div>
+                <WishlistSkeleton />
             </AppLayout>
         );
     }

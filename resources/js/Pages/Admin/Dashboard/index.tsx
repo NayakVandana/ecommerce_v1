@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useDashboardStore } from './useDashboardStore';
 import AdminLayout from '../Layout';
+import { StatsCardSkeleton } from '../../../Components/Skeleton';
 import {
     ChartBarIcon,
     ShoppingBagIcon,
@@ -107,9 +108,7 @@ export default function DashboardIndex() {
                 </div>
 
                 {loading ? (
-                    <div className="flex items-center justify-center h-64">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                    </div>
+                    <StatsCardSkeleton count={6} />
                 ) : (
                     <>
                         {/* Stats Grid */}

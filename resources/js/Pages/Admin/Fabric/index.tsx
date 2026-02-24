@@ -4,6 +4,7 @@ import AdminLayout from '../Layout';
 import ConfirmationModal from '../../../Components/ConfirmationModal';
 import AlertModal from '../../../Components/AlertModal';
 import FabricModal from './FabricModal';
+import { TableSkeleton } from '../../../Components/Skeleton';
 import toast from '../../../utils/toast';
 import {
     PlusIcon,
@@ -190,10 +191,7 @@ export default function FabricIndex() {
                 {/* Fabrics Table */}
                 <div className="bg-white shadow rounded-lg overflow-hidden">
                     {loading ? (
-                        <div className="text-center py-12">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                            <p className="mt-2 text-sm text-gray-500">Loading fabrics...</p>
-                        </div>
+                        <TableSkeleton rows={8} columns={5} />
                     ) : fabrics.length === 0 ? (
                         <div className="text-center py-12">
                             <p className="text-sm text-gray-500">No fabrics found</p>

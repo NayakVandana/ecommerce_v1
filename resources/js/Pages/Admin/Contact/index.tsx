@@ -4,6 +4,7 @@ import AdminLayout from '../Layout';
 import FormDatePicker from '../../../Components/FormInput/FormDatePicker';
 import ConfirmationModal from '../../../Components/ConfirmationModal';
 import AlertModal from '../../../Components/AlertModal';
+import { TableSkeleton } from '../../../Components/Skeleton';
 import toast from '../../../utils/toast';
 import Pagination from '../../../Components/Pagination';
 import {
@@ -297,10 +298,7 @@ export default function ContactIndex() {
                     {/* Contacts Table */}
                     <div className="bg-white rounded-lg shadow-md overflow-hidden">
                         {loading ? (
-                            <div className="text-center py-12">
-                                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent"></div>
-                                <p className="mt-4 text-gray-600">Loading contacts...</p>
-                            </div>
+                            <TableSkeleton rows={8} columns={6} />
                         ) : contacts.length === 0 ? (
                             <div className="text-center py-12">
                                 <EnvelopeIcon className="mx-auto h-12 w-12 text-gray-400" />

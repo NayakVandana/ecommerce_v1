@@ -3,6 +3,7 @@ import { Link } from '@inertiajs/react';
 import { useState, useEffect, useMemo } from 'react';
 import { useCategoryStore } from './useCategoryStore';
 import { useProductStore } from '../Products/useProductStore';
+import { ProductCardSkeleton, CategoryListSkeleton } from '../../Components/Skeleton';
 import { 
     ChevronRightIcon, 
     ChevronDownIcon,
@@ -441,10 +442,7 @@ export default function Index() {
                                     {expandedFilters.categories && (
                                         <>
                                         {loading ? (
-                                        <div className="text-center py-16">
-                                            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-200 border-t-indigo-600"></div>
-                                            <p className="text-gray-500 text-sm mt-4 font-medium">Loading categories...</p>
-                                        </div>
+                                        <CategoryListSkeleton />
                                     ) : filteredHierarchicalCategories && filteredHierarchicalCategories.length > 0 ? (
                                         <div className="space-y-1 max-h-96 overflow-y-auto">
                                             {filteredHierarchicalCategories.map((category: any) => {
@@ -577,10 +575,7 @@ export default function Index() {
                             </div>
 
                             {productsLoading ? (
-                                <div className="text-center py-20">
-                                    <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-indigo-200 border-t-indigo-600"></div>
-                                    <p className="text-gray-500 text-lg mt-4 font-medium">Loading products...</p>
-                                </div>
+                                <ProductCardSkeleton count={12} />
                             ) : sortedProducts && sortedProducts.data && sortedProducts.data.length > 0 ? (
                                 <>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">

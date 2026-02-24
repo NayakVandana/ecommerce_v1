@@ -10,6 +10,7 @@ import 'react-image-gallery/styles/css/image-gallery.css';
 import { HeartIcon, ShoppingBagIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import DirectOrderModal from '../../Components/DirectOrderModal';
+import ProductDetailSkeleton from '../../Components/Skeleton/ProductDetailSkeleton';
 
 export default function Show() {
     const { props } = usePage();
@@ -630,9 +631,7 @@ export default function Show() {
     if (loading) {
         return (
             <AppLayout>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <p className="text-center text-gray-500">Loading product...</p>
-                </div>
+                <ProductDetailSkeleton />
             </AppLayout>
         );
     }

@@ -5,6 +5,7 @@ import AdminLayout from '../Layout';
 import FormDatePicker from '../../../Components/FormInput/FormDatePicker';
 import ConfirmationModal from '../../../Components/ConfirmationModal';
 import AlertModal from '../../../Components/AlertModal';
+import { TableSkeleton } from '../../../Components/Skeleton';
 import toast from '../../../utils/toast';
 import {
     PencilIcon,
@@ -306,9 +307,7 @@ export default function UserIndex() {
                 </div>
 
                 {loading ? (
-                    <div className="flex items-center justify-center h-64">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                    </div>
+                    <TableSkeleton rows={8} columns={5} />
                 ) : (
                     <div className="bg-white shadow rounded-lg overflow-hidden">
                         <table className="min-w-full divide-y divide-gray-200">

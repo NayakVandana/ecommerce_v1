@@ -4,6 +4,7 @@ import AdminLayout from '../Layout';
 import ConfirmationModal from '../../../Components/ConfirmationModal';
 import AlertModal from '../../../Components/AlertModal';
 import CategoryModal from './CategoryModal';
+import { TableSkeleton } from '../../../Components/Skeleton';
 import toast from '../../../utils/toast';
 import {
     PlusIcon,
@@ -194,9 +195,7 @@ export default function CategoryIndex() {
                 </div>
 
                 {loading ? (
-                    <div className="flex items-center justify-center h-64">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
-                    </div>
+                    <TableSkeleton rows={10} columns={7} />
                 ) : (
                     <div className="bg-white shadow rounded-lg overflow-hidden">
                         <table className="min-w-full divide-y divide-gray-200">

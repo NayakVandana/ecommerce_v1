@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDeliveryBoyStore } from './useDeliveryBoyStore';
 import AppLayout from '../Layouts/AppLayout';
 import toast from '../../utils/toast';
+import DeliveryBoySkeleton from '../../Components/Skeleton/DeliveryBoySkeleton';
 import { TruckIcon, CheckCircleIcon, ClockIcon, PhotoIcon, VideoCameraIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CubeIcon, CameraIcon, FolderOpenIcon, TrashIcon } from '@heroicons/react/24/outline';
 
 export default function DeliveryBoyIndex() {
@@ -273,12 +274,7 @@ export default function DeliveryBoyIndex() {
     if (loading) {
         return (
             <AppLayout>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="text-center py-12">
-                        <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-                        <p className="mt-2 text-sm text-gray-500">Loading orders...</p>
-                    </div>
-                </div>
+                <DeliveryBoySkeleton />
             </AppLayout>
         );
     }
