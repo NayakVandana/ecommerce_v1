@@ -210,7 +210,27 @@ class CategorySeeder extends Seeder
                                 ]
                             ],
                             ['name' => 'Night & Loungewear', 'description' => 'Nightwear and loungewear', 'icon' => 'fa-bed', 'sort_order' => 8],
-                            ['name' => 'Fashion Jewellery', 'description' => 'Fashion jewelry', 'icon' => 'fa-ring', 'sort_order' => 9],
+                            [
+                                'name' => 'Fashion Jewellery', 
+                                'description' => 'Fashion jewelry', 
+                                'icon' => 'fa-ring', 
+                                'sort_order' => 9,
+                                'children' => [
+                                    ['name' => 'Anklet', 'description' => 'Anklets', 'sort_order' => 1],
+                                    ['name' => 'Bangle', 'description' => 'Bangles', 'sort_order' => 2],
+                                    ['name' => 'Bracelet', 'description' => 'Bracelets', 'sort_order' => 3],
+                                    ['name' => 'Brooch', 'description' => 'Brooches', 'sort_order' => 4],
+                                    ['name' => 'Earrings', 'description' => 'Earrings', 'sort_order' => 5],
+                                    ['name' => 'Head Jewellery', 'description' => 'Head jewellery', 'sort_order' => 6],
+                                    ['name' => 'Jewellery Set', 'description' => 'Jewellery sets', 'sort_order' => 7],
+                                    ['name' => 'Mangalsutra', 'description' => 'Mangalsutra', 'sort_order' => 8],
+                                    ['name' => 'Necklace and Chains', 'description' => 'Necklaces and chains', 'sort_order' => 9],
+                                    ['name' => 'Nosepin', 'description' => 'Nosepins', 'sort_order' => 10],
+                                    ['name' => 'Pendant', 'description' => 'Pendants', 'sort_order' => 11],
+                                    ['name' => 'Ring', 'description' => 'Rings', 'sort_order' => 12],
+                                    ['name' => 'Saree Accessories', 'description' => 'Saree accessories', 'sort_order' => 13],
+                                ]
+                            ],
                         ]
                     ],
                     [
@@ -219,18 +239,101 @@ class CategorySeeder extends Seeder
                         'icon' => 'fa-child',
                         'sort_order' => 3,
                         'children' => [
-                            ['name' => 'Western Wear', 'description' => 'Western clothing for boys', 'icon' => 'fa-tshirt', 'sort_order' => 1],
-                            ['name' => 'Ethnic Wear', 'description' => 'Traditional ethnic wear for boys', 'icon' => 'fa-tshirt', 'sort_order' => 2],
-                            ['name' => 'Footwear', 'description' => 'Boys\' shoes and footwear', 'icon' => 'fa-shoe-prints', 'sort_order' => 3],
-                            ['name' => 'Night & Loungewear', 'description' => 'Nightwear and loungewear', 'icon' => 'fa-bed', 'sort_order' => 4],
-                            ['name' => 'Inner Wear', 'description' => 'Boys\' innerwear', 'icon' => 'fa-vest', 'sort_order' => 5],
-                            ['name' => 'Clothing Accessories', 'description' => 'Caps, accessories', 'icon' => 'fa-hat-cowboy', 'sort_order' => 6],
-                            ['name' => 'Bags, Belts & Wallets', 'description' => 'Bags, belts, and wallets', 'icon' => 'fa-briefcase', 'sort_order' => 7],
-                            ['name' => 'Watches', 'description' => 'Boys\' watches', 'icon' => 'fa-clock', 'sort_order' => 8],
+                            [
+                                'name' => 'Western Wear', 
+                                'description' => 'Western clothing for boys', 
+                                'icon' => 'fa-tshirt', 
+                                'sort_order' => 1,
+                                'children' => [
+                                    ['name' => 'T-Shirts', 'description' => 'Boys\' t-shirts', 'sort_order' => 1],
+                                    ['name' => 'Casual Shirts', 'description' => 'Casual shirts', 'sort_order' => 2],
+                                    ['name' => 'Formal Shirts', 'description' => 'Formal shirts', 'sort_order' => 3],
+                                    ['name' => 'Sweatshirts', 'description' => 'Sweatshirts & hoodies', 'sort_order' => 4],
+                                    ['name' => 'Sweaters', 'description' => 'Sweaters & cardigans', 'sort_order' => 5],
+                                    ['name' => 'Jackets', 'description' => 'Jackets & coats', 'sort_order' => 6],
+                                    ['name' => 'Jeans', 'description' => 'Jeans', 'sort_order' => 7],
+                                    ['name' => 'Casual Trousers', 'description' => 'Casual trousers', 'sort_order' => 8],
+                                    ['name' => 'Formal Trousers', 'description' => 'Formal trousers', 'sort_order' => 9],
+                                    ['name' => 'Shorts', 'description' => 'Shorts', 'sort_order' => 10],
+                                    ['name' => 'Track Pants', 'description' => 'Track pants', 'sort_order' => 11],
+                                ]
+                            ],
+                            [
+                                'name' => 'Ethnic Wear', 
+                                'description' => 'Traditional ethnic wear for boys', 
+                                'icon' => 'fa-tshirt', 
+                                'sort_order' => 2,
+                                'children' => [
+                                    ['name' => 'Kurtas', 'description' => 'Kurtas', 'sort_order' => 1],
+                                    ['name' => 'Kurta Sets', 'description' => 'Kurta sets', 'sort_order' => 2],
+                                    ['name' => 'Sherwanis', 'description' => 'Sherwanis', 'sort_order' => 3],
+                                    ['name' => 'Dhotis', 'description' => 'Dhotis', 'sort_order' => 4],
+                                    ['name' => 'Lungi', 'description' => 'Lungi', 'sort_order' => 5],
+                                ]
+                            ],
+                            [
+                                'name' => 'Footwear', 
+                                'description' => 'Boys\' shoes and footwear', 
+                                'icon' => 'fa-shoe-prints', 
+                                'sort_order' => 3,
+                                'children' => [
+                                    ['name' => 'Casual Shoes', 'description' => 'Casual shoes', 'sort_order' => 1],
+                                    ['name' => 'Sports Shoes', 'description' => 'Sports shoes', 'sort_order' => 2],
+                                    ['name' => 'Formal Shoes', 'description' => 'Formal shoes', 'sort_order' => 3],
+                                    ['name' => 'Sneakers', 'description' => 'Sneakers', 'sort_order' => 4],
+                                    ['name' => 'Sandals', 'description' => 'Sandals & floaters', 'sort_order' => 5],
+                                    ['name' => 'Flip Flops', 'description' => 'Flip flops', 'sort_order' => 6],
+                                    ['name' => 'Socks', 'description' => 'Socks', 'sort_order' => 7],
+                                ]
+                            ],
+                            [
+                                'name' => 'Inner Wear', 
+                                'description' => 'Boys\' innerwear', 
+                                'icon' => 'fa-vest', 
+                                'sort_order' => 4,
+                                'children' => [
+                                    ['name' => 'Briefs', 'description' => 'Briefs', 'sort_order' => 1],
+                                    ['name' => 'Trunks', 'description' => 'Trunks', 'sort_order' => 2],
+                                    ['name' => 'Vests', 'description' => 'Vests', 'sort_order' => 3],
+                                    ['name' => 'Thermals', 'description' => 'Thermals', 'sort_order' => 4],
+                                ]
+                            ],
+                            ['name' => 'Night & Loungewear', 'description' => 'Nightwear and loungewear', 'icon' => 'fa-bed', 'sort_order' => 5],
+                            [
+                                'name' => 'Clothing Accessories', 
+                                'description' => 'Caps, sunglasses, and accessories', 
+                                'icon' => 'fa-hat-cowboy', 
+                                'sort_order' => 6,
+                                'children' => [
+                                    ['name' => 'Caps', 'description' => 'Caps and hats', 'sort_order' => 1],
+                                    ['name' => 'Belts', 'description' => 'Belts', 'sort_order' => 2],
+                                    ['name' => 'Ties', 'description' => 'Ties', 'sort_order' => 3],
+                                ]
+                            ],
+                            [
+                                'name' => 'Bags, Belts & Wallets', 
+                                'description' => 'Bags, belts, and wallets', 
+                                'icon' => 'fa-briefcase', 
+                                'sort_order' => 7,
+                                'children' => [
+                                    ['name' => 'Backpacks', 'description' => 'Backpacks', 'sort_order' => 1],
+                                    ['name' => 'Wallets', 'description' => 'Wallets', 'sort_order' => 2],
+                                    ['name' => 'Belts', 'description' => 'Belts', 'sort_order' => 3],
+                                    ['name' => 'Messenger Bags', 'description' => 'Messenger bags', 'sort_order' => 4],
+                                ]
+                            ],
+                            [
+                                'name' => 'Watches', 
+                                'description' => 'Boys\' watches', 
+                                'icon' => 'fa-clock', 
+                                'sort_order' => 8,
+                                'children' => [
+                                    ['name' => 'Analog Watches', 'description' => 'Analog watches', 'sort_order' => 1],
+                                    ['name' => 'Digital Watches', 'description' => 'Digital watches', 'sort_order' => 2],
+                                    ['name' => 'Smart Watches', 'description' => 'Smart watches', 'sort_order' => 3],
+                                ]
+                            ],
                             ['name' => 'Eyewear', 'description' => 'Sunglasses and eyewear', 'icon' => 'fa-glasses', 'sort_order' => 9],
-                            ['name' => 'Watch Accessories', 'description' => 'Watch straps and accessories', 'icon' => 'fa-clock', 'sort_order' => 10],
-                            ['name' => 'Accessories', 'description' => 'Various accessories', 'icon' => 'fa-bag-shopping', 'sort_order' => 11],
-                            ['name' => 'Inner & Nightwear', 'description' => 'Innerwear and nightwear', 'icon' => 'fa-bed', 'sort_order' => 12],
                         ]
                     ],
                     [
@@ -239,18 +342,100 @@ class CategorySeeder extends Seeder
                         'icon' => 'fa-child',
                         'sort_order' => 4,
                         'children' => [
-                            ['name' => 'Western Wear', 'description' => 'Western clothing for girls', 'icon' => 'fa-tshirt', 'sort_order' => 1],
-                            ['name' => 'Ethnic Wear', 'description' => 'Traditional ethnic wear for girls', 'icon' => 'fa-tshirt', 'sort_order' => 2],
-                            ['name' => 'Footwear', 'description' => 'Girls\' shoes and footwear', 'icon' => 'fa-shoe-prints', 'sort_order' => 3],
-                            ['name' => 'Night & Loungewear', 'description' => 'Nightwear and loungewear', 'icon' => 'fa-bed', 'sort_order' => 4],
-                            ['name' => 'Inner Wear', 'description' => 'Girls\' innerwear', 'icon' => 'fa-vest', 'sort_order' => 5],
-                            ['name' => 'Clothing Accessories', 'description' => 'Hair accessories, accessories', 'icon' => 'fa-scarf', 'sort_order' => 6],
-                            ['name' => 'Bags, Belts & Wallets', 'description' => 'Bags, belts, and wallets', 'icon' => 'fa-handbag', 'sort_order' => 7],
-                            ['name' => 'Watches', 'description' => 'Girls\' watches', 'icon' => 'fa-clock', 'sort_order' => 8],
+                            [
+                                'name' => 'Western Wear', 
+                                'description' => 'Western clothing for girls', 
+                                'icon' => 'fa-tshirt', 
+                                'sort_order' => 1,
+                                'children' => [
+                                    ['name' => 'Dresses', 'description' => 'Dresses', 'sort_order' => 1],
+                                    ['name' => 'Tops', 'description' => 'Tops', 'sort_order' => 2],
+                                    ['name' => 'T-Shirts', 'description' => 'T-shirts', 'sort_order' => 3],
+                                    ['name' => 'Jeans', 'description' => 'Jeans', 'sort_order' => 4],
+                                    ['name' => 'Trousers', 'description' => 'Trousers', 'sort_order' => 5],
+                                    ['name' => 'Skirts', 'description' => 'Skirts', 'sort_order' => 6],
+                                    ['name' => 'Shorts', 'description' => 'Shorts', 'sort_order' => 7],
+                                    ['name' => 'Jumpsuits', 'description' => 'Jumpsuits', 'sort_order' => 8],
+                                    ['name' => 'Jackets', 'description' => 'Jackets & coats', 'sort_order' => 9],
+                                    ['name' => 'Sweaters', 'description' => 'Sweaters', 'sort_order' => 10],
+                                ]
+                            ],
+                            [
+                                'name' => 'Ethnic Wear', 
+                                'description' => 'Traditional ethnic wear for girls', 
+                                'icon' => 'fa-tshirt', 
+                                'sort_order' => 2,
+                                'children' => [
+                                    ['name' => 'Kurtis & Tunics', 'description' => 'Kurtis and tunics', 'sort_order' => 1],
+                                    ['name' => 'Kurta Sets', 'description' => 'Kurta sets', 'sort_order' => 2],
+                                    ['name' => 'Lehenga Cholis', 'description' => 'Lehenga cholis', 'sort_order' => 3],
+                                    ['name' => 'Dress Materials', 'description' => 'Dress materials', 'sort_order' => 4],
+                                    ['name' => 'Salwar & Churidars', 'description' => 'Salwar and churidars', 'sort_order' => 5],
+                                    ['name' => 'Dupattas', 'description' => 'Dupattas', 'sort_order' => 6],
+                                ]
+                            ],
+                            [
+                                'name' => 'Footwear', 
+                                'description' => 'Girls\' shoes and footwear', 
+                                'icon' => 'fa-shoe-prints', 
+                                'sort_order' => 3,
+                                'children' => [
+                                    ['name' => 'Flats', 'description' => 'Flats', 'sort_order' => 1],
+                                    ['name' => 'Heels', 'description' => 'Heels', 'sort_order' => 2],
+                                    ['name' => 'Casual Shoes', 'description' => 'Casual shoes', 'sort_order' => 3],
+                                    ['name' => 'Sports Shoes', 'description' => 'Sports shoes', 'sort_order' => 4],
+                                    ['name' => 'Sandals', 'description' => 'Sandals', 'sort_order' => 5],
+                                    ['name' => 'Flip Flops', 'description' => 'Flip flops', 'sort_order' => 6],
+                                ]
+                            ],
+                            [
+                                'name' => 'Inner Wear', 
+                                'description' => 'Girls\' innerwear', 
+                                'icon' => 'fa-vest', 
+                                'sort_order' => 4,
+                                'children' => [
+                                    ['name' => 'Briefs', 'description' => 'Briefs', 'sort_order' => 1],
+                                    ['name' => 'Camisoles', 'description' => 'Camisoles', 'sort_order' => 2],
+                                    ['name' => 'Vests', 'description' => 'Vests', 'sort_order' => 3],
+                                ]
+                            ],
+                            ['name' => 'Night & Loungewear', 'description' => 'Nightwear and loungewear', 'icon' => 'fa-bed', 'sort_order' => 5],
+                            [
+                                'name' => 'Clothing Accessories', 
+                                'description' => 'Hair accessories and accessories', 
+                                'icon' => 'fa-scarf', 
+                                'sort_order' => 6,
+                                'children' => [
+                                    ['name' => 'Hair Accessories', 'description' => 'Hair clips, bands, and accessories', 'sort_order' => 1],
+                                    ['name' => 'Hair Bands', 'description' => 'Hair bands', 'sort_order' => 2],
+                                    ['name' => 'Hair Clips', 'description' => 'Hair clips', 'sort_order' => 3],
+                                    ['name' => 'Scarves', 'description' => 'Scarves and stoles', 'sort_order' => 4],
+                                ]
+                            ],
+                            [
+                                'name' => 'Bags, Belts & Wallets', 
+                                'description' => 'Bags, belts, and wallets', 
+                                'icon' => 'fa-handbag', 
+                                'sort_order' => 7,
+                                'children' => [
+                                    ['name' => 'Handbags', 'description' => 'Handbags', 'sort_order' => 1],
+                                    ['name' => 'Backpacks', 'description' => 'Backpacks', 'sort_order' => 2],
+                                    ['name' => 'Wallets', 'description' => 'Wallets', 'sort_order' => 3],
+                                    ['name' => 'Belts', 'description' => 'Belts', 'sort_order' => 4],
+                                ]
+                            ],
+                            [
+                                'name' => 'Watches', 
+                                'description' => 'Girls\' watches', 
+                                'icon' => 'fa-clock', 
+                                'sort_order' => 8,
+                                'children' => [
+                                    ['name' => 'Analog Watches', 'description' => 'Analog watches', 'sort_order' => 1],
+                                    ['name' => 'Digital Watches', 'description' => 'Digital watches', 'sort_order' => 2],
+                                    ['name' => 'Smart Watches', 'description' => 'Smart watches', 'sort_order' => 3],
+                                ]
+                            ],
                             ['name' => 'Eyewear', 'description' => 'Sunglasses and eyewear', 'icon' => 'fa-glasses', 'sort_order' => 9],
-                            ['name' => 'Watch Accessories', 'description' => 'Watch straps and accessories', 'icon' => 'fa-clock', 'sort_order' => 10],
-                            ['name' => 'Inner & Nightwear', 'description' => 'Innerwear and nightwear', 'icon' => 'fa-bed', 'sort_order' => 11],
-                            ['name' => 'Accessories', 'description' => 'Various accessories', 'icon' => 'fa-bag-shopping', 'sort_order' => 12],
                         ]
                     ],
                     [
@@ -537,73 +722,11 @@ class CategorySeeder extends Seeder
                 ]
             ],
             [
-                'name' => 'Jewellery',
-                'description' => 'Jewelry and accessories for all',
-                'is_featured' => true,
-                'icon' => 'fa-ring',
-                'sort_order' => 9,
-                'children' => [
-                    [
-                        'name' => 'Fashion Jewellery',
-                        'description' => 'Fashion jewelry',
-                        'icon' => 'fa-ring',
-                        'sort_order' => 1,
-                        'children' => [
-                            ['name' => 'Necklaces', 'description' => 'Necklaces and chains', 'sort_order' => 1],
-                            ['name' => 'Earrings', 'description' => 'Earrings and studs', 'sort_order' => 2],
-                            ['name' => 'Rings', 'description' => 'Rings and bands', 'sort_order' => 3],
-                            ['name' => 'Bracelets', 'description' => 'Bracelets and bangles', 'sort_order' => 4],
-                            ['name' => 'Anklets', 'description' => 'Anklets', 'sort_order' => 5],
-                            ['name' => 'Pendants', 'description' => 'Pendants and lockets', 'sort_order' => 6],
-                            ['name' => 'Hair Accessories', 'description' => 'Hair pins and clips', 'sort_order' => 7],
-                            ['name' => 'Brooches', 'description' => 'Brooches and pins', 'sort_order' => 8],
-                        ]
-                    ],
-                    [
-                        'name' => 'Fine Jewellery',
-                        'description' => 'Fine jewelry with precious metals and stones',
-                        'icon' => 'fa-gem',
-                        'sort_order' => 2,
-                        'children' => [
-                            ['name' => 'Gold Jewellery', 'description' => 'Gold jewelry', 'sort_order' => 1],
-                            ['name' => 'Silver Jewellery', 'description' => 'Silver jewelry', 'sort_order' => 2],
-                            ['name' => 'Diamond Jewellery', 'description' => 'Diamond jewelry', 'sort_order' => 3],
-                            ['name' => 'Pearl Jewellery', 'description' => 'Pearl jewelry', 'sort_order' => 4],
-                            ['name' => 'Gemstone Jewellery', 'description' => 'Gemstone jewelry', 'sort_order' => 5],
-                        ]
-                    ],
-                    [
-                        'name' => 'Men\'s Jewellery',
-                        'description' => 'Jewelry for men',
-                        'icon' => 'fa-ring',
-                        'sort_order' => 3,
-                        'children' => [
-                            ['name' => 'Men\'s Rings', 'description' => 'Rings for men', 'sort_order' => 1],
-                            ['name' => 'Men\'s Chains', 'description' => 'Chains and necklaces for men', 'sort_order' => 2],
-                            ['name' => 'Men\'s Bracelets', 'description' => 'Bracelets for men', 'sort_order' => 3],
-                            ['name' => 'Men\'s Watches', 'description' => 'Watches for men', 'sort_order' => 4],
-                        ]
-                    ],
-                    [
-                        'name' => 'Kids Jewellery',
-                        'description' => 'Jewelry for kids',
-                        'icon' => 'fa-ring',
-                        'sort_order' => 4,
-                        'children' => [
-                            ['name' => 'Kids Necklaces', 'description' => 'Necklaces for kids', 'sort_order' => 1],
-                            ['name' => 'Kids Earrings', 'description' => 'Earrings for kids', 'sort_order' => 2],
-                            ['name' => 'Kids Bracelets', 'description' => 'Bracelets for kids', 'sort_order' => 3],
-                            ['name' => 'Kids Rings', 'description' => 'Rings for kids', 'sort_order' => 4],
-                        ]
-                    ],
-                ]
-            ],
-            [
                 'name' => 'Sports',
                 'description' => 'Fitness and outdoor gear',
                 'is_featured' => true,
                 'icon' => 'fa-dumbbell',
-                'sort_order' => 10,
+                'sort_order' => 9,
                 'children' => [
                     ['name' => 'Fitness Equipment', 'description' => 'Gym and fitness equipment', 'icon' => 'fa-dumbbell', 'sort_order' => 1],
                     ['name' => 'Outdoor Sports', 'description' => 'Outdoor and adventure gear', 'icon' => 'fa-mountain', 'sort_order' => 2],
@@ -615,7 +738,7 @@ class CategorySeeder extends Seeder
                 'description' => 'Fiction, non-fiction, and educational books',
                 'is_featured' => false,
                 'icon' => 'fa-book',
-                'sort_order' => 11,
+                'sort_order' => 10,
                 'children' => [
                     ['name' => 'Fiction', 'description' => 'Fiction books and novels', 'icon' => 'fa-book', 'sort_order' => 1],
                     ['name' => 'Non-Fiction', 'description' => 'Non-fiction and educational books', 'icon' => 'fa-book', 'sort_order' => 2],
@@ -627,7 +750,7 @@ class CategorySeeder extends Seeder
                 'description' => 'Food items and daily essentials',
                 'is_featured' => true,
                 'icon' => 'fa-shopping-cart',
-                'sort_order' => 12,
+                'sort_order' => 11,
                 'children' => [
                     ['name' => 'Food & Beverages', 'description' => 'Food and drinks', 'icon' => 'fa-utensils', 'sort_order' => 1],
                     ['name' => 'Snacks', 'description' => 'Snacks and munchies', 'icon' => 'fa-cookie', 'sort_order' => 2],

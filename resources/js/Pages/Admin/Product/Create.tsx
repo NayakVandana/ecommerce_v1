@@ -250,12 +250,22 @@ export default function ProductCreate() {
         const options: JSX.Element[] = [];
         const mainCategories = filteredCategories.filter((cat: any) => !cat.parent_id);
         
+        // Check for duplicate category names across different parents
+        const categoryNameCounts = new Map<string, number>();
+        filteredCategories.forEach((cat: any) => {
+            const count = categoryNameCounts.get(cat.name) || 0;
+            categoryNameCounts.set(cat.name, count + 1);
+        });
+        
         if (mainCategories.length === 0) {
             // If no main categories, show all categories (might be all subcategories)
             filteredCategories.forEach((cat: any) => {
+                const displayName = categoryNameCounts.get(cat.name) > 1 
+                    ? getCategoryDisplayName(cat) 
+                    : cat.name;
                 options.push(
                     <option key={cat.id} value={cat.id}>
-                        {cat.name}
+                        {displayName}
                     </option>
                 );
             });
@@ -289,10 +299,16 @@ export default function ProductCreate() {
                 });
             
             subCategories.forEach((subCat: any) => {
+                // Show full path for duplicate category names
+                const isDuplicate = (categoryNameCounts.get(subCat.name) || 0) > 1;
+                const displayName = isDuplicate 
+                    ? getCategoryDisplayName(subCat)
+                    : subCat.name;
+                
                 // Add subcategory
                 options.push(
                     <option key={subCat.id} value={subCat.id}>
-                        &nbsp;&nbsp;└─ {subCat.name}
+                        &nbsp;&nbsp;└─ {displayName}
                     </option>
                 );
                 
@@ -307,9 +323,15 @@ export default function ProductCreate() {
                     });
                 
                 subSubCategories.forEach((subSubCat: any) => {
+                    // Show full path for duplicate category names
+                    const isSubDuplicate = (categoryNameCounts.get(subSubCat.name) || 0) > 1;
+                    const subDisplayName = isSubDuplicate 
+                        ? getCategoryDisplayName(subSubCat)
+                        : subSubCat.name;
+                    
                     options.push(
                         <option key={subSubCat.id} value={subSubCat.id}>
-                            &nbsp;&nbsp;&nbsp;&nbsp;└─ {subSubCat.name}
+                            &nbsp;&nbsp;&nbsp;&nbsp;└─ {subDisplayName}
                         </option>
                     );
                 });
@@ -527,6 +549,353 @@ export default function ProductCreate() {
             }
         }
         
+        return false;
+    };
+
+    // Check if current category is Footwear (including parent categories)
+    const isFootwearCategory = () => {
+        // First check if main category is Footwear
+        if (selectedMainCategory) {
+            const mainCat = categories.find((c: any) => c.id === parseInt(selectedMainCategory));
+            if (mainCat && mainCat.name.toLowerCase() === 'footwear') {
+                return true;
+            }
+        }
+        
+        // Then check if final selected category is Footwear or has Footwear as parent
+        if (formData.category) {
+            const selectedCategory = categories.find((cat: any) => cat.id === parseInt(formData.category));
+            if (selectedCategory) {
+                // Check if category name is Footwear (case-insensitive)
+                if (selectedCategory.name.toLowerCase() === 'footwear') {
+                    return true;
+                }
+                
+                // Also check if parent category is Footwear (for subcategories)
+                if (selectedCategory.parent_id) {
+                    const parent = categories.find((c: any) => c.id === selectedCategory.parent_id);
+                    if (parent && parent.name.toLowerCase() === 'footwear') {
+                        return true;
+                    }
+                    
+                    // Check grandparent if exists
+                    if (parent && parent.parent_id) {
+                        const grandParent = categories.find((c: any) => c.id === parent.parent_id);
+                        if (grandParent && grandParent.name.toLowerCase() === 'footwear') {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Also check selected subcategory
+        if (selectedSubCategory) {
+            const subCat = categories.find((c: any) => c.id === parseInt(selectedSubCategory));
+            if (subCat) {
+                // Check if subcategory name is Footwear
+                if (subCat.name.toLowerCase() === 'footwear') {
+                    return true;
+                }
+                // Check if parent is Footwear
+                if (subCat.parent_id) {
+                    const parent = categories.find((c: any) => c.id === subCat.parent_id);
+                    if (parent && parent.name.toLowerCase() === 'footwear') {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
+    };
+
+    // Check if fashion category is for kids (Boys, Girls, Infants)
+    const isKidsFashionCategory = () => {
+        if (!isFashionCategory()) {
+            return false;
+        }
+
+        // Check if main category is Boys, Girls, or Infants
+        if (selectedMainCategory) {
+            const mainCat = categories.find((c: any) => c.id === parseInt(selectedMainCategory));
+            if (mainCat) {
+                const mainCatName = mainCat.name.toLowerCase();
+                if (mainCatName === 'boys' || mainCatName === 'girls' || mainCatName === 'infants') {
+                    return true;
+                }
+            }
+        }
+
+        // Check if final selected category has Boys, Girls, or Infants as parent
+        if (formData.category) {
+            const selectedCategory = categories.find((cat: any) => cat.id === parseInt(formData.category));
+            if (selectedCategory && selectedCategory.parent_id) {
+                const parent = categories.find((c: any) => c.id === selectedCategory.parent_id);
+                if (parent) {
+                    const parentName = parent.name.toLowerCase();
+                    if (parentName === 'boys' || parentName === 'girls' || parentName === 'infants') {
+                        return true;
+                    }
+                    
+                    // Check grandparent if exists
+                    if (parent.parent_id) {
+                        const grandParent = categories.find((c: any) => c.id === parent.parent_id);
+                        if (grandParent) {
+                            const grandParentName = grandParent.name.toLowerCase();
+                            if (grandParentName === 'boys' || grandParentName === 'girls' || grandParentName === 'infants') {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check selected subcategory
+        if (selectedSubCategory) {
+            const subCat = categories.find((c: any) => c.id === parseInt(selectedSubCategory));
+            if (subCat && subCat.parent_id) {
+                const parent = categories.find((c: any) => c.id === subCat.parent_id);
+                if (parent) {
+                    const parentName = parent.name.toLowerCase();
+                    if (parentName === 'boys' || parentName === 'girls' || parentName === 'infants') {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    };
+
+    // Check if fashion is for infants (smallest sizes)
+    const isInfantFashionCategory = () => {
+        if (!isKidsFashionCategory()) {
+            return false;
+        }
+
+        // Check if main category is Infants
+        if (selectedMainCategory) {
+            const mainCat = categories.find((c: any) => c.id === parseInt(selectedMainCategory));
+            if (mainCat && mainCat.name.toLowerCase() === 'infants') {
+                return true;
+            }
+        }
+
+        // Check if final selected category has Infants as parent
+        if (formData.category) {
+            const selectedCategory = categories.find((cat: any) => cat.id === parseInt(formData.category));
+            if (selectedCategory && selectedCategory.parent_id) {
+                const parent = categories.find((c: any) => c.id === selectedCategory.parent_id);
+                if (parent && parent.name.toLowerCase() === 'infants') {
+                    return true;
+                }
+                
+                // Check grandparent if exists
+                if (parent && parent.parent_id) {
+                    const grandParent = categories.find((c: any) => c.id === parent.parent_id);
+                    if (grandParent && grandParent.name.toLowerCase() === 'infants') {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // Check selected subcategory
+        if (selectedSubCategory) {
+            const subCat = categories.find((c: any) => c.id === parseInt(selectedSubCategory));
+            if (subCat && subCat.parent_id) {
+                const parent = categories.find((c: any) => c.id === subCat.parent_id);
+                if (parent && parent.name.toLowerCase() === 'infants') {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    };
+
+    // Check if current category is Bottomwear (Jeans, Trousers, Shorts, Track Pants, Skirts)
+    const isBottomwearCategory = () => {
+        if (!formData.category) return false;
+        
+        const selectedCategory = categories.find((cat: any) => cat.id === parseInt(formData.category));
+        if (!selectedCategory) return false;
+        
+        const categoryNameLower = selectedCategory.name.toLowerCase();
+        const bottomwearCategories = ['jeans', 'trousers', 'casual trousers', 'formal trousers', 'shorts', 'track pants', 'skirts'];
+        
+        // Check if category name matches bottomwear
+        if (bottomwearCategories.some(bw => categoryNameLower.includes(bw))) {
+            return true;
+        }
+        
+        return false;
+    };
+
+    // Check if bottomwear is for men
+    const isMenBottomwearCategory = () => {
+        if (!isBottomwearCategory()) return false;
+        
+        // Check if main category is Men
+        if (selectedMainCategory) {
+            const mainCat = categories.find((c: any) => c.id === parseInt(selectedMainCategory));
+            if (mainCat && mainCat.name.toLowerCase() === 'men') {
+                return true;
+            }
+        }
+        
+        // Check if final selected category has Men as parent
+        if (formData.category) {
+            const selectedCategory = categories.find((cat: any) => cat.id === parseInt(formData.category));
+            if (selectedCategory && selectedCategory.parent_id) {
+                const parent = categories.find((c: any) => c.id === selectedCategory.parent_id);
+                if (parent) {
+                    const parentName = parent.name.toLowerCase();
+                    if (parentName === 'men') {
+                        return true;
+                    }
+                    
+                    // Check grandparent if exists
+                    if (parent.parent_id) {
+                        const grandParent = categories.find((c: any) => c.id === parent.parent_id);
+                        if (grandParent && grandParent.name.toLowerCase() === 'men') {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        
+        return false;
+    };
+
+    // Check if current category is Bangle
+    const isBangleCategory = () => {
+        if (!formData.category) return false;
+        
+        const selectedCategory = categories.find((cat: any) => cat.id === parseInt(formData.category));
+        if (!selectedCategory) return false;
+        
+        const categoryNameLower = selectedCategory.name.toLowerCase();
+        return categoryNameLower === 'bangle';
+    };
+
+    // Check if current category is Ring
+    const isRingCategory = () => {
+        if (!formData.category) return false;
+        
+        const selectedCategory = categories.find((cat: any) => cat.id === parseInt(formData.category));
+        if (!selectedCategory) return false;
+        
+        const categoryNameLower = selectedCategory.name.toLowerCase();
+        return categoryNameLower === 'ring' || categoryNameLower.includes('ring');
+    };
+
+    // Check if footwear category is for kids (Boys, Girls, Infants)
+    const isKidsFootwearCategory = () => {
+        if (!isFootwearCategory()) {
+            return false;
+        }
+
+        // Check if main category is Boys, Girls, or Infants
+        if (selectedMainCategory) {
+            const mainCat = categories.find((c: any) => c.id === parseInt(selectedMainCategory));
+            if (mainCat) {
+                const mainCatName = mainCat.name.toLowerCase();
+                if (mainCatName === 'boys' || mainCatName === 'girls' || mainCatName === 'infants') {
+                    return true;
+                }
+            }
+        }
+
+        // Check if final selected category has Boys, Girls, or Infants as parent
+        if (formData.category) {
+            const selectedCategory = categories.find((cat: any) => cat.id === parseInt(formData.category));
+            if (selectedCategory && selectedCategory.parent_id) {
+                const parent = categories.find((c: any) => c.id === selectedCategory.parent_id);
+                if (parent) {
+                    const parentName = parent.name.toLowerCase();
+                    if (parentName === 'boys' || parentName === 'girls' || parentName === 'infants') {
+                        return true;
+                    }
+                    
+                    // Check grandparent if exists
+                    if (parent.parent_id) {
+                        const grandParent = categories.find((c: any) => c.id === parent.parent_id);
+                        if (grandParent) {
+                            const grandParentName = grandParent.name.toLowerCase();
+                            if (grandParentName === 'boys' || grandParentName === 'girls' || grandParentName === 'infants') {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check selected subcategory
+        if (selectedSubCategory) {
+            const subCat = categories.find((c: any) => c.id === parseInt(selectedSubCategory));
+            if (subCat && subCat.parent_id) {
+                const parent = categories.find((c: any) => c.id === subCat.parent_id);
+                if (parent) {
+                    const parentName = parent.name.toLowerCase();
+                    if (parentName === 'boys' || parentName === 'girls' || parentName === 'infants') {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    };
+
+    // Check if footwear is for infants (smallest sizes)
+    const isInfantFootwearCategory = () => {
+        if (!isKidsFootwearCategory()) {
+            return false;
+        }
+
+        // Check if main category is Infants
+        if (selectedMainCategory) {
+            const mainCat = categories.find((c: any) => c.id === parseInt(selectedMainCategory));
+            if (mainCat && mainCat.name.toLowerCase() === 'infants') {
+                return true;
+            }
+        }
+
+        // Check if final selected category has Infants as parent
+        if (formData.category) {
+            const selectedCategory = categories.find((cat: any) => cat.id === parseInt(formData.category));
+            if (selectedCategory && selectedCategory.parent_id) {
+                const parent = categories.find((c: any) => c.id === selectedCategory.parent_id);
+                if (parent && parent.name.toLowerCase() === 'infants') {
+                    return true;
+                }
+                
+                // Check grandparent if exists
+                if (parent && parent.parent_id) {
+                    const grandParent = categories.find((c: any) => c.id === parent.parent_id);
+                    if (grandParent && grandParent.name.toLowerCase() === 'infants') {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        // Check selected subcategory
+        if (selectedSubCategory) {
+            const subCat = categories.find((c: any) => c.id === parseInt(selectedSubCategory));
+            if (subCat && subCat.parent_id) {
+                const parent = categories.find((c: any) => c.id === subCat.parent_id);
+                if (parent && parent.name.toLowerCase() === 'infants') {
+                    return true;
+                }
+            }
+        }
+
         return false;
     };
 
@@ -894,7 +1263,7 @@ export default function ProductCreate() {
                 id: null,
                 size: '',
                 color: '',
-            gender: isFashionCategory() ? 'male' : null,
+            gender: (isFashionCategory() && !isBangleCategory() && !isRingCategory()) ? 'male' : null,
                 stock_quantity: 0,
                 in_stock: true,
             };
@@ -1501,11 +1870,16 @@ export default function ProductCreate() {
                                         <p className="mt-1 text-sm text-red-600">{errors.category}</p>
                                     )}
                                     
-                                    {formData.category && (
-                                        <p className="mt-1 text-xs text-gray-500">
-                                            Selected: {categories.find((c: any) => c.id === parseInt(formData.category))?.name || 'Unknown'}
-                                        </p>
-                                    )}
+                                    {formData.category && (() => {
+                                        const selectedCat = categories.find((c: any) => c.id === parseInt(formData.category));
+                                        if (!selectedCat) return null;
+                                        const displayName = getCategoryDisplayName(selectedCat);
+                                        return (
+                                            <p className="mt-1 text-xs text-gray-500">
+                                                Selected: <span className="font-medium">{displayName}</span>
+                                            </p>
+                                        );
+                                    })()}
                                     
                                     {categories.length === 0 && (
                                         <p className="mt-1 text-xs text-yellow-600">
@@ -2064,10 +2438,59 @@ export default function ProductCreate() {
                                             if (genderA !== genderB) return genderA - genderB;
                                             
                                             // Then sort by size
-                                            const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
-                                            const sizeA = sizeOrder.indexOf(a.size || '');
-                                            const sizeB = sizeOrder.indexOf(b.size || '');
-                                            return sizeA - sizeB;
+                                            if (isBangleCategory()) {
+                                                // Bangle sizes: numeric sorting (inches - 2.0, 2.25, 2.5, etc.)
+                                                const sizeA = parseFloat(a.size || '0') || 0;
+                                                const sizeB = parseFloat(b.size || '0') || 0;
+                                                return sizeA - sizeB;
+                                            } else if (isRingCategory()) {
+                                                // Ring sizes: numeric sorting (4, 5, 6, 7, etc.)
+                                                const sizeA = parseInt(a.size || '0') || 0;
+                                                const sizeB = parseInt(b.size || '0') || 0;
+                                                return sizeA - sizeB;
+                                            } else if (isFootwearCategory()) {
+                                                // Footwear sizes: numeric sorting (all footwear sizes are numeric)
+                                                const sizeA = parseInt(a.size || '0') || 0;
+                                                const sizeB = parseInt(b.size || '0') || 0;
+                                                return sizeA - sizeB;
+                                            } else if (isFashionCategory()) {
+                                                if (isBottomwearCategory()) {
+                                                    // Bottomwear sizes: numeric sorting (waist sizes)
+                                                    const sizeA = parseInt(a.size || '0') || 0;
+                                                    const sizeB = parseInt(b.size || '0') || 0;
+                                                    return sizeA - sizeB;
+                                                } else if (isInfantFashionCategory()) {
+                                                    // Infant sizes: age-based sorting
+                                                    const sizeOrder = ['0M-3M', '3M-6M', '6M-9M', '9M-12M', '12M-18M', '18M-24M', 'Newborn', '2T', '3T', '4T'];
+                                                    const sizeA = sizeOrder.indexOf(a.size || '');
+                                                    const sizeB = sizeOrder.indexOf(b.size || '');
+                                                    if (sizeA !== -1 && sizeB !== -1) return sizeA - sizeB;
+                                                    if (sizeA !== -1) return -1;
+                                                    if (sizeB !== -1) return 1;
+                                                    return (a.size || '').localeCompare(b.size || '');
+                                                } else if (isKidsFashionCategory()) {
+                                                    // Kids sizes: age-based sorting
+                                                    const sizeOrder = ['0M-3M', '3M-6M', '6M-9M', '9M-12M', '12M-18M', '18M-24M', 'Newborn', '2Y-4Y', '4Y-6Y', '6Y-8Y', '8Y-10Y', '10Y-12Y', '12Y-14Y', '14Y+'];
+                                                    const sizeA = sizeOrder.indexOf(a.size || '');
+                                                    const sizeB = sizeOrder.indexOf(b.size || '');
+                                                    if (sizeA !== -1 && sizeB !== -1) return sizeA - sizeB;
+                                                    if (sizeA !== -1) return -1;
+                                                    if (sizeB !== -1) return 1;
+                                                    return (a.size || '').localeCompare(b.size || '');
+                                                } else {
+                                                    // Adult fashion sizes: alphabetical sorting
+                                                    const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+                                                    const sizeA = sizeOrder.indexOf(a.size || '');
+                                                    const sizeB = sizeOrder.indexOf(b.size || '');
+                                                    return sizeA - sizeB;
+                                                }
+                                            } else {
+                                                // Default: alphabetical sorting
+                                                const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+                                                const sizeA = sizeOrder.indexOf(a.size || '');
+                                                const sizeB = sizeOrder.indexOf(b.size || '');
+                                                return sizeA - sizeB;
+                                            }
                                             })
                                             .map((variation: any, sortedIndex: number) => {
                                                 // Use original index from the variation object, not the sorted index
@@ -2075,7 +2498,7 @@ export default function ProductCreate() {
                                                 return (
                                             <div key={`variation-${originalIndex}-${variation.id || sortedIndex}`} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                                                 <div className={`grid grid-cols-1 gap-4 ${isFashionCategory() ? 'md:grid-cols-5' : 'md:grid-cols-4'}`}>
-                                                    {isFashionCategory() && (
+                                                    {isFashionCategory() && !isBangleCategory() && !isRingCategory() && (
                                                         <div>
                                                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                                                 Gender
@@ -2101,13 +2524,161 @@ export default function ProductCreate() {
                                                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                         >
                                                             <option value="">Select Size</option>
-                                                            <option value="XS">XS - Extra Small</option>
-                                                            <option value="S">S - Small</option>
-                                                            <option value="M">M - Medium</option>
-                                                            <option value="L">L - Large</option>
-                                                            <option value="XL">XL - Extra Large</option>
-                                                            <option value="XXL">XXL - Extra Extra Large</option>
-                                                            <option value="XXXL">XXXL - Extra Extra Extra Large</option>
+                                                            {isFootwearCategory() ? (
+                                                                isInfantFootwearCategory() ? (
+                                                                    // Infant footwear sizes (1-5)
+                                                                    <>
+                                                                        <option value="1">1</option>
+                                                                        <option value="2">2</option>
+                                                                        <option value="3">3</option>
+                                                                        <option value="4">4</option>
+                                                                        <option value="5">5</option>
+                                                                    </>
+                                                                ) : isKidsFootwearCategory() ? (
+                                                                    // Kids footwear sizes (Boys/Girls: 1-13)
+                                                                    <>
+                                                                        <option value="1">1</option>
+                                                                        <option value="2">2</option>
+                                                                        <option value="3">3</option>
+                                                                        <option value="4">4</option>
+                                                                        <option value="5">5</option>
+                                                                        <option value="6">6</option>
+                                                                        <option value="7">7</option>
+                                                                        <option value="8">8</option>
+                                                                        <option value="9">9</option>
+                                                                        <option value="10">10</option>
+                                                                        <option value="11">11</option>
+                                                                        <option value="12">12</option>
+                                                                        <option value="13">13</option>
+                                                                    </>
+                                                                ) : (
+                                                                    // Adult footwear sizes (UK/India sizes 6-12)
+                                                                    <>
+                                                                        <option value="6">6</option>
+                                                                        <option value="7">7</option>
+                                                                        <option value="8">8</option>
+                                                                        <option value="9">9</option>
+                                                                        <option value="10">10</option>
+                                                                        <option value="11">11</option>
+                                                                        <option value="12">12</option>
+                                                                    </>
+                                                                )
+                                                            ) : isBangleCategory() ? (
+                                                                // Bangle sizes (in inches)
+                                                                <>
+                                                                    <option value="2.0">2.0"</option>
+                                                                    <option value="2.25">2.25"</option>
+                                                                    <option value="2.5">2.5"</option>
+                                                                    <option value="2.75">2.75"</option>
+                                                                    <option value="3.0">3.0"</option>
+                                                                    <option value="3.25">3.25"</option>
+                                                                    <option value="3.5">3.5"</option>
+                                                                    <option value="3.75">3.75"</option>
+                                                                    <option value="4.0">4.0"</option>
+                                                                    <option value="4.25">4.25"</option>
+                                                                    <option value="4.5">4.5"</option>
+                                                                    <option value="4.75">4.75"</option>
+                                                                    <option value="5.0">5.0"</option>
+                                                                </>
+                                                            ) : isRingCategory() ? (
+                                                                // Ring sizes (numeric sizes)
+                                                                <>
+                                                                    <option value="4">4</option>
+                                                                    <option value="5">5</option>
+                                                                    <option value="6">6</option>
+                                                                    <option value="7">7</option>
+                                                                    <option value="8">8</option>
+                                                                    <option value="9">9</option>
+                                                                    <option value="10">10</option>
+                                                                    <option value="11">11</option>
+                                                                    <option value="12">12</option>
+                                                                    <option value="13">13</option>
+                                                                    <option value="14">14</option>
+                                                                </>
+                                                            ) : isFashionCategory() ? (
+                                                                isBottomwearCategory() ? (
+                                                                    isMenBottomwearCategory() ? (
+                                                                        // Men's bottomwear sizes (waist sizes in inches)
+                                                                        <>
+                                                                            <option value="28">28</option>
+                                                                            <option value="30">30</option>
+                                                                            <option value="32">32</option>
+                                                                            <option value="34">34</option>
+                                                                            <option value="36">36</option>
+                                                                            <option value="38">38</option>
+                                                                            <option value="40">40</option>
+                                                                            <option value="42">42</option>
+                                                                            <option value="44">44</option>
+                                                                        </>
+                                                                    ) : (
+                                                                        // Women's bottomwear sizes (waist sizes in inches)
+                                                                        <>
+                                                                            <option value="24">24</option>
+                                                                            <option value="26">26</option>
+                                                                            <option value="28">28</option>
+                                                                            <option value="30">30</option>
+                                                                            <option value="32">32</option>
+                                                                            <option value="34">34</option>
+                                                                            <option value="36">36</option>
+                                                                            <option value="38">38</option>
+                                                                        </>
+                                                                    )
+                                                                ) : isInfantFashionCategory() ? (
+                                                                    // Infant clothing sizes (age-based)
+                                                                    <>
+                                                                        <option value="0M-3M">0M-3M</option>
+                                                                        <option value="3M-6M">3M-6M</option>
+                                                                        <option value="6M-9M">6M-9M</option>
+                                                                        <option value="9M-12M">9M-12M</option>
+                                                                        <option value="12M-18M">12M-18M</option>
+                                                                        <option value="18M-24M">18M-24M</option>
+                                                                        <option value="Newborn">Newborn</option>
+                                                                        <option value="2T">2T</option>
+                                                                        <option value="3T">3T</option>
+                                                                        <option value="4T">4T</option>
+                                                                    </>
+                                                                ) : isKidsFashionCategory() ? (
+                                                                    // Kids clothing sizes (Boys/Girls: age-based)
+                                                                    <>
+                                                                        <option value="0M-3M">0M-3M</option>
+                                                                        <option value="3M-6M">3M-6M</option>
+                                                                        <option value="6M-9M">6M-9M</option>
+                                                                        <option value="9M-12M">9M-12M</option>
+                                                                        <option value="12M-18M">12M-18M</option>
+                                                                        <option value="18M-24M">18M-24M</option>
+                                                                        <option value="Newborn">Newborn</option>
+                                                                        <option value="2Y-4Y">2Y-4Y</option>
+                                                                        <option value="4Y-6Y">4Y-6Y</option>
+                                                                        <option value="6Y-8Y">6Y-8Y</option>
+                                                                        <option value="8Y-10Y">8Y-10Y</option>
+                                                                        <option value="10Y-12Y">10Y-12Y</option>
+                                                                        <option value="12Y-14Y">12Y-14Y</option>
+                                                                        <option value="14Y+">14Y+</option>
+                                                                    </>
+                                                                ) : (
+                                                                    // Adult fashion sizes (clothing)
+                                                                    <>
+                                                                        <option value="XS">XS - Extra Small</option>
+                                                                        <option value="S">S - Small</option>
+                                                                        <option value="M">M - Medium</option>
+                                                                        <option value="L">L - Large</option>
+                                                                        <option value="XL">XL - Extra Large</option>
+                                                                        <option value="XXL">XXL - Extra Extra Large</option>
+                                                                        <option value="XXXL">XXXL - Extra Extra Extra Large</option>
+                                                                    </>
+                                                                )
+                                                            ) : (
+                                                                // Default: Adult fashion sizes (clothing)
+                                                                <>
+                                                                    <option value="XS">XS - Extra Small</option>
+                                                                    <option value="S">S - Small</option>
+                                                                    <option value="M">M - Medium</option>
+                                                                    <option value="L">L - Large</option>
+                                                                    <option value="XL">XL - Extra Large</option>
+                                                                    <option value="XXL">XXL - Extra Extra Large</option>
+                                                                    <option value="XXXL">XXXL - Extra Extra Extra Large</option>
+                                                                </>
+                                                            )}
                                                         </select>
                                                     </div>
                                                     <div>

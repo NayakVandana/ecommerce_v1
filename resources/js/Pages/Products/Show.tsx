@@ -203,6 +203,149 @@ export default function Show() {
         return Array.from(colorMap.values());
     }, [product, selectedGender]);
 
+    // Helper functions to detect category type
+    const isFootwearCategory = useMemo(() => {
+        if (!product?.categoryRelation) return false;
+        const category = product.categoryRelation;
+        const categoryNameLower = category.name.toLowerCase();
+        
+        if (categoryNameLower === 'footwear') return true;
+        
+        // Check parent
+        if (category.parent) {
+            const parentNameLower = category.parent.name.toLowerCase();
+            if (parentNameLower === 'footwear') return true;
+        }
+        
+        return false;
+    }, [product]);
+
+    const isKidsFootwearCategory = useMemo(() => {
+        if (!isFootwearCategory || !product?.categoryRelation) return false;
+        const category = product.categoryRelation;
+        
+        // Check if parent is Boys, Girls, or Infants
+        if (category.parent) {
+            const parentNameLower = category.parent.name.toLowerCase();
+            if (parentNameLower === 'boys' || parentNameLower === 'girls' || parentNameLower === 'infants') {
+                return true;
+            }
+        }
+        
+        return false;
+    }, [product, isFootwearCategory]);
+
+    const isInfantFootwearCategory = useMemo(() => {
+        if (!isKidsFootwearCategory || !product?.categoryRelation) return false;
+        const category = product.categoryRelation;
+        
+        if (category.parent && category.parent.name.toLowerCase() === 'infants') {
+            return true;
+        }
+        
+        return false;
+    }, [product, isKidsFootwearCategory]);
+
+    const isFashionCategory = useMemo(() => {
+        if (!product?.categoryRelation) return false;
+        const category = product.categoryRelation;
+        const categoryNameLower = category.name.toLowerCase();
+        
+        if (categoryNameLower === 'fashion') return true;
+        
+        // Check parent
+        if (category.parent) {
+            const parentNameLower = category.parent.name.toLowerCase();
+            if (parentNameLower === 'fashion') return true;
+        }
+        
+        return false;
+    }, [product]);
+
+    const isKidsFashionCategory = useMemo(() => {
+        if (!isFashionCategory || !product?.categoryRelation) return false;
+        const category = product.categoryRelation;
+        
+        // Check if parent is Boys, Girls, or Infants
+        if (category.parent) {
+            const parentNameLower = category.parent.name.toLowerCase();
+            if (parentNameLower === 'boys' || parentNameLower === 'girls' || parentNameLower === 'infants') {
+                return true;
+            }
+        }
+        
+        // Check grandparent (Fashion > Boys > Western Wear)
+        if (category.parent && category.parent.parent) {
+            const grandParentNameLower = category.parent.parent.name.toLowerCase();
+            if (grandParentNameLower === 'boys' || grandParentNameLower === 'girls' || grandParentNameLower === 'infants') {
+                return true;
+            }
+        }
+        
+        return false;
+    }, [product, isFashionCategory]);
+
+    const isInfantFashionCategory = useMemo(() => {
+        if (!isKidsFashionCategory || !product?.categoryRelation) return false;
+        const category = product.categoryRelation;
+        
+        if (category.parent && category.parent.name.toLowerCase() === 'infants') {
+            return true;
+        }
+        
+        if (category.parent && category.parent.parent && category.parent.parent.name.toLowerCase() === 'infants') {
+            return true;
+        }
+        
+        return false;
+    }, [product, isKidsFashionCategory]);
+
+    const isBottomwearCategory = useMemo(() => {
+        if (!product?.categoryRelation) return false;
+        const category = product.categoryRelation;
+        const categoryNameLower = category.name.toLowerCase();
+        
+        const bottomwearCategories = ['jeans', 'trousers', 'casual trousers', 'formal trousers', 'shorts', 'track pants', 'skirts'];
+        return bottomwearCategories.some(bw => categoryNameLower.includes(bw));
+    }, [product]);
+
+    const isMenBottomwearCategory = useMemo(() => {
+        if (!isBottomwearCategory || !product?.categoryRelation) return false;
+        const category = product.categoryRelation;
+        
+        // Check if parent is Men
+        if (category.parent) {
+            const parentNameLower = category.parent.name.toLowerCase();
+            if (parentNameLower === 'men') {
+                return true;
+            }
+            
+            // Check grandparent (Fashion > Men > Western Wear > Jeans)
+            if (category.parent.parent) {
+                const grandParentNameLower = category.parent.parent.name.toLowerCase();
+                if (grandParentNameLower === 'men') {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }, [product, isBottomwearCategory]);
+
+    const isBangleCategory = useMemo(() => {
+        if (!product?.categoryRelation) return false;
+        const category = product.categoryRelation;
+        const categoryNameLower = category.name.toLowerCase();
+        return categoryNameLower === 'bangle';
+    }, [product]);
+
+    const isRingCategory = useMemo(() => {
+        if (!product?.categoryRelation) return false;
+        const category = product.categoryRelation;
+        const categoryNameLower = category.name.toLowerCase();
+        return categoryNameLower === 'ring' || categoryNameLower.includes('ring');
+    }, [product]);
+
     // Get all possible sizes from all variations (for display - shows all sizes)
     const allPossibleSizes = useMemo(() => {
         if (!product?.variations) return [];
@@ -210,17 +353,107 @@ export default function Show() {
         product.variations.forEach((v: any) => {
             if (v.size) sizes.add(v.size);
         });
-        // Sort sizes in a logical order
-        const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '3XL', '4XL'];
-        return Array.from(sizes).sort((a, b) => {
-            const indexA = sizeOrder.indexOf(a);
-            const indexB = sizeOrder.indexOf(b);
-            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
-            if (indexA !== -1) return -1;
-            if (indexB !== -1) return 1;
-            return a.localeCompare(b);
-        });
-    }, [product]);
+        
+        // Sort sizes based on category type
+        const sizeArray = Array.from(sizes);
+        
+        if (isBangleCategory) {
+            // Bangle sizes: numeric sorting (inches - 2.0, 2.25, 2.5, etc.)
+            return sizeArray.sort((a, b) => {
+                const numA = parseFloat(a) || 0;
+                const numB = parseFloat(b) || 0;
+                return numA - numB;
+            });
+        } else if (isRingCategory) {
+            // Ring sizes: numeric sorting (4, 5, 6, 7, etc.)
+            return sizeArray.sort((a, b) => {
+                const numA = parseInt(a) || 0;
+                const numB = parseInt(b) || 0;
+                return numA - numB;
+            });
+        } else if (isFootwearCategory) {
+            // Footwear sizes: numeric sorting
+            if (isInfantFootwearCategory) {
+                // Infant footwear: 1-5
+                return sizeArray.sort((a, b) => {
+                    const numA = parseInt(a) || 0;
+                    const numB = parseInt(b) || 0;
+                    return numA - numB;
+                });
+            } else if (isKidsFootwearCategory) {
+                // Kids footwear: 1-13
+                return sizeArray.sort((a, b) => {
+                    const numA = parseInt(a) || 0;
+                    const numB = parseInt(b) || 0;
+                    return numA - numB;
+                });
+            } else {
+                // Adult footwear: 6-12
+                return sizeArray.sort((a, b) => {
+                    const numA = parseInt(a) || 0;
+                    const numB = parseInt(b) || 0;
+                    return numA - numB;
+                });
+            }
+        } else if (isFashionCategory) {
+            if (isBottomwearCategory) {
+                // Bottomwear sizes: numeric sorting (waist sizes)
+                return sizeArray.sort((a, b) => {
+                    const numA = parseInt(a) || 0;
+                    const numB = parseInt(b) || 0;
+                    return numA - numB;
+                });
+            } else if (isInfantFashionCategory) {
+                // Infant fashion: age-based sizes
+                const sizeOrder = ['0M-3M', '3M-6M', '6M-9M', '9M-12M', '12M-18M', '18M-24M', 'Newborn', '2T', '3T', '4T'];
+                return sizeArray.sort((a, b) => {
+                    const indexA = sizeOrder.indexOf(a);
+                    const indexB = sizeOrder.indexOf(b);
+                    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                    if (indexA !== -1) return -1;
+                    if (indexB !== -1) return 1;
+                    return a.localeCompare(b);
+                });
+            } else if (isKidsFashionCategory) {
+                // Kids fashion: age-based sizes
+                const sizeOrder = ['0M-3M', '3M-6M', '6M-9M', '9M-12M', '12M-18M', '18M-24M', 'Newborn', '2Y-4Y', '4Y-6Y', '6Y-8Y', '8Y-10Y', '10Y-12Y', '12Y-14Y', '14Y+'];
+                return sizeArray.sort((a, b) => {
+                    const indexA = sizeOrder.indexOf(a);
+                    const indexB = sizeOrder.indexOf(b);
+                    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                    if (indexA !== -1) return -1;
+                    if (indexB !== -1) return 1;
+                    return a.localeCompare(b);
+                });
+            } else {
+                // Adult fashion: XS, S, M, L, XL, XXL, XXXL
+                const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '3XL', '4XL'];
+                return sizeArray.sort((a, b) => {
+                    const indexA = sizeOrder.indexOf(a);
+                    const indexB = sizeOrder.indexOf(b);
+                    if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                    if (indexA !== -1) return -1;
+                    if (indexB !== -1) return 1;
+                    return a.localeCompare(b);
+                });
+            }
+        } else {
+            // Default: try to sort as adult fashion sizes
+            const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '3XL', '4XL'];
+            return sizeArray.sort((a, b) => {
+                const indexA = sizeOrder.indexOf(a);
+                const indexB = sizeOrder.indexOf(b);
+                if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+                if (indexA !== -1) return -1;
+                if (indexB !== -1) return 1;
+                // Try numeric sorting if not in size order
+                const numA = parseInt(a) || 0;
+                const numB = parseInt(b) || 0;
+                if (numA > 0 && numB > 0) return numA - numB;
+                return a.localeCompare(b);
+            });
+        }
+    }, [product, isFootwearCategory, isKidsFootwearCategory, isInfantFootwearCategory, isFashionCategory, isKidsFashionCategory, isInfantFashionCategory]);
 
     // Check if a size is available for current selection (color + gender + in_stock)
     const isSizeAvailable = useMemo(() => {

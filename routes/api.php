@@ -85,13 +85,15 @@ Route::middleware('auth.optional')->group(function () {
     });
 });
 
+// Logout route - uses optional auth so it works even with expired/invalid tokens
+// This allows users to logout and clear their token even if it's expired
+Route::middleware(['auth.optional', 'throttle:logout'])->post('/auth/logout', [AuthApiController::class, 'logout']);
+
 // Protected Routes (require authentication) - only for authenticated users
 Route::middleware('auth.token')->prefix('auth')->group(function () {
     // User Profile (require authentication)
     Route::post('/user', [AuthApiController::class, 'getUser']);
     Route::post('/user/update', [AuthApiController::class, 'updateProfile']);
-    // Logout with higher rate limit to prevent 429 errors
-    Route::middleware('throttle:logout')->post('/logout', [AuthApiController::class, 'logout']);
     
     // Order Routes (require authentication)
     Route::prefix('orders')->group(function () {
