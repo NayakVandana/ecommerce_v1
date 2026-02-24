@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\AdminRecentlyViewedController;
 use App\Http\Controllers\Admin\AdminCouponController;
 use App\Http\Controllers\Admin\AdminFabricController;
 use App\Http\Controllers\Admin\AdminContactController;
+use App\Http\Controllers\Admin\AdminCustomerController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -126,5 +127,15 @@ Route::prefix('admin')->middleware(['auth.token', 'admin'])->group(function () {
         Route::post('/mark-unread', [AdminContactController::class, 'markAsUnread']);
         Route::post('/delete', [AdminContactController::class, 'destroy']);
         Route::post('/counts', [AdminContactController::class, 'getCounts']);
+    });
+    
+    // Customer Management
+    Route::prefix('customers')->group(function () {
+        Route::post('/', [AdminCustomerController::class, 'index']);
+        Route::post('/store', [AdminCustomerController::class, 'store']);
+        Route::post('/show', [AdminCustomerController::class, 'show']);
+        Route::post('/update', [AdminCustomerController::class, 'update']);
+        Route::post('/delete', [AdminCustomerController::class, 'destroy']);
+        Route::post('/toggle-status', [AdminCustomerController::class, 'toggleStatus']);
     });
 });

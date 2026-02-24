@@ -273,6 +273,16 @@ Route::prefix('admin')->group(function () {
         ]);
     })->name('admin.users.show');
     
+    Route::get('/customers', function () {
+        return Inertia::render('Admin/Customer/index');
+    })->name('admin.customers');
+    
+    Route::get('/customers/{id}', function ($id) {
+        return Inertia::render('Admin/Customer/Show', [
+            'id' => $id
+        ]);
+    })->name('admin.customers.show');
+    
     Route::get('/carts', function () {
         return Inertia::render('Admin/Cart/index');
     })->name('admin.carts');
