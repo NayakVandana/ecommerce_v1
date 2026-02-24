@@ -13,6 +13,7 @@ import {
 
 export default function CategoryIndex() {
     const [categories, setCategories] = useState<any[]>([]);
+    const [categoriesFlat, setCategoriesFlat] = useState<any[]>([]); // Store flat list for operations
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingCategory, setEditingCategory] = useState<any>(null);
@@ -26,31 +27,102 @@ export default function CategoryIndex() {
         loadCategories();
     }, []);
 
+    // Helper function to get full category path
+    const getCategoryPath = (category: any, allCategories: any[]): string => {
+        const path: string[] = [category.name];
+        let currentCategory = category;
+        
+        while (currentCategory.parent_id) {
+            const parent = allCategories.find((c: any) => c.id === currentCategory.parent_id);
+            if (parent) {
+                path.unshift(parent.name);
+                currentCategory = parent;
+            } else {
+                break;
+            }
+        }
+        
+        return path.join(' > ');
+    };
+
+    // Helper function to get category level
+    const getCategoryLevel = (category: any, allCategories: any[]): string => {
+        if (!category.parent_id) return 'Main Category';
+        
+        let level = 1;
+        let currentCategory = category;
+        
+        while (currentCategory.parent_id) {
+            const parent = allCategories.find((c: any) => c.id === currentCategory.parent_id);
+            if (parent) {
+                level++;
+                currentCategory = parent;
+            } else {
+                break;
+            }
+        }
+        
+        if (level === 1) return 'Subcategory';
+        if (level === 2) return 'Child Category';
+        return `Level ${level}`;
+    };
+
+    // Helper function to build hierarchical list for display
+    const buildHierarchicalList = (allCategories: any[]): any[] => {
+        const mainCategories = allCategories.filter((cat: any) => !cat.parent_id);
+        const hierarchicalList: any[] = [];
+        
+        const addCategoryAndChildren = (category: any, level: number = 0) => {
+            // Add the category itself
+            hierarchicalList.push({ ...category, displayLevel: level });
+            
+            // Find and add all direct children
+            const children = allCategories
+                .filter((cat: any) => cat.parent_id === category.id)
+                .sort((a: any, b: any) => {
+                    // Sort by sort_order first, then by name
+                    if (a.sort_order !== b.sort_order) {
+                        return (a.sort_order || 0) - (b.sort_order || 0);
+                    }
+                    return (a.name || '').localeCompare(b.name || '');
+                });
+            
+            // Recursively add children
+            children.forEach((child: any) => {
+                addCategoryAndChildren(child, level + 1);
+            });
+        };
+        
+        // Start with main categories, sorted by sort_order then name
+        mainCategories
+            .sort((a: any, b: any) => {
+                if (a.sort_order !== b.sort_order) {
+                    return (a.sort_order || 0) - (b.sort_order || 0);
+                }
+                return (a.name || '').localeCompare(b.name || '');
+            })
+            .forEach((mainCat: any) => {
+                addCategoryAndChildren(mainCat, 0);
+            });
+        
+        return hierarchicalList;
+    };
+
     const loadCategories = async () => {
         try {
             setLoading(true);
             const response = await useCategoryStore.list();
             if (response.data?.status) {
-                // Use flat list for display and modal
+                // Use flat list for modal and operations
                 const flatCategories = response.data.data?.flat || response.data.data || [];
                 
-                // Sort categories: parent categories first, then subcategories grouped under their parents
-                const sortedCategories = [...flatCategories].sort((a: any, b: any) => {
-                    // If both have parent_id, sort by parent_id first, then by name
-                    if (a.parent_id && b.parent_id) {
-                        if (a.parent_id !== b.parent_id) {
-                            return a.parent_id - b.parent_id;
-                        }
-                        return (a.name || '').localeCompare(b.name || '');
-                    }
-                    // If only one has parent_id, the one without comes first
-                    if (a.parent_id && !b.parent_id) return 1;
-                    if (!a.parent_id && b.parent_id) return -1;
-                    // If neither has parent_id, sort by name
-                    return (a.name || '').localeCompare(b.name || '');
-                });
+                // Store flat list for operations (modal, path calculations, etc.)
+                setCategoriesFlat(flatCategories);
                 
-                setCategories(sortedCategories);
+                // Build hierarchical list for display
+                const hierarchicalList = buildHierarchicalList(flatCategories);
+                
+                setCategories(hierarchicalList);
             }
         } catch (error) {
             console.error('Error loading categories:', error);
@@ -107,17 +179,17 @@ export default function CategoryIndex() {
                 <div className="flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">Categories</h1>
-                        <p className="mt-2 text-sm text-gray-600">Manage product categories</p>
+                        <p className="mt-2 text-sm text-gray-600">Manage product categories and their hierarchy</p>
                     </div>
                     <button
                         onClick={() => {
                             setEditingCategory(null);
                             setShowModal(true);
                         }}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700"
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700"
                     >
                         <PlusIcon className="h-5 w-5 mr-2" />
-                        Add Category
+                        Add New Category
                     </button>
                 </div>
 
@@ -131,88 +203,119 @@ export default function CategoryIndex() {
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Name
+                                        Category Name
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Parent Category
+                                        Category Level
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Slug
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Description
+                                        Full Path
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                         Products
                                     </th>
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Featured
+                                        Status
+                                    </th>
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Date Created
                                     </th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Actions
+                                        Action
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {categories.length > 0 ? (
                                     categories.map((category: any) => {
-                                        // Calculate indentation level based on parent hierarchy
-                                        const getIndentLevel = (cat: any, allCats: any[], level = 0): number => {
-                                            if (!cat.parent_id) return level;
-                                            const parent = allCats.find((c: any) => c.id === cat.parent_id);
-                                            return parent ? getIndentLevel(parent, allCats, level + 1) : level;
-                                        };
-                                        const indentLevel = getIndentLevel(category, categories);
+                                        // Use flat list for path and level calculations
+                                        const categoryPath = getCategoryPath(category, categoriesFlat);
+                                        const categoryLevel = getCategoryLevel(category, categoriesFlat);
+                                        const parentCategory = category.parent_id 
+                                            ? categoriesFlat.find((c: any) => c.id === category.parent_id)
+                                            : null;
+                                        
+                                        const displayLevel = category.displayLevel || 0;
+                                        const indentPx = displayLevel * 32;
                                         
                                         return (
-                                        <tr key={category.id} className="hover:bg-gray-50">
+                                        <tr 
+                                            key={category.id} 
+                                            className={`hover:bg-blue-50 ${
+                                                displayLevel === 0 ? 'bg-gray-50 font-semibold' : 
+                                                displayLevel === 1 ? 'bg-white' : 
+                                                'bg-gray-50'
+                                            }`}
+                                        >
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm font-medium text-gray-900 flex items-center" style={{ paddingLeft: `${indentLevel * 24}px` }}>
-                                                    {indentLevel > 0 && (
-                                                        <span className="mr-2 text-gray-400">└─</span>
-                                                    )}
-                                                    {category.name}
-                                                    {category.parent_id && (
-                                                        <span className="ml-2 text-xs text-gray-500">
-                                                            (Subcategory)
+                                                <div 
+                                                    className="text-sm font-medium text-gray-900 flex items-center"
+                                                    style={{ paddingLeft: `${indentPx}px` }}
+                                                >
+                                                    {displayLevel > 0 && (
+                                                        <span className="mr-2 text-gray-400 flex-shrink-0 font-mono">
+                                                            {displayLevel === 1 ? '├─' : displayLevel === 2 ? '└─' : '└─'}
                                                         </span>
                                                     )}
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-500">
-                                                    {category.parent_id ? (
-                                                        categories.find((c: any) => c.id === category.parent_id)?.name || 'Unknown'
-                                                    ) : (
-                                                        <span className="text-gray-400 italic">Main Category</span>
+                                                    {displayLevel === 0 && (
+                                                        <span className="mr-2 text-blue-500 flex-shrink-0">●</span>
                                                     )}
+                                                    <span className={displayLevel === 0 ? 'text-gray-900 font-bold text-base' : displayLevel === 1 ? 'text-gray-800' : 'text-gray-700'}>
+                                                        {category.name}
+                                                    </span>
                                                 </div>
+                                                {category.description && (
+                                                    <div 
+                                                        className="text-xs text-gray-500 mt-1 max-w-xs truncate"
+                                                        style={{ paddingLeft: `${indentPx + (displayLevel > 0 ? 32 : 20)}px` }}
+                                                    >
+                                                        {category.description}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-500">
-                                                    {category.slug}
-                                                </div>
+                                                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                    !category.parent_id 
+                                                        ? 'bg-blue-100 text-blue-800' 
+                                                        : categoryLevel === 'Subcategory'
+                                                        ? 'bg-purple-100 text-purple-800'
+                                                        : 'bg-pink-100 text-pink-800'
+                                                }`}>
+                                                    {categoryLevel}
+                                                </span>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="text-sm text-gray-500 max-w-xs truncate">
-                                                    {category.description || 'No description'}
+                                                <div className="text-sm text-gray-600">
+                                                    {categoryPath}
                                                 </div>
+                                                {parentCategory && (
+                                                    <div className="text-xs text-gray-500 mt-1">
+                                                        Parent: {parentCategory.name}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">
+                                                <div className="text-sm font-medium text-gray-900">
                                                     {category.products_count || 0}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                {category.is_featured ? (
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                        Yes
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                                        No
-                                                    </span>
-                                                )}
+                                                <span className="inline-flex items-center">
+                                                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                                                    <span className="text-sm text-green-600 font-medium">Active</span>
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="text-sm text-gray-500">
+                                                    {category.created_at 
+                                                        ? new Date(category.created_at).toLocaleDateString('en-GB', {
+                                                            day: '2-digit',
+                                                            month: 'short',
+                                                            year: 'numeric'
+                                                        })
+                                                        : 'N/A'
+                                                    }
+                                                </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                                 <div className="flex justify-end space-x-2">
@@ -221,17 +324,17 @@ export default function CategoryIndex() {
                                                             setEditingCategory(category);
                                                             setShowModal(true);
                                                         }}
-                                                        className="text-indigo-600 hover:text-indigo-900"
-                                                        title="Edit"
+                                                        className="inline-flex items-center justify-center w-8 h-8 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                                                        title="Edit Category"
                                                     >
-                                                        <PencilIcon className="h-5 w-5" />
+                                                        <PencilIcon className="h-4 w-4" />
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteClick(category.id)}
-                                                        className="text-red-600 hover:text-red-900"
-                                                        title="Delete"
+                                                        className="inline-flex items-center justify-center w-8 h-8 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                                                        title="Delete Category"
                                                     >
-                                                        <TrashIcon className="h-5 w-5" />
+                                                        <TrashIcon className="h-4 w-4" />
                                                     </button>
                                                 </div>
                                             </td>
@@ -241,7 +344,7 @@ export default function CategoryIndex() {
                                 ) : (
                                     <tr>
                                         <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">
-                                            No categories found
+                                            No categories found. Click "Add New Category" to create one.
                                         </td>
                                     </tr>
                                 )}
@@ -256,7 +359,7 @@ export default function CategoryIndex() {
                     onClose={handleModalClose}
                     editingCategory={editingCategory}
                     onSuccess={handleModalSuccess}
-                    categories={categories}
+                    categories={categoriesFlat}
                 />
 
                 {/* Delete Confirmation Modal */}

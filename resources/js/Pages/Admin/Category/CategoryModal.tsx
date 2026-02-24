@@ -255,18 +255,49 @@ export default function CategoryModal({
                                         <option value="">None (Main Category)</option>
                                         {parentCategories
                                             .sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''))
-                                            .map((category: any) => (
-                                            <option key={category.id} value={category.id}>
-                                                {category.name}
-                                            </option>
-                                        ))}
+                                            .map((category: any) => {
+                                                // Build full path for parent category
+                                                const getCategoryPath = (cat: any, allCats: any[]): string => {
+                                                    const path: string[] = [cat.name];
+                                                    let currentCat = cat;
+                                                    
+                                                    while (currentCat.parent_id) {
+                                                        const parent = allCats.find((c: any) => c.id === currentCat.parent_id);
+                                                        if (parent) {
+                                                            path.unshift(parent.name);
+                                                            currentCat = parent;
+                                                        } else {
+                                                            break;
+                                                        }
+                                                    }
+                                                    
+                                                    return path.join(' > ');
+                                                };
+                                                
+                                                const fullPath = getCategoryPath(category, categories);
+                                                const displayText = fullPath !== category.name ? `${category.name} (${fullPath})` : category.name;
+                                                
+                                                return (
+                                                    <option key={category.id} value={category.id}>
+                                                        {displayText}
+                                                    </option>
+                                                );
+                                            })}
                                     </select>
                                     {errors.parent_id && (
                                         <p className="mt-1 text-sm text-red-600">{errors.parent_id}</p>
                                     )}
-                                    <p className="mt-1 text-xs text-gray-500">
-                                        Select a parent category to create a subcategory. Leave empty for main category.
-                                    </p>
+                                    <div className="mt-2 space-y-1">
+                                        <p className="text-xs text-gray-600 font-medium">Category Hierarchy:</p>
+                                        <ul className="text-xs text-gray-500 space-y-1 ml-4">
+                                            <li>• <span className="font-medium text-blue-600">Main Category</span> - Top-level category (no parent)</li>
+                                            <li>• <span className="font-medium text-purple-600">Subcategory</span> - Child of a main category</li>
+                                            <li>• <span className="font-medium text-pink-600">Child Category</span> - Child of a subcategory</li>
+                                        </ul>
+                                        <p className="mt-2 text-xs text-gray-500">
+                                            Select a parent category to create a subcategory or child category. Leave empty to create a main category.
+                                        </p>
+                                    </div>
                                 </div>
 
                                 {/* Description */}
