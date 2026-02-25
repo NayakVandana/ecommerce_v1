@@ -129,8 +129,8 @@ Route::get('/terms', function () {
 |
 */
 
-// Admin Routes
-Route::prefix('admin')->group(function () {
+// Admin Routes (protected - only admin users can access)
+Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/', function () {
         return Inertia::render('Admin/Dashboard/index');
     })->name('admin.dashboard');

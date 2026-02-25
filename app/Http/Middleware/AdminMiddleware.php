@@ -16,9 +16,15 @@ class AdminMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (!$request->user() || $request->user()->role !== 'admin') {
-            return response()->json([
-                'message' => 'Unauthorized. Admin access required.'
-            ], 403);
+            // For API requests, return JSON response
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Unauthorized. Admin access required.'
+                ], 403);
+            }
+            
+            // For web requests, redirect to home page
+            return redirect()->route('home')->with('error', 'Unauthorized. Admin access required.');
         }
 
         return $next($request);
