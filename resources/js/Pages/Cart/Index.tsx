@@ -121,8 +121,8 @@ export default function Index() {
 
     return (
         <AppLayout>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <h1 className="text-3xl font-bold mb-6">Shopping Cart</h1>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+                <h1 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Shopping Cart</h1>
 
                 {items.length === 0 ? (
                     <div className="bg-white rounded-lg shadow-md p-12 text-center">
@@ -135,7 +135,7 @@ export default function Index() {
                         </Link>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
                         {/* Cart Items */}
                         <div className="lg:col-span-2">
                             <div className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -146,11 +146,11 @@ export default function Index() {
                                     const imageUrl = primaryImage?.url || primaryImage?.file_path || '';
                                     
                                     return (
-                                        <div key={item.id} className="border-b last:border-b-0 p-6">
-                                            <div className="flex gap-4">
-                                                <div className="flex-shrink-0 relative group">
+                                        <div key={item.id} className="border-b last:border-b-0 p-4 sm:p-6">
+                                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                                                <div className="flex-shrink-0 relative group flex justify-center sm:justify-start">
                                                     <Link href={`/products/${product?.id}`}>
-                                                        <div className="w-24 h-24 bg-gray-200 rounded overflow-hidden relative">
+                                                        <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gray-200 rounded overflow-hidden relative">
                                                             {imageUrl ? (
                                                                 <img 
                                                                     src={imageUrl} 
@@ -167,9 +167,9 @@ export default function Index() {
                                                     </Link>
                                                 </div>
                                                 
-                                                <div className="flex-1">
+                                                <div className="flex-1 min-w-0">
                                                     <Link href={`/products/${product?.id}`}>
-                                                        <h3 className="font-semibold text-lg mb-1 hover:text-indigo-600">
+                                                        <h3 className="font-semibold text-base sm:text-lg mb-1 hover:text-indigo-600 break-words">
                                                             {product?.product_name}
                                                         </h3>
                                                     </Link>

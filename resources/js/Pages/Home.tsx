@@ -560,8 +560,8 @@ export default function Home() {
 
                             {/* Search Results Header */}
                             {searchTerm && (
-                                <div className="mb-6">
-                                    <h2 className="text-xl font-semibold text-gray-900">
+                                <div className="mb-4 sm:mb-6">
+                                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900 break-words">
                                         {products.length > 0 
                                             ? `Search Results for "${searchTerm}" (${pagination?.total || products.length} found)`
                                             : `No products found for "${searchTerm}"`
@@ -572,26 +572,26 @@ export default function Home() {
 
                             {/* Featured Collections - Only show when not searching */}
                             {!searchTerm && specificCategories.length > 0 && (
-                                <div className="mb-10">
-                                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Featured Collections</h2>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="mb-8 sm:mb-10">
+                                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Featured Collections</h2>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                         {specificCategories.map((category) => (
                                             <Link
                                                 key={category.id}
                                                 href={`/categories/${category.slug}`}
-                                                className="group relative overflow-hidden rounded-lg bg-indigo-600 p-6 text-white hover:bg-indigo-700 transition-colors"
+                                                className="group relative overflow-hidden rounded-lg bg-indigo-600 p-4 sm:p-6 text-white hover:bg-indigo-700 transition-colors"
                                             >
-                                                <div className="flex items-center gap-4">
-                                                    <div className="w-16 h-16 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                                                <div className="flex items-center gap-3 sm:gap-4">
+                                                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
                                                         <CategoryIcon 
                                                             icon={category.icon} 
-                                                            className="h-8 w-8 text-white"
+                                                            className="h-6 w-6 sm:h-8 sm:w-8 text-white"
                                                         />
                                                     </div>
-                                                    <div className="flex-1">
-                                                        <h3 className="text-xl font-bold mb-1">{category.name}</h3>
-                                                        <p className="text-indigo-100 text-sm mb-2">Explore our exclusive collection</p>
-                                                        <span className="text-sm font-medium inline-flex items-center">
+                                                    <div className="flex-1 min-w-0">
+                                                        <h3 className="text-lg sm:text-xl font-bold mb-1 break-words">{category.name}</h3>
+                                                        <p className="text-indigo-100 text-xs sm:text-sm mb-2">Explore our exclusive collection</p>
+                                                        <span className="text-xs sm:text-sm font-medium inline-flex items-center">
                                                             Shop Now →
                                                         </span>
                                                     </div>

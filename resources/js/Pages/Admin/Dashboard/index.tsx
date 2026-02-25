@@ -103,8 +103,8 @@ export default function DashboardIndex() {
         <AdminLayout currentPath="/admin">
             <div className="space-y-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-                    <p className="mt-2 text-sm text-gray-600">Overview of your Selorise platform</p>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
+                    <p className="mt-2 text-xs sm:text-sm text-gray-600">Overview of your Selorise platform</p>
                 </div>
 
                 {loading ? (
@@ -112,7 +112,7 @@ export default function DashboardIndex() {
                 ) : (
                     <>
                         {/* Stats Grid */}
-                        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-4 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
                             {statCards.map((stat) => {
                                 const Icon = stat.icon;
                                 return (
@@ -120,17 +120,17 @@ export default function DashboardIndex() {
                                         key={stat.name}
                                         className="bg-white overflow-hidden shadow rounded-lg"
                                     >
-                                        <div className="p-5">
+                                        <div className="p-4 sm:p-5">
                                             <div className="flex items-center">
-                                                <div className={`flex-shrink-0 ${stat.color} rounded-md p-3`}>
-                                                    <Icon className="h-6 w-6 text-white" />
+                                                <div className={`flex-shrink-0 ${stat.color} rounded-md p-2 sm:p-3`}>
+                                                    <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                                                 </div>
-                                                <div className="ml-5 w-0 flex-1">
+                                                <div className="ml-4 sm:ml-5 w-0 flex-1 min-w-0">
                                                     <dl>
-                                                        <dt className="text-sm font-medium text-gray-500 truncate">
+                                                        <dt className="text-xs sm:text-sm font-medium text-gray-500 truncate">
                                                             {stat.name}
                                                         </dt>
-                                                        <dd className="text-2xl font-semibold text-gray-900">
+                                                        <dd className="text-xl sm:text-2xl font-semibold text-gray-900">
                                                             {stat.value}
                                                         </dd>
                                                     </dl>
@@ -144,25 +144,25 @@ export default function DashboardIndex() {
 
                         {/* Recent Orders */}
                         <div className="bg-white shadow rounded-lg">
-                            <div className="px-4 py-5 sm:p-6">
-                                <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Orders</h3>
+                            <div className="px-3 py-4 sm:px-4 sm:py-5 lg:p-6">
+                                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-3 sm:mb-4">Recent Orders</h3>
                                 <div className="overflow-x-auto">
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gray-50">
                                             <tr>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                                     Order ID
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                                     Customer
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                                     Total
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                                                     Status
                                                 </th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap hidden sm:table-cell">
                                                     Date
                                                 </th>
                                             </tr>
@@ -171,26 +171,26 @@ export default function DashboardIndex() {
                                             {recentOrders.length > 0 ? (
                                                 recentOrders.map((order: any) => (
                                                     <tr key={order.id} className="hover:bg-gray-50">
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
                                                             #{order.id}
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 max-w-[120px] sm:max-w-none truncate">
                                                             {order.user?.name || 'Guest'}
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
                                                             ₹{order.total?.toLocaleString() || '0.00'}
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap">
+                                                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                                                             {getStatusBadge(order.status)}
                                                         </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                        <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden sm:table-cell">
                                                             {new Date(order.created_at).toLocaleDateString()}
                                                         </td>
                                                     </tr>
                                                 ))
                                             ) : (
                                                 <tr>
-                                                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">
+                                                    <td colSpan={5} className="px-3 sm:px-6 py-4 text-center text-xs sm:text-sm text-gray-500">
                                                         No recent orders
                                                     </td>
                                                 </tr>

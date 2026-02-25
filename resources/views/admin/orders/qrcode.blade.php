@@ -23,28 +23,54 @@
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            padding: 40px;
+            padding: 20px;
             max-width: 500px;
             width: 100%;
             text-align: center;
         }
+        @media (min-width: 640px) {
+            .container {
+                padding: 40px;
+            }
+        }
         .header {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+        }
+        @media (min-width: 640px) {
+            .header {
+                margin-bottom: 30px;
+            }
         }
         .header h1 {
             color: #333;
-            font-size: 28px;
+            font-size: 22px;
             margin-bottom: 10px;
+        }
+        @media (min-width: 640px) {
+            .header h1 {
+                font-size: 28px;
+            }
         }
         .header p {
             color: #666;
-            font-size: 16px;
+            font-size: 14px;
+        }
+        @media (min-width: 640px) {
+            .header p {
+                font-size: 16px;
+            }
         }
         .order-info {
             background: #f8f9fa;
             border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        @media (min-width: 640px) {
+            .order-info {
+                padding: 20px;
+                margin-bottom: 30px;
+            }
         }
         .order-info p {
             margin: 8px 0;
@@ -69,8 +95,15 @@
         }
         .qr-code-container img {
             display: block;
-            width: 200px;
-            height: 200px;
+            width: 150px;
+            height: 150px;
+            max-width: 100%;
+        }
+        @media (min-width: 640px) {
+            .qr-code-container img {
+                width: 200px;
+                height: 200px;
+            }
         }
         .payment-info {
             background: #e8f5e9;
@@ -88,16 +121,26 @@
             font-weight: 600;
         }
         .amount {
-            font-size: 32px;
+            font-size: 24px;
             font-weight: bold;
             color: #1b5e20;
             margin: 10px 0;
         }
+        @media (min-width: 640px) {
+            .amount {
+                font-size: 32px;
+            }
+        }
         .upi-id {
-            font-size: 18px;
+            font-size: 14px;
             color: #2e7d32;
             margin: 10px 0;
             word-break: break-all;
+        }
+        @media (min-width: 640px) {
+            .upi-id {
+                font-size: 18px;
+            }
         }
         .instructions {
             margin-top: 30px;
@@ -120,22 +163,38 @@
             font-size: 14px;
         }
         .actions {
-            margin-top: 30px;
+            margin-top: 20px;
             display: flex;
-            gap: 15px;
+            gap: 10px;
             justify-content: center;
             flex-wrap: wrap;
+            flex-direction: column;
+        }
+        @media (min-width: 640px) {
+            .actions {
+                margin-top: 30px;
+                gap: 15px;
+                flex-direction: row;
+            }
         }
         .btn {
-            padding: 12px 24px;
+            padding: 10px 20px;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             text-decoration: none;
             display: inline-block;
             transition: all 0.3s ease;
+            width: 100%;
+        }
+        @media (min-width: 640px) {
+            .btn {
+                padding: 12px 24px;
+                font-size: 16px;
+                width: auto;
+            }
         }
         .btn-primary {
             background: #667eea;

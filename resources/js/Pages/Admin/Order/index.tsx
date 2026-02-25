@@ -823,11 +823,11 @@ export default function OrderIndex() {
             <div className="space-y-6">
                 {/* Title */}
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-900">Manage your Orders</h1>
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Manage your Orders</h1>
                 </div>
 
                 {/* Order Status Cards Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 sm:gap-4">
                     {orderStatusCards.map((card) => {
                         const Icon = card.icon;
                         const isActive = normalizedSection === card.id || (card.id === 'all' && normalizedSection === 'all');
@@ -859,13 +859,13 @@ export default function OrderIndex() {
                 <div>
                     
                     {/* Search and Filters */}
-                    <div className="bg-white shadow rounded-lg p-4">
-                        <div className="flex flex-wrap items-center gap-3">
+                    <div className="bg-white shadow rounded-lg p-3 sm:p-4">
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                             {/* Search Bar */}
-                            <div className="flex-1 min-w-[200px]">
+                            <div className="flex-1 w-full sm:min-w-[200px]">
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                                        <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                                     </div>
                                     <input
                                         type="text"
@@ -873,19 +873,19 @@ export default function OrderIndex() {
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                         onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                                         placeholder="Search"
-                                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                        className="block w-full pl-9 sm:pl-10 pr-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
                                     />
                                     <button
                                         onClick={handleSearch}
                                         className="absolute inset-y-0 right-0 pr-3 flex items-center"
                                     >
-                                        <span className="text-sm text-indigo-600 hover:text-indigo-800">Search</span>
+                                        <span className="text-xs sm:text-sm text-indigo-600 hover:text-indigo-800">Search</span>
                                     </button>
                                 </div>
                             </div>
                             
                             {/* Date Filters */}
-                            <div className="flex-shrink-0 min-w-[280px]">
+                            <div className="flex-shrink-0 w-full sm:w-auto sm:min-w-[280px]">
                                 <FormDatePicker
                                     title="Filter by Date Range"
                                     isRange={true}
@@ -915,38 +915,38 @@ export default function OrderIndex() {
                             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
                         </div>
                     ) : (
-                        <div className="bg-white shadow rounded-lg overflow-auto">
-                            <table className="min-w-full divide-y divide-gray-200 ">
+                        <div className="bg-white shadow rounded-lg overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-800">
                                     <tr>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                        <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap">
                                             Order ID
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                                            No of Products
+                                        <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap">
+                                            Products
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                                            Customer Name
+                                        <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap">
+                                            Customer
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                        <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap">
                                             Amount
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                                            Delivery Status
+                                        <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap">
+                                            Status
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                                            Payment Status
+                                        <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap hidden md:table-cell">
+                                            Payment
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                        <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap hidden lg:table-cell">
                                             Delivery Boy
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                        <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap hidden lg:table-cell">
                                             Date
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
-                                            Expected Delivery Date
+                                        <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap hidden xl:table-cell">
+                                            Delivery Date
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">
+                                        <th className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-white uppercase tracking-wider whitespace-nowrap">
                                             Action
                                         </th>
                                     </tr>
@@ -960,23 +960,23 @@ export default function OrderIndex() {
                                                 key={order.id} 
                                                 className={shouldHighlight ? "bg-red-100 hover:bg-red-200" : "hover:bg-gray-50"}
                                             >
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                                <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
                                                         <Link
                                                             href={`/admin/orders/${order.id}?section=${normalizedSection}`}
                                                             className="text-indigo-600 hover:text-indigo-900 font-medium hover:underline"
                                                         >
                                                             {order.order_number || `#${order.id}`} 
                                                             {order.is_direct_order && (
-                                                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                                                Direct Order
+                                                            <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 ml-1">
+                                                                Direct
                                                             </span>
                                                         )}
                                                         </Link>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
                                                     {order.items?.length || 0}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 max-w-[120px] sm:max-w-none truncate">
                                                     {order.user?.id ? (
                                                         <Link
                                                             href={`/admin/users/${order.user.id}?from=orders&section=${normalizedSection}`}
@@ -988,13 +988,13 @@ export default function OrderIndex() {
                                                             <span>{order.name || 'Guest'}</span>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    {Number(order.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900">
+                                                    ₹{Number(order.total || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                                                     {getDeliveryStatusBadge(order.status)}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap">
+                                                <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap hidden md:table-cell">
                                                     <div className="flex items-center gap-2">
                                                         {getPaymentStatusBadge(order)}
                                                         <button
@@ -1006,7 +1006,7 @@ export default function OrderIndex() {
                                                         </button>
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 hidden lg:table-cell">
                                                     {order.delivery_boy ? (
                                                         <div>
                                                             <p className="font-medium">{order.delivery_boy.name}</p>
@@ -1018,13 +1018,13 @@ export default function OrderIndex() {
                                                         <span className="text-gray-400 text-xs">Not assigned</span>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-500 hidden lg:table-cell">
                                                     {new Date(order.created_at).toISOString().split('T')[0]}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                    <div className="flex items-center gap-2">
+                                                <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm text-gray-900 hidden xl:table-cell">
+                                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-1 sm:gap-2">
                                                         {order.delivery_date ? (
-                                                            <span className="text-sm font-medium text-indigo-600">
+                                                            <span className="text-xs sm:text-sm font-medium text-indigo-600">
                                                                 {new Date(order.delivery_date).toLocaleDateString('en-US', { 
                                                                     year: 'numeric', 
                                                                     month: 'short', 
@@ -1041,19 +1041,19 @@ export default function OrderIndex() {
                                                                 title="Set Delivery Date"
                                                             >
                                                                 <TruckIcon className="h-3 w-3" />
-                                                                {order.delivery_date ? 'Change' : 'Set'}
+                                                                <span className="hidden sm:inline">{order.delivery_date ? 'Change' : 'Set'}</span>
                                                             </button>
                                                         )}
                                                     </div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                                    <div className="flex items-center gap-2">
+                                                <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs sm:text-sm font-medium">
+                                                    <div className="flex items-center gap-1 sm:gap-2">
                                                         <Link
                                                             href={`/admin/orders/${order.id}?section=${normalizedSection}`}
                                                             className="text-indigo-600 hover:text-indigo-900"
                                                             title="View Details"
                                                         >
-                                                            <EyeIcon className="h-5 w-5" />
+                                                            <EyeIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                                                         </Link>
                                                         
                                                         {/* Assign Delivery Boy - Show once for orders that need delivery boy */}
@@ -1061,11 +1061,12 @@ export default function OrderIndex() {
                                                          (order.status === 'processing' || order.status === 'shipped' || order.status === 'out_for_delivery') && (
                                                             <button
                                                                 onClick={() => handleAssignDeliveryBoyClick(order.id)}
-                                                                className="px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 flex items-center gap-1"
+                                                                className="px-2 sm:px-3 py-1 text-xs font-medium text-white bg-indigo-600 rounded hover:bg-indigo-700 flex items-center gap-1"
                                                                 title="Assign Delivery Boy"
                                                             >
                                                                 <UserIcon className="h-3 w-3" />
-                                                                Assign Delivery
+                                                                <span className="hidden sm:inline">Assign Delivery</span>
+                                                                <span className="sm:hidden">Assign</span>
                                                             </button>
                                                         )}
 
@@ -1074,14 +1075,14 @@ export default function OrderIndex() {
                                                             <>
                                                                 <button
                                                                     onClick={() => handleAcceptOrder(order.id)}
-                                                                    className="px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700"
+                                                                    className="px-2 sm:px-3 py-1 text-xs font-medium text-white bg-green-600 rounded hover:bg-green-700"
                                                                     title="Accept Order"
                                                                 >
                                                                     Accept
                                                                 </button>
                                                                 <button
                                                                     onClick={() => handleRejectOrder(order.id)}
-                                                                    className="px-3 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700"
+                                                                    className="px-2 sm:px-3 py-1 text-xs font-medium text-white bg-red-600 rounded hover:bg-red-700"
                                                                     title="Reject Order"
                                                                 >
                                                                     Reject

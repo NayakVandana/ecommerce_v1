@@ -94,10 +94,10 @@ export default function Register() {
 
     return (
         <AppLayout>
-            <div className="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-                <div className="max-w-md w-full space-y-8">
+            <div className="min-h-[calc(100vh-200px)] flex items-center justify-center py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-md w-full space-y-6 sm:space-y-8">
                     <div>
-                        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+                        <h2 className="mt-4 sm:mt-6 text-center text-2xl sm:text-3xl font-extrabold text-gray-900">
                             Create your account
                         </h2>
                         <p className="mt-2 text-center text-sm text-gray-600">

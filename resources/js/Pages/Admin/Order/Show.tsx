@@ -617,8 +617,8 @@ export default function OrderShow() {
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>
-                            <h1 className="text-3xl font-bold text-gray-900">Order Details</h1>
-                            <p className="mt-1 text-sm text-gray-600">
+                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Order Details</h1>
+                            <p className="mt-1 text-xs sm:text-sm text-gray-600">
                                 Order #{order.order_number || order.id}
                             </p>
                             {order.status === 'cancelled' && order.cancellation_reason && (
@@ -642,33 +642,40 @@ export default function OrderShow() {
                                 </div>
                             )}
                         </div>
-                        <div className="flex items-center gap-3">
-                            {getStatusBadge(order.status)}
-                            <a
-                                href={`/admin/orders/${order.id}/qr-code`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors"
-                            >
-                                <QrCodeIcon className="h-4 w-4 mr-2" />
-                                Generate QR Code
-                            </a>
-                            <a
-                                href={`/admin/orders/${order.id}/invoice`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors"
-                            >
-                                <EyeIcon className="h-4 w-4 mr-2" />
-                                View Invoice
-                            </a>
-                            <a
-                                href={`/admin/orders/${order.id}/invoice/download`}
-                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
-                            >
-                                <DocumentArrowDownIcon className="h-4 w-4 mr-2" />
-                                Download PDF
-                            </a>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+                            <div className="flex justify-center sm:justify-start">
+                                {getStatusBadge(order.status)}
+                            </div>
+                            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                                <a
+                                    href={`/admin/orders/${order.id}/qr-code`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors"
+                                >
+                                    <QrCodeIcon className="h-4 w-4 mr-1 sm:mr-2" />
+                                    <span className="hidden sm:inline">Generate QR Code</span>
+                                    <span className="sm:hidden">QR Code</span>
+                                </a>
+                                <a
+                                    href={`/admin/orders/${order.id}/invoice`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors"
+                                >
+                                    <EyeIcon className="h-4 w-4 mr-1 sm:mr-2" />
+                                    <span className="hidden sm:inline">View Invoice</span>
+                                    <span className="sm:hidden">Invoice</span>
+                                </a>
+                                <a
+                                    href={`/admin/orders/${order.id}/invoice/download`}
+                                    className="inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 transition-colors"
+                                >
+                                    <DocumentArrowDownIcon className="h-4 w-4 mr-1 sm:mr-2" />
+                                    <span className="hidden sm:inline">Download PDF</span>
+                                    <span className="sm:hidden">PDF</span>
+                                </a>
+                            </div>
                         </div>
                     </div>
 
@@ -703,25 +710,25 @@ export default function OrderShow() {
                 </div>
 
                 {/* Order Timeline */}
-                <div className="bg-white shadow rounded-lg p-6">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-6">Order Timeline</h2>
+                <div className="bg-white shadow rounded-lg p-4 sm:p-6">
+                    <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4 sm:mb-6">Order Timeline</h2>
                     <div className="relative">
                         {/* Timeline Line */}
-                        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                        <div className="absolute left-3 sm:left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
                         
                         <div className="space-y-6">
                             {/* Ordered */}
                             <div className="relative flex items-start">
-                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 ${
+                                <div className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center z-10 ${
                                     order.created_at ? 'bg-green-500' : 'bg-gray-300'
                                 }`}>
-                                    <CheckCircleIcon className={`h-5 w-5 ${
+                                    <CheckCircleIcon className={`h-4 w-4 sm:h-5 sm:w-5 ${
                                         order.created_at ? 'text-white' : 'text-gray-500'
                                     }`} />
                                 </div>
-                                <div className="ml-4 flex-1">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className={`text-sm font-semibold ${
+                                <div className="ml-3 sm:ml-4 flex-1 min-w-0">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0">
+                                        <h3 className={`text-xs sm:text-sm font-semibold ${
                                             order.created_at ? 'text-gray-900' : 'text-gray-400'
                                         }`}>
                                             Order Placed
@@ -1292,16 +1299,16 @@ export default function OrderShow() {
                         </div>
 
                         {/* Customer Information */}
-                        <div className="bg-white shadow rounded-lg p-6">
-                            <h2 className="text-lg font-semibold text-gray-900 mb-4">Customer Information</h2>
-                            <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-white shadow rounded-lg p-4 sm:p-6">
+                            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Customer Information</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                 <div>
                                     <p className="text-xs text-gray-500">Name</p>
-                                    <p className="text-sm font-medium text-gray-900">{order.name}</p>
+                                    <p className="text-sm font-medium text-gray-900 break-words">{order.name}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500">Email</p>
-                                    <p className="text-sm font-medium text-gray-900">{order.email}</p>
+                                    <p className="text-sm font-medium text-gray-900 break-all">{order.email}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500">Phone</p>
@@ -1310,8 +1317,8 @@ export default function OrderShow() {
                                 {order.user && (
                                     <div>
                                         <p className="text-xs text-gray-500">User Account</p>
-                                        <p className="text-sm font-medium text-gray-900">
-                                            {order.user.name} ({order.user.email})
+                                        <p className="text-sm font-medium text-gray-900 break-words">
+                                            {order.user.name} <span className="text-xs text-gray-500">({order.user.email})</span>
                                         </p>
                                     </div>
                                 )}
@@ -1319,8 +1326,8 @@ export default function OrderShow() {
                         </div>
 
                         {/* Shipping Address */}
-                        <div className="bg-white shadow rounded-lg p-6">
-                            <h2 className="text-lg font-semibold text-gray-900 mb-4">Shipping Address</h2>
+                        <div className="bg-white shadow rounded-lg p-4 sm:p-6">
+                            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Shipping Address</h2>
                             <div className="text-sm text-gray-900 space-y-2">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div>
@@ -1473,8 +1480,8 @@ export default function OrderShow() {
                         </div>
 
                         {/* Order Items */}
-                        <div className="bg-white shadow rounded-lg p-6">
-                            <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h2>
+                        <div className="bg-white shadow rounded-lg p-4 sm:p-6">
+                            <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">Order Items</h2>
                             <div className="space-y-4">
                                 {items.map((item: any) => {
                                     const product = item.product;
@@ -1486,9 +1493,9 @@ export default function OrderShow() {
                                     const hasReplacementStatus = item.replacement_status;
                                     
                                     return (
-                                        <div key={item.id} className="flex gap-4 pb-4 border-b last:border-b-0">
-                                            <div className="flex-shrink-0">
-                                                <div className="w-20 h-20 bg-gray-200 rounded overflow-hidden">
+                                        <div key={item.id} className="flex flex-col sm:flex-row gap-3 sm:gap-4 pb-4 border-b last:border-b-0">
+                                            <div className="flex-shrink-0 flex justify-center sm:justify-start">
+                                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded overflow-hidden">
                                                     {imageUrl ? (
                                                         <img 
                                                             src={imageUrl} 
@@ -1501,12 +1508,12 @@ export default function OrderShow() {
                                                 </div>
                                             </div>
                                             
-                                            <div className="flex-1">
-                                                <h3 className="font-semibold text-sm">
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-semibold text-sm break-words">
                                                     {item.product_name || product?.product_name}
                                                 </h3>
                                                 {item.product_sku && (
-                                                    <p className="text-xs text-gray-500">SKU: {item.product_sku}</p>
+                                                    <p className="text-xs text-gray-500 break-all">SKU: {item.product_sku}</p>
                                                 )}
                                                 {(item.size || item.color) && (
                                                     <p className="text-xs text-gray-500">
@@ -1854,10 +1861,10 @@ export default function OrderShow() {
                             onClick={() => setShowDeliveryBoyModal(false)}
                         ></div>
 
-                        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full mx-4 sm:mx-auto sm:my-8 sm:w-full sm:max-w-lg">
                             <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-lg font-semibold text-gray-900">Assign Delivery Boy</h3>
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">Assign Delivery Boy</h3>
                                     <button
                                         type="button"
                                         onClick={() => setShowDeliveryBoyModal(false)}
@@ -1932,10 +1939,10 @@ export default function OrderShow() {
                             onClick={() => setShowDeliveryDateModal(false)}
                         ></div>
 
-                        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+                        <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all w-full mx-4 sm:mx-auto sm:my-8 sm:w-full sm:max-w-lg">
                             <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
                                 <div className="flex items-center justify-between mb-4">
-                                    <h3 className="text-lg font-semibold text-gray-900">Update Delivery Date</h3>
+                                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">Update Delivery Date</h3>
                                     <button
                                         type="button"
                                         onClick={() => setShowDeliveryDateModal(false)}

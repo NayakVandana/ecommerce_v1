@@ -299,30 +299,30 @@ export default function DeliveryBoyIndex() {
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-white rounded-lg shadow p-4">
+                        <div className="bg-white rounded-lg shadow p-3 sm:p-4">
                             <div className="flex items-center">
-                                <ClockIcon className="h-8 w-8 text-yellow-600" />
-                                <div className="ml-4">
-                                    <p className="text-sm text-gray-500">Pending Delivery</p>
-                                    <p className="text-2xl font-bold text-gray-900">{stats.pending_delivery || 0}</p>
+                                <ClockIcon className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 flex-shrink-0" />
+                                <div className="ml-3 sm:ml-4 min-w-0">
+                                    <p className="text-xs sm:text-sm text-gray-500">Pending Delivery</p>
+                                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.pending_delivery || 0}</p>
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-white rounded-lg shadow p-4">
+                        <div className="bg-white rounded-lg shadow p-3 sm:p-4">
                             <div className="flex items-center">
-                                <CheckCircleIcon className="h-8 w-8 text-green-600" />
-                                <div className="ml-4">
-                                    <p className="text-sm text-gray-500">Delivered</p>
-                                    <p className="text-2xl font-bold text-gray-900">{stats.delivered || 0}</p>
+                                <CheckCircleIcon className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 flex-shrink-0" />
+                                <div className="ml-3 sm:ml-4 min-w-0">
+                                    <p className="text-xs sm:text-sm text-gray-500">Delivered</p>
+                                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.delivered || 0}</p>
                                 </div>
                             </div>
                         </div>
-                        <div className="bg-white rounded-lg shadow p-4">
+                        <div className="bg-white rounded-lg shadow p-3 sm:p-4">
                             <div className="flex items-center">
-                                <CheckCircleIcon className="h-8 w-8 text-blue-600" />
-                                <div className="ml-4">
-                                    <p className="text-sm text-gray-500">Today's Deliveries</p>
-                                    <p className="text-2xl font-bold text-gray-900">{stats.today_deliveries || 0}</p>
+                                <CheckCircleIcon className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 flex-shrink-0" />
+                                <div className="ml-3 sm:ml-4 min-w-0">
+                                    <p className="text-xs sm:text-sm text-gray-500">Today's Deliveries</p>
+                                    <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.today_deliveries || 0}</p>
                                 </div>
                             </div>
                         </div>
@@ -331,8 +331,8 @@ export default function DeliveryBoyIndex() {
 
                 {/* Orders List */}
                 <div className="bg-white rounded-lg shadow">
-                    <div className="px-6 py-4 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-900">Assigned Orders</h2>
+                    <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                        <h2 className="text-base sm:text-lg font-semibold text-gray-900">Assigned Orders</h2>
                     </div>
 
                     {orders.length === 0 ? (
@@ -350,19 +350,19 @@ export default function DeliveryBoyIndex() {
                                     order.delivery_boy_id // Only show orders assigned to this delivery boy
                                 )
                                 .map((order: any) => (
-                                <div key={order.id} className="p-6 hover:bg-gray-50 transition-colors">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <h3 className="text-lg font-semibold text-gray-900">
+                                <div key={order.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
+                                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                                                <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                                                     Order #{order.order_number || order.id}
                                                 </h3>
-                                                <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-100 text-indigo-800">
+                                                <span className="px-2.5 py-1 rounded-md text-xs font-medium bg-indigo-100 text-indigo-800 self-start">
                                                     Out for Delivery
                                                 </span>
                                             </div>
                                             
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-3 sm:mt-4">
                                                 <div>
                                                     <p className="text-xs text-gray-500 mb-1">Customer</p>
                                                     <p className="text-sm font-medium text-gray-900">{order.name}</p>
@@ -616,9 +616,9 @@ export default function DeliveryBoyIndex() {
                                             )}
                                         </div>
 
-                                        <div className="ml-6">
+                                        <div className="lg:ml-6 w-full lg:w-80">
                                             {order.otp_code && !order.otp_verified ? (
-                                                <div className="w-80 bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
+                                                <div className="w-full lg:w-80 bg-indigo-50 border-2 border-indigo-200 rounded-lg p-3 sm:p-4">
                                                     <p className="text-sm font-semibold text-gray-900 mb-3">Enter OTP to Complete Delivery</p>
                                                     <p className="text-xs text-gray-600 mb-3">Ask the customer for the 6-digit OTP code to verify delivery</p>
                                                     <div className="space-y-3">
@@ -641,9 +641,9 @@ export default function DeliveryBoyIndex() {
                                                     </div>
                                                 </div>
                                             ) : order.otp_verified ? (
-                                                <div className="w-80 bg-green-50 border-2 border-green-200 rounded-lg p-4 text-center">
-                                                    <CheckCircleIcon className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                                                    <p className="text-sm font-semibold text-green-900">Order Delivered</p>
+                                                <div className="w-full lg:w-80 bg-green-50 border-2 border-green-200 rounded-lg p-3 sm:p-4 text-center">
+                                                    <CheckCircleIcon className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 mx-auto mb-2" />
+                                                    <p className="text-xs sm:text-sm font-semibold text-green-900">Order Delivered</p>
                                                     {order.delivered_at && (
                                                         <p className="text-xs text-green-700 mt-1">
                                                             Delivered on {new Date(order.delivered_at).toLocaleString()}
@@ -651,15 +651,15 @@ export default function DeliveryBoyIndex() {
                                                     )}
                                                 </div>
                                             ) : (
-                                                <div className="w-80 bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4 text-center">
-                                                    <ClockIcon className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
-                                                    <p className="text-sm font-semibold text-yellow-900 mb-2">OTP Not Generated</p>
+                                                <div className="w-full lg:w-80 bg-yellow-50 border-2 border-yellow-200 rounded-lg p-3 sm:p-4 text-center">
+                                                    <ClockIcon className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 mx-auto mb-2" />
+                                                    <p className="text-xs sm:text-sm font-semibold text-yellow-900 mb-2">OTP Not Generated</p>
                                                     <p className="text-xs text-yellow-700 mb-3">Click the button below to generate OTP for this order</p>
                                                     <button
                                                         type="button"
                                                         onClick={() => handleGenerateOTP(order.id)}
                                                         disabled={generatingOTP === order.id}
-                                                        className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        className="w-full bg-indigo-600 text-white px-3 sm:px-4 py-2 text-sm sm:text-base rounded-md font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                                     >
                                                         {generatingOTP === order.id ? 'Generating...' : 'Generate OTP'}
                                                     </button>
