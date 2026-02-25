@@ -21,7 +21,8 @@ import {
     EyeIcon, 
     ChevronLeftIcon,
     ChevronRightIcon,
-    PencilIcon
+    PencilIcon,
+    QrCodeIcon
 } from '@heroicons/react/24/outline';
 
 export default function OrderShow() {
@@ -643,6 +644,15 @@ export default function OrderShow() {
                         </div>
                         <div className="flex items-center gap-3">
                             {getStatusBadge(order.status)}
+                            <a
+                                href={`/admin/orders/${order.id}/qr-code`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors"
+                            >
+                                <QrCodeIcon className="h-4 w-4 mr-2" />
+                                Generate QR Code
+                            </a>
                             <a
                                 href={`/admin/orders/${order.id}/invoice`}
                                 target="_blank"

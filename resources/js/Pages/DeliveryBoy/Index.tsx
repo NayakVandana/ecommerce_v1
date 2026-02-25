@@ -3,7 +3,7 @@ import { useDeliveryBoyStore } from './useDeliveryBoyStore';
 import AppLayout from '../Layouts/AppLayout';
 import toast from '../../utils/toast';
 import DeliveryBoySkeleton from '../../Components/Skeleton/DeliveryBoySkeleton';
-import { TruckIcon, CheckCircleIcon, ClockIcon, PhotoIcon, VideoCameraIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CubeIcon, CameraIcon, FolderOpenIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { TruckIcon, CheckCircleIcon, ClockIcon, PhotoIcon, VideoCameraIcon, XMarkIcon, ChevronLeftIcon, ChevronRightIcon, CubeIcon, CameraIcon, FolderOpenIcon, TrashIcon, QrCodeIcon } from '@heroicons/react/24/outline';
 
 export default function DeliveryBoyIndex() {
     const [orders, setOrders] = useState<any[]>([]);
@@ -406,9 +406,20 @@ export default function DeliveryBoyIndex() {
                                                 </div>
                                             </div>
 
-                                            <div className="mt-4">
-                                                <p className="text-xs text-gray-500 mb-1">Order Total</p>
-                                                <p className="text-lg font-bold text-gray-900">₹{Number(order.total || 0).toFixed(2)}</p>
+                                            <div className="mt-4 flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-xs text-gray-500 mb-1">Order Total</p>
+                                                    <p className="text-lg font-bold text-gray-900">₹{Number(order.total || 0).toFixed(2)}</p>
+                                                </div>
+                                                <a
+                                                    href={`/admin/orders/${order.id}/qr-code`}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-md hover:bg-purple-700 transition-colors"
+                                                >
+                                                    <QrCodeIcon className="h-4 w-4 mr-2" />
+                                                    Generate QR Code
+                                                </a>
                                             </div>
 
                                             {/* Order Items Section */}

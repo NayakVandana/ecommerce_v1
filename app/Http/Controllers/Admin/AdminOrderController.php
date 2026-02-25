@@ -8,9 +8,62 @@ use App\Enums\PaymentMethod;
 use App\Enums\PaymentType;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class AdminOrderController extends Controller
 {
+    /**
+     * Generate payment QR code
+     */
+    private function generatePaymentQrCode($order, $format = 'svg')
+    {
+        $qrCodeUrl = config('app.payment_qr_code_url', env('PAYMENT_QR_CODE_URL', ''));
+        $upiId = trim(config('app.payment_upi_id', env('PAYMENT_UPI_ID', 'vandunayak4000@okaxis')));
+        $amount = (float)($order->proforma_total_amount ?? $order->total ?? 0);
+        $finalQrCodeUrl = null;
+        
+        // Validate inputs
+        if (empty($upiId)) {
+            \Log::warning('UPI ID is empty, cannot generate QR code');
+            return ['qrCode' => $qrCodeUrl, 'upiId' => null, 'amount' => $amount];
+        }
+        
+        if ($amount <= 0) {
+            \Log::warning('Order amount is 0 or negative, cannot generate QR code. Amount: ' . $amount);
+            return ['qrCode' => $qrCodeUrl, 'upiId' => $upiId, 'amount' => $amount];
+        }
+        
+        try {
+            // Build UPI payment link
+            $upiPaymentLink = "upi://pay?pa=" . urlencode($upiId) . "&am=" . number_format($amount, 2, '.', '') . "&cu=INR&tn=Payment%20for%20Order%20" . urlencode($order->order_number ?? (string)$order->id);
+            
+            // Generate QR code
+            if ($format === 'png') {
+                $qrCodeData = QrCode::format('png')
+                    ->size(120)
+                    ->errorCorrection('H')
+                    ->generate($upiPaymentLink);
+                $finalQrCodeUrl = 'data:image/png;base64,' . base64_encode($qrCodeData);
+            } else {
+                $qrCodeData = QrCode::format('svg')
+                    ->size(120)
+                    ->errorCorrection('H')
+                    ->generate($upiPaymentLink);
+                $finalQrCodeUrl = 'data:image/svg+xml;base64,' . base64_encode($qrCodeData);
+            }
+            
+            \Log::info('QR code generated successfully for order: ' . $order->id);
+        } catch (\Exception $e) {
+            \Log::error('QR Code generation failed for order ' . $order->id . ': ' . $e->getMessage());
+            // Fallback to URL if QR generation fails
+            if ($qrCodeUrl) {
+                $finalQrCodeUrl = $qrCodeUrl;
+            }
+        }
+        
+        return ['qrCode' => $finalQrCodeUrl, 'upiId' => $upiId, 'amount' => $amount];
+    }
+
     public function index(Request $request)
     {
         $query = Order::with(['user', 'items.product', 'couponCode', 'deliveryBoy']);
@@ -944,6 +997,30 @@ class AdminOrderController extends Controller
         $filename = 'Invoice-' . ($order->order_number ?? $order->id) . '.pdf';
         
         return $pdf->download($filename);
+    }
+
+    public function qrCode($id)
+    {
+        $order = Order::with(['user', 'items.product', 'couponCode'])
+            ->findOrFail($id);
+
+        // Check if user is delivery boy and verify they are assigned to this order
+        $user = auth()->user();
+        if ($user && $user->role === 'delivery_boy') {
+            if ($order->delivery_boy_id !== $user->id) {
+                abort(403, 'You are not assigned to this order.');
+            }
+        }
+
+        // Generate QR code for payment
+        $qrData = $this->generatePaymentQrCode($order, 'svg');
+        
+        return view('admin.orders.qrcode', [
+            'order' => $order,
+            'qrCodeUrl' => $qrData['qrCode'],
+            'upiId' => $qrData['upiId'],
+            'amount' => $qrData['amount']
+        ]);
     }
 
     /**

@@ -263,6 +263,10 @@ Route::prefix('admin')->group(function () {
     Route::get('/orders/{id}/invoice/download', [AdminOrderController::class, 'downloadInvoice'])
         ->name('admin.orders.invoice.download');
     
+    // QR Code route
+    Route::get('/orders/{id}/qr-code', [AdminOrderController::class, 'qrCode'])
+        ->name('admin.orders.qrcode');
+    
     Route::get('/users', function () {
         return Inertia::render('Admin/User/index');
     })->name('admin.users');

@@ -25,5 +25,7 @@ return [
     'aliases' => Facade::defaultAliases()->merge([
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
+  'payment_qr_code_url' => env('PAYMENT_QR_CODE_URL', ''),
+  'payment_upi_id' => env('PAYMENT_UPI_ID', 'vandunayak4000@okaxis'),
 ];
 
