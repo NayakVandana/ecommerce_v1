@@ -806,9 +806,9 @@ export default function Show() {
                                         </p>
                                         <p className="text-xs sm:text-sm text-blue-800">
                                             {(() => {
-                                                // Calculate default delivery date: 2 days after tomorrow (3 days from today)
+                                                // Calculate default delivery date: tomorrow
                                                 const deliveryDate = new Date();
-                                                deliveryDate.setDate(deliveryDate.getDate() + 3);
+                                                deliveryDate.setDate(deliveryDate.getDate() + 1);
                                                 return deliveryDate.toLocaleDateString('en-US', { 
                                                     weekday: 'long', 
                                                     year: 'numeric', 

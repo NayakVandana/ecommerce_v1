@@ -494,9 +494,9 @@ export default function OrderShow() {
             const date = new Date(order.delivery_date);
             setDeliveryDate(date.toISOString().split('T')[0]);
         } else {
-            // Default to 3 days from today
+            // Default to tomorrow
             const defaultDate = new Date();
-            defaultDate.setDate(defaultDate.getDate() + 3);
+            defaultDate.setDate(defaultDate.getDate() + 1);
             setDeliveryDate(defaultDate.toISOString().split('T')[0]);
         }
         setShowDeliveryDateModal(true);
