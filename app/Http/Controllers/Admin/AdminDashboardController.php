@@ -19,7 +19,7 @@ class AdminDashboardController extends Controller
             'total_products' => Product::count(),
             'active_products' => Product::where('is_approve', 1)->count(),
             'total_users' => User::count(),
-            'total_revenue' => Order::where('status', 'completed')->sum('total'),
+            'total_revenue' => Order::whereIn('status', ['completed', 'delivered'])->sum('total'),
         ];
 
         $recentOrders = Order::with('user')
@@ -45,7 +45,7 @@ class AdminDashboardController extends Controller
             'inactive_products' => Product::where('is_approve', 0)->count(),
             'total_users' => User::count(),
             'admin_users' => User::where('role', 'admin')->count(),
-            'total_revenue' => Order::where('status', 'completed')->sum('total'),
+            'total_revenue' => Order::whereIn('status', ['completed', 'delivered'])->sum('total'),
         ];
 
         return $this->sendJsonResponse(true, 'Statistics fetched successfully', $stats, 200);
@@ -57,7 +57,7 @@ class AdminDashboardController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         
-        $baseQuery = Order::where('status', 'completed');
+        $baseQuery = Order::whereIn('status', ['completed', 'delivered']);
         
         // Apply date range filter if custom dates are provided
         if ($startDate && $endDate) {
@@ -68,13 +68,13 @@ class AdminDashboardController extends Controller
         }
         
         $revenueData = [
-            'total_revenue' => Order::where('status', 'completed')->sum('total'),
+            'total_revenue' => Order::whereIn('status', ['completed', 'delivered'])->sum('total'),
             'today_revenue' => (clone $baseQuery)->whereDate('created_at', today())->sum('total'),
             'week_revenue' => (clone $baseQuery)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->sum('total'),
             'month_revenue' => (clone $baseQuery)->whereMonth('created_at', now()->month)
                 ->whereYear('created_at', now()->year)->sum('total'),
             'year_revenue' => (clone $baseQuery)->whereYear('created_at', now()->year)->sum('total'),
-            'total_orders' => Order::where('status', 'completed')->count(),
+            'total_orders' => Order::whereIn('status', ['completed', 'delivered'])->count(),
             'today_orders' => (clone $baseQuery)->whereDate('created_at', today())->count(),
             'week_orders' => (clone $baseQuery)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->count(),
             'month_orders' => (clone $baseQuery)->whereMonth('created_at', now()->month)
@@ -84,7 +84,7 @@ class AdminDashboardController extends Controller
 
         // Calculate filtered revenue if date range is provided
         if ($startDate && $endDate) {
-            $filteredQuery = Order::where('status', 'completed')
+            $filteredQuery = Order::whereIn('status', ['completed', 'delivered'])
                 ->whereBetween('created_at', [
                     \Carbon\Carbon::parse($startDate)->startOfDay(),
                     \Carbon\Carbon::parse($endDate)->endOfDay()
@@ -173,7 +173,7 @@ class AdminDashboardController extends Controller
         };
 
         // Get order IDs for different periods
-        $allOrderIds = Order::where('status', 'completed')->pluck('id')->toArray();
+        $allOrderIds = Order::whereIn('status', ['completed', 'delivered'])->pluck('id')->toArray();
         $todayOrderIds = (clone $baseQuery)->whereDate('created_at', today())->pluck('id')->toArray();
         $weekOrderIds = (clone $baseQuery)->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])->pluck('id')->toArray();
         $monthOrderIds = (clone $baseQuery)->whereMonth('created_at', now()->month)
