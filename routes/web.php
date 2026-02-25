@@ -320,6 +320,10 @@ Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
     Route::get('/contacts', function () {
         return Inertia::render('Admin/Contact/index');
     })->name('admin.contacts');
+    
+    Route::get('/stock-purchases', function () {
+        return Inertia::render('Admin/StockPurchase/index');
+    })->name('admin.stock-purchases');
 });
 
 // Guest Routes (only accessible when not authenticated)

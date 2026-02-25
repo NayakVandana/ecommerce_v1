@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\AdminCouponController;
 use App\Http\Controllers\Admin\AdminFabricController;
 use App\Http\Controllers\Admin\AdminContactController;
 use App\Http\Controllers\Admin\AdminCustomerController;
+use App\Http\Controllers\Admin\AdminStockPurchaseController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -137,5 +138,14 @@ Route::prefix('admin')->middleware(['auth.token', 'admin'])->group(function () {
         Route::post('/update', [AdminCustomerController::class, 'update']);
         Route::post('/delete', [AdminCustomerController::class, 'destroy']);
         Route::post('/toggle-status', [AdminCustomerController::class, 'toggleStatus']);
+    });
+    
+    // Stock Purchase Management
+    Route::prefix('stock-purchases')->group(function () {
+        Route::post('/', [AdminStockPurchaseController::class, 'index']);
+        Route::post('/store', [AdminStockPurchaseController::class, 'store']);
+        Route::post('/show', [AdminStockPurchaseController::class, 'show']);
+        Route::post('/update', [AdminStockPurchaseController::class, 'update']);
+        Route::post('/delete', [AdminStockPurchaseController::class, 'destroy']);
     });
 });
