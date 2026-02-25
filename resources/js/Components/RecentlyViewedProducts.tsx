@@ -138,7 +138,7 @@ export default function RecentlyViewedProducts({
                         {product.brand && (
                             <p className="text-gray-500 text-xs mb-1">{product.brand}</p>
                         )}
-                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.description}</p>
+                        {/* <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.description}</p> */}
                     </Link>
                     <div className="flex items-center gap-2 mb-3">
                         <p className="text-indigo-600 font-bold">${displayPrice}</p>

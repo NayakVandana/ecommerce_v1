@@ -8,7 +8,7 @@ import { useCategoryStore } from './Categories/useCategoryStore';
 import { useCartStore } from './Cart/useCartStore';
 import { useWishlistStore } from './Wishlist/useWishlistStore';
 import toast from '../utils/toast';
-import { HeartIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import { HeartIcon, MagnifyingGlassIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import RecentlyViewedProducts from '../Components/RecentlyViewedProducts';
 import Pagination from '../Components/Pagination';
@@ -359,7 +359,7 @@ export default function Home() {
         return (
             <Card key={product.id} hover padding="none" className="overflow-hidden flex flex-col group bg-white border border-gray-100 hover:border-indigo-300 hover:shadow-xl transition-all duration-300">
                 <Link href={`/products/${product.id}`} className="relative overflow-hidden">
-                    <div className="h-64 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden">
+                    <div className="h-48 sm:h-56 lg:h-64 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden">
                         {imageUrl ? (
                             <img 
                                 src={imageUrl} 
@@ -371,44 +371,44 @@ export default function Home() {
                         )}
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300"></div>
                         {discount > 0 && (
-                            <span className="absolute top-3 right-3 bg-gradient-to-r from-red-500 to-red-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg">
+                            <span className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-gradient-to-r from-red-500 to-red-600 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold shadow-lg">
                                 {discount}% OFF
                             </span>
                         )}
                         <button
                             onClick={(e) => handleToggleWishlist(e, product.id)}
                             disabled={isToggling}
-                            className="absolute top-3 left-3 p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-red-50 hover:scale-110 transition-all duration-200 disabled:opacity-50 z-10"
+                            className="absolute top-2 left-2 sm:top-3 sm:left-3 p-1.5 sm:p-2.5 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-red-50 hover:scale-110 transition-all duration-200 disabled:opacity-50 z-10"
                             title={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
                         >
                             {isToggling ? (
-                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-red-600 border-t-transparent"></div>
+                                <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-red-600 border-t-transparent"></div>
                             ) : isInWishlist ? (
-                                <HeartIconSolid className="h-5 w-5 text-red-600" />
+                                <HeartIconSolid className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
                             ) : (
-                                <HeartIcon className="h-5 w-5 text-gray-600" />
+                                <HeartIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-600" />
                             )}
                         </button>
                     </div>
                 </Link>
-                <div className="p-4 sm:p-5 flex-1 flex flex-col bg-white">
-                    <Link href={`/products/${product.id}`} className="flex-1 mb-3">
+                <div className="p-2.5 sm:p-4 lg:p-5 flex-1 flex flex-col bg-white">
+                    <Link href={`/products/${product.id}`} className="flex-1 mb-2 sm:mb-3">
                         {product.brand && (
-                            <p className="text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1.5">{product.brand}</p>
+                            <p className="text-[10px] sm:text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">{product.brand}</p>
                         )}
-                        <h3 className="font-bold text-base sm:text-lg mb-2 line-clamp-2 hover:text-indigo-600 transition-colors text-gray-900 leading-snug">
+                        <h3 className="font-bold text-sm sm:text-base lg:text-lg mb-1.5 sm:mb-2 line-clamp-2 hover:text-indigo-600 transition-colors text-gray-900 leading-tight sm:leading-snug">
                             {product.product_name}
                         </h3>
-                        {product.description && (
-                            <p className="text-gray-500 text-xs sm:text-sm mb-3 line-clamp-2 leading-relaxed">{product.description}</p>
-                        )}
+                        {/* {product.description && (
+                            <p className="text-gray-500 text-[10px] sm:text-xs lg:text-sm mb-2 sm:mb-3 line-clamp-2 leading-relaxed hidden sm:block">{product.description}</p>
+                        )} */}
                     </Link>
-                    <div className="flex items-center flex-wrap gap-2 mb-4">
-                        <p className="text-xl sm:text-2xl font-bold text-gray-900">₹{Number(displayPrice).toFixed(2)}</p>
+                    <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-4">
+                        <p className="text-base sm:text-xl lg:text-2xl font-bold text-gray-900">₹{Number(displayPrice).toFixed(2)}</p>
                         {mrp && mrp > displayPrice && (
                             <>
-                                <p className="text-gray-400 line-through text-sm">₹{Number(mrp).toFixed(2)}</p>
-                                <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-1 rounded-md">
+                                <p className="text-gray-400 line-through text-xs sm:text-sm">₹{Number(mrp).toFixed(2)}</p>
+                                <span className="text-[10px] sm:text-xs font-semibold text-green-700 bg-green-100 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
                                     Save ₹{Number(mrp - displayPrice).toFixed(2)}
                                 </span>
                             </>
@@ -416,27 +416,29 @@ export default function Home() {
                     </div>
                     
                     {/* Add to Cart Button */}
-                    <div className="flex gap-2 mt-auto">
+                    <div className="flex gap-1.5 sm:gap-2 mt-auto">
                         <button
                             onClick={(e) => handleAddToCart(e, product)}
                             disabled={isAdding || (product.total_quantity !== null && product.total_quantity === 0)}
-                            className="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-4 py-2.5 sm:py-3 rounded-lg font-semibold text-sm sm:text-base hover:from-indigo-700 hover:to-indigo-800 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 shadow-sm hover:shadow-md"
+                            className="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-2 sm:px-4 py-2 sm:py-2.5 lg:py-3 rounded-lg font-semibold text-xs sm:text-sm lg:text-base hover:from-indigo-700 hover:to-indigo-800 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 shadow-sm hover:shadow-md flex items-center justify-center"
                         >
                             {isAdding ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                <span className="flex items-center justify-center gap-1 sm:gap-2">
+                                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-2 border-white border-t-transparent"></div>
                                     <span className="hidden sm:inline">Adding...</span>
                                     <span className="sm:hidden">...</span>
                                 </span>
                             ) : (
-                                <span className="hidden sm:inline">ADD TO CART</span>
+                                <>
+                                    <ShoppingCartIcon className="h-5 w-5 sm:hidden" />
+                                    <span className="hidden sm:inline">ADD TO CART</span>
+                                </>
                             )}
-                            {!isAdding && <span className="sm:hidden">ADD</span>}
                         </button>
                         <button
                             onClick={(e) => handleToggleWishlist(e, product.id)}
                             disabled={isToggling}
-                            className={`px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 flex items-center justify-center ${
+                            className={`px-2 sm:px-3 lg:px-4 py-2 sm:py-2.5 lg:py-3 rounded-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 flex items-center justify-center ${
                                 isInWishlist
                                     ? 'bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 shadow-sm hover:shadow-md'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300'
@@ -444,11 +446,11 @@ export default function Home() {
                             title={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
                         >
                             {isToggling ? (
-                                <div className="animate-spin rounded-full h-5 w-5 border-2 border-current border-t-transparent"></div>
+                                <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-current border-t-transparent"></div>
                             ) : isInWishlist ? (
-                                <HeartIconSolid className="h-5 w-5" />
+                                <HeartIconSolid className="h-4 w-4 sm:h-5 sm:w-5" />
                             ) : (
-                                <HeartIcon className="h-5 w-5" />
+                                <HeartIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                             )}
                         </button>
                     </div>
@@ -606,7 +608,7 @@ export default function Home() {
                                     {!searchTerm && (
                                         <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Products</h2>
                                     )}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                                         {products.map((product: any) => renderProductCard(product))}
                                     </div>
                                     
