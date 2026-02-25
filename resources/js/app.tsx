@@ -8,7 +8,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Seloris';
+const appName = import.meta.env.VITE_APP_NAME || 'Selorise';
 
 // Configure axios (used by Inertia) to send token with requests
 axios.defaults.headers.common['X-Auth-Token'] = localStorage.getItem('auth_token') || '';

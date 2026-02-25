@@ -159,11 +159,11 @@
     <table class="header-table">
         <tr>
             <td class="company-cell">
-                <h1>Seloris</h1>
+                <h1>Selorise</h1>
                 <p>123 Business Street</p>
                 <p>City, State 12345</p>
                 <p>Phone: +1 (555) 123-4567</p>
-                <p>Email: info@seloris.com</p>
+                <p>Email: info@selorise.com</p>
             </td>
             <td class="invoice-cell">
                 <h2>INVOICE</h2>

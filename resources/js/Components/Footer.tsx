@@ -25,7 +25,7 @@ export default function Footer() {
                             <span className="relative inline-block px-4 py-2 rounded-lg">
                                 <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-indigo-400/20 via-purple-400/20 to-pink-400/20 opacity-100 group-hover:opacity-100 transition-opacity duration-300"></span>
                                 <h2 className="relative text-2xl font-display font-extrabold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent group-hover:from-indigo-300 group-hover:via-purple-300 group-hover:to-pink-300 transition-all tracking-tight drop-shadow-md">
-                                    Seloris
+                                    Selorise
                                 </h2>
                             </span>
                         </Link>
@@ -202,7 +202,7 @@ export default function Footer() {
                         {/* Copyright */}
                         <div className="text-center md:text-right">
                             <p className="text-gray-400 text-sm">
-                                &copy; {currentYear} <span className="font-display font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">seloris</span>. All rights reserved.
+                                &copy; {currentYear} <span className="font-display font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Selorise</span>. All rights reserved.
                             </p>
                             <p className="text-gray-500 text-xs mt-1">
                                 Made with <span className="text-red-500">❤</span> for our customers

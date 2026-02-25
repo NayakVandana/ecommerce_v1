@@ -10,7 +10,7 @@ export default function About() {
                     <section>
                         <h2 className="text-2xl font-semibold mb-4">Our Story</h2>
                         <p className="text-gray-600 leading-relaxed">
-                            Welcome to Seloris! We are dedicated to providing you with the best products 
+                            Welcome to Selorise! We are dedicated to providing you with the best products 
                             and exceptional customer service. Our mission is to make shopping easy, convenient, and enjoyable.
                         </p>
                     </section>
