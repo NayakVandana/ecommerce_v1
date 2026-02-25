@@ -233,5 +233,34 @@ class DeliveryBoyApiController extends Controller
 
         return $this->sendJsonResponse(true, 'Media deleted successfully', [], 200);
     }
+
+    public function markAsDelivered(Request $request)
+    {
+        $user = $request->user();
+        
+        if (!$user || $user->role !== 'delivery_boy') {
+            return $this->sendJsonResponse(false, 'Unauthorized. Delivery boy access required.', [], 403);
+        }
+
+        $request->validate([
+            'id' => 'required|exists:orders,id',
+        ]);
+
+        $order = Order::where('delivery_boy_id', $user->id)
+            ->findOrFail($request->id);
+
+        if ($order->otp_verified || $order->status === 'delivered') {
+            return $this->sendJsonResponse(false, 'Order already delivered', [], 400);
+        }
+
+        // Mark order as delivered
+        $order->update([
+            'otp_verified' => true,
+            'status' => 'delivered',
+            'delivered_at' => now(),
+        ]);
+
+        return $this->sendJsonResponse(true, 'Order marked as delivered successfully', $order->fresh(), 200);
+    }
 }
 

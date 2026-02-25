@@ -5,6 +5,7 @@ export const useDeliveryBoyStore = {
     show: (data: any) => api.post('/auth/delivery-boy/orders/show', data),
     generateOTP: (data: any) => api.post('/auth/delivery-boy/orders/generate-otp', data),
     verifyOTP: (data: any) => api.post('/auth/delivery-boy/orders/verify-otp', data),
+    markAsDelivered: (data: any) => api.post('/auth/delivery-boy/orders/mark-as-delivered', data),
     uploadOpenBoxMedia: (data: FormData) => api.post('/auth/delivery-boy/orders/upload-open-box-media', data, {
         headers: {
             'Content-Type': 'multipart/form-data',

@@ -17,6 +17,7 @@ export default function DeliveryBoyIndex() {
     const [openBoxOrders, setOpenBoxOrders] = useState<Set<number>>(new Set());
     const [uploadingMedia, setUploadingMedia] = useState<{orderId: number, itemId?: number} | null>(null);
     const [verificationMedia, setVerificationMedia] = useState<{[key: number]: any[]}>({});
+    const [markingAsDelivered, setMarkingAsDelivered] = useState<number | null>(null);
 
     useEffect(() => {
         loadOrders();
@@ -268,6 +269,42 @@ export default function DeliveryBoyIndex() {
         } catch (error: any) {
             console.error('Error deleting media:', error);
             toast({ type: 'error', message: error.response?.data?.message || 'Failed to delete media' });
+        }
+    };
+
+    const handleMarkAsDelivered = async (orderId: number) => {
+        if (!confirm('Are you sure you want to mark this order as delivered? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            setMarkingAsDelivered(orderId);
+            const response = await useDeliveryBoyStore.markAsDelivered({ id: orderId });
+            
+            if (response.data?.status) {
+                // Optimistically remove the order from the list
+                setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+                
+                // Clear OTP for this order
+                setOtpCodes(prev => {
+                    const newCodes = { ...prev };
+                    delete newCodes[orderId];
+                    return newCodes;
+                });
+                
+                toast({ type: 'success', message: 'Order marked as delivered successfully!' });
+                
+                // Reload orders and stats
+                await loadOrders();
+                await loadStats();
+            } else {
+                toast({ type: 'error', message: response.data?.message || 'Failed to mark order as delivered' });
+            }
+        } catch (error: any) {
+            console.error('Error marking order as delivered:', error);
+            toast({ type: 'error', message: error.response?.data?.message || 'Failed to mark order as delivered' });
+        } finally {
+            setMarkingAsDelivered(null);
         }
     };
 
@@ -638,6 +675,14 @@ export default function DeliveryBoyIndex() {
                                                         >
                                                             {verifyingOTP === order.id ? 'Verifying...' : 'Verify OTP & Complete Delivery'}
                                                         </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleMarkAsDelivered(order.id)}
+                                                            disabled={markingAsDelivered === order.id}
+                                                            className="w-full bg-green-600 text-white px-4 py-2 rounded-md font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                                        >
+                                                            {markingAsDelivered === order.id ? 'Marking...' : 'Mark as Delivered (Without OTP)'}
+                                                        </button>
                                                     </div>
                                                 </div>
                                             ) : order.otp_verified ? (
@@ -655,14 +700,24 @@ export default function DeliveryBoyIndex() {
                                                     <ClockIcon className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 mx-auto mb-2" />
                                                     <p className="text-xs sm:text-sm font-semibold text-yellow-900 mb-2">OTP Not Generated</p>
                                                     <p className="text-xs text-yellow-700 mb-3">Click the button below to generate OTP for this order</p>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleGenerateOTP(order.id)}
-                                                        disabled={generatingOTP === order.id}
-                                                        className="w-full bg-indigo-600 text-white px-3 sm:px-4 py-2 text-sm sm:text-base rounded-md font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                    >
-                                                        {generatingOTP === order.id ? 'Generating...' : 'Generate OTP'}
-                                                    </button>
+                                                    <div className="space-y-2">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleGenerateOTP(order.id)}
+                                                            disabled={generatingOTP === order.id}
+                                                            className="w-full bg-indigo-600 text-white px-3 sm:px-4 py-2 text-sm sm:text-base rounded-md font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        >
+                                                            {generatingOTP === order.id ? 'Generating...' : 'Generate OTP'}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleMarkAsDelivered(order.id)}
+                                                            disabled={markingAsDelivered === order.id}
+                                                            className="w-full bg-green-600 text-white px-3 sm:px-4 py-2 text-sm sm:text-base rounded-md font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        >
+                                                            {markingAsDelivered === order.id ? 'Marking...' : 'Mark as Delivered'}
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
