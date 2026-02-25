@@ -8,7 +8,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import axios from 'axios';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'Seloris';
 
 // Configure axios (used by Inertia) to send token with requests
 axios.defaults.headers.common['X-Auth-Token'] = localStorage.getItem('auth_token') || '';
@@ -55,7 +55,7 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 createInertiaApp({
-    title: (title) => `${title} - ${appName}`,
+    title: (title) => title ? `${title} ${appName}` : appName,
     resolve: (name) => resolvePageComponent(`./Pages/${name}.tsx`, import.meta.glob('./Pages/**/*.tsx')),
     setup({ el, App, props }) {
         const root = createRoot(el);

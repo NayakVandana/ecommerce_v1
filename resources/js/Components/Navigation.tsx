@@ -180,8 +180,11 @@ export default function Navigation() {
                 <div className="flex justify-between h-20">
                     <div className="flex">
                         <Link href="/" className="flex items-center group">
-                            <span className="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent group-hover:from-indigo-700 group-hover:to-purple-700 transition-all">
-                                Ecommerce
+                            <span className="relative inline-block px-4 py-2 rounded-lg">
+                                <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-indigo-100 via-purple-100 to-pink-100 opacity-100 group-hover:opacity-100 transition-opacity duration-300"></span>
+                                <span className="relative text-3xl font-display font-extrabold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent group-hover:from-indigo-700 group-hover:via-purple-700 group-hover:to-pink-700 transition-all tracking-tight drop-shadow-md">
+                                    Seloris
+                                </span>
                             </span>
                         </Link>
                         <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
