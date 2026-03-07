@@ -462,14 +462,10 @@ export default function Home() {
     return (
         <AppLayout>
             <CategoriesHeader />
-            <div className="min-h-screen bg-gray-50">
-                <Container className="py-8">
-                    {loading ? (
-                        <ProductCardSkeleton count={8} />
-                    ) : (
-                        <>
-                            {/* Search Bar */}
-                            <div className="mb-8 relative max-w-2xl mx-auto">
+            {/* Search Bar */}
+            <div className="sticky top-36 z-30 bg-white border-b border-gray-200 shadow-sm py-4">
+                <Container>
+                    <div className="max-w-2xl mx-auto relative">
                                 <form onSubmit={handleSearch} className="relative">
                                     <div className="relative">
                                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -556,8 +552,15 @@ export default function Home() {
                                         )}
                                     </div>
                                 )}
-                            </div>
-
+                    </div>
+                </Container>
+            </div>
+            <div className="min-h-screen bg-gray-50">
+                <Container className="py-8">
+                    {loading ? (
+                        <ProductCardSkeleton count={8} />
+                    ) : (
+                        <>
                             {/* Search Results Header */}
                             {searchTerm && (
                                 <div className="mb-4 sm:mb-6">
@@ -572,8 +575,7 @@ export default function Home() {
 
                             {/* Featured Collections - Only show when not searching */}
                             {!searchTerm && specificCategories.length > 0 && (
-                                <div className="mb-8 sm:mb-10">
-                                    <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">Featured Collections</h2>
+                                <div className="mb-8 sm:mb-10">                                    
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                         {specificCategories.map((category) => (
                                             <Link
@@ -605,8 +607,15 @@ export default function Home() {
                             {/* Featured Products / Search Results */}
                             {products.length > 0 && (
                                 <div className="mb-10">
-                                    {!searchTerm && (
-                                        <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Products</h2>
+                                 
+                                     {/* Pagination */}
+                                    {pagination && pagination.last_page > 1 && (
+                                        <div className="mt-8">
+                                            <Pagination 
+                                                data={pagination} 
+                                                baseUrl="/"
+                                            />
+                                        </div>
                                     )}
                                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                                         {products.map((product: any) => renderProductCard(product))}
