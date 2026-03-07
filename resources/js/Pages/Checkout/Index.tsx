@@ -394,8 +394,8 @@ export default function Index() {
 
     return (
         <AppLayout>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold mb-3 sm:mb-4 lg:mb-6">Checkout</h1>
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6">
+                <h1 className="text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4">Checkout</h1>
 
                 {items.length === 0 ? (
                     <div className="bg-white rounded-lg shadow-md p-12 text-center">
@@ -410,13 +410,13 @@ export default function Index() {
                 ) : (
                     <form onSubmit={handleSubmit}>
                         {/* Checkout Steps Indicator */}
-                        <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 mb-6">
+                        <div className="bg-white rounded-lg shadow-md p-3 sm:p-4 mb-4 sm:mb-5">
                             {/* Mobile Layout - Vertical */}
                             <div className="block sm:hidden">
                                 <div className="space-y-4">
                                     {/* Step 1: Shipping */}
-                                    <div className={`flex items-center gap-3 ${currentStep >= 1 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all flex-shrink-0 ${
+                                    <div className={`flex items-center gap-2 ${currentStep >= 1 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all flex-shrink-0 ${
                                             currentStep === 1 
                                                 ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' 
                                                 : currentStep > 1
@@ -426,23 +426,23 @@ export default function Index() {
                                             {currentStep > 1 ? '✓' : '1'}
                                         </div>
                                         <div className="flex-1">
-                                            <div className={`text-sm font-semibold ${currentStep === 1 ? 'text-indigo-600' : currentStep > 1 ? 'text-green-600' : 'text-gray-400'}`}>
+                                            <div className={`text-xs font-semibold ${currentStep === 1 ? 'text-indigo-600' : currentStep > 1 ? 'text-green-600' : 'text-gray-400'}`}>
                                                 Step 1: Shipping
                                             </div>
                                             {currentStep === 1 && (
-                                                <div className="text-xs text-gray-500 mt-0.5">Fill in your delivery details</div>
+                                                <div className="text-[10px] text-gray-500 mt-0.5">Fill delivery details</div>
                                             )}
                                         </div>
                                     </div>
                                     
                                     {/* Connector Line - Vertical */}
-                                    <div className={`w-0.5 h-6 ml-5 transition-colors ${
+                                    <div className={`w-0.5 h-4 ml-4 transition-colors ${
                                         currentStep >= 2 ? 'bg-indigo-600' : 'bg-gray-300'
                                     }`}></div>
                                     
                                     {/* Step 2: Review */}
-                                    <div className={`flex items-center gap-3 ${currentStep >= 2 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all flex-shrink-0 ${
+                                    <div className={`flex items-center gap-2 ${currentStep >= 2 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all flex-shrink-0 ${
                                             currentStep === 2 
                                                 ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' 
                                                 : currentStep > 2
@@ -452,23 +452,23 @@ export default function Index() {
                                             {currentStep > 2 ? '✓' : '2'}
                                         </div>
                                         <div className="flex-1">
-                                            <div className={`text-sm font-semibold ${currentStep === 2 ? 'text-indigo-600' : currentStep > 2 ? 'text-green-600' : 'text-gray-400'}`}>
+                                            <div className={`text-xs font-semibold ${currentStep === 2 ? 'text-indigo-600' : currentStep > 2 ? 'text-green-600' : 'text-gray-400'}`}>
                                                 Step 2: Review
                                             </div>
                                             {currentStep === 2 && (
-                                                <div className="text-xs text-gray-500 mt-0.5">Review your order details</div>
+                                                <div className="text-[10px] text-gray-500 mt-0.5">Review order</div>
                                             )}
                                         </div>
                                     </div>
                                     
                                     {/* Connector Line - Vertical */}
-                                    <div className={`w-0.5 h-6 ml-5 transition-colors ${
+                                    <div className={`w-0.5 h-4 ml-4 transition-colors ${
                                         currentStep >= 3 ? 'bg-indigo-600' : 'bg-gray-300'
                                     }`}></div>
                                     
                                     {/* Step 3: Payment */}
-                                    <div className={`flex items-center gap-3 ${currentStep >= 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-all flex-shrink-0 ${
+                                    <div className={`flex items-center gap-2 ${currentStep >= 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs border-2 transition-all flex-shrink-0 ${
                                             currentStep === 3 
                                                 ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' 
                                                 : 'bg-gray-200 text-gray-600 border-gray-300'
@@ -476,11 +476,11 @@ export default function Index() {
                                             3
                                         </div>
                                         <div className="flex-1">
-                                            <div className={`text-sm font-semibold ${currentStep === 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                            <div className={`text-xs font-semibold ${currentStep === 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
                                                 Step 3: Payment
                                             </div>
                                             {currentStep === 3 && (
-                                                <div className="text-xs text-gray-500 mt-0.5">Complete your payment</div>
+                                                <div className="text-[10px] text-gray-500 mt-0.5">Complete payment</div>
                                             )}
                                         </div>
                                     </div>
@@ -488,10 +488,10 @@ export default function Index() {
                             </div>
                             
                             {/* Desktop Layout - Horizontal */}
-                            <div className="hidden sm:flex items-center justify-center gap-3 md:gap-6">
+                            <div className="hidden sm:flex items-center justify-center gap-2 md:gap-4">
                                 {/* Step 1: Shipping */}
                                 <div className={`flex flex-col items-center ${currentStep >= 1 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                                    <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center font-bold text-base md:text-lg border-2 transition-all ${
+                                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-sm md:text-base border-2 transition-all ${
                                         currentStep === 1 
                                             ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg scale-110' 
                                             : currentStep > 1
@@ -500,19 +500,19 @@ export default function Index() {
                                     }`}>
                                         {currentStep > 1 ? '✓' : '1'}
                                     </div>
-                                    <span className={`mt-2 text-sm md:text-base font-semibold ${currentStep === 1 ? 'text-indigo-600' : currentStep > 1 ? 'text-green-600' : 'text-gray-400'}`}>
+                                    <span className={`mt-1.5 text-xs md:text-sm font-semibold ${currentStep === 1 ? 'text-indigo-600' : currentStep > 1 ? 'text-green-600' : 'text-gray-400'}`}>
                                         Shipping
                                     </span>
                                 </div>
                                 
                                 {/* Connector Line */}
-                                <div className={`flex-1 h-0.5 min-w-[30px] md:min-w-[80px] transition-colors ${
+                                <div className={`flex-1 h-0.5 min-w-[20px] md:min-w-[60px] transition-colors ${
                                     currentStep >= 2 ? 'bg-indigo-600' : 'bg-gray-300'
                                 }`}></div>
                                 
                                 {/* Step 2: Review */}
                                 <div className={`flex flex-col items-center ${currentStep >= 2 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                                    <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center font-bold text-base md:text-lg border-2 transition-all ${
+                                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-sm md:text-base border-2 transition-all ${
                                         currentStep === 2 
                                             ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg scale-110' 
                                             : currentStep > 2
@@ -521,42 +521,42 @@ export default function Index() {
                                     }`}>
                                         {currentStep > 2 ? '✓' : '2'}
                                     </div>
-                                    <span className={`mt-2 text-sm md:text-base font-semibold ${currentStep === 2 ? 'text-indigo-600' : currentStep > 2 ? 'text-green-600' : 'text-gray-400'}`}>
+                                    <span className={`mt-1.5 text-xs md:text-sm font-semibold ${currentStep === 2 ? 'text-indigo-600' : currentStep > 2 ? 'text-green-600' : 'text-gray-400'}`}>
                                         Review
                                     </span>
                                 </div>
                                 
                                 {/* Connector Line */}
-                                <div className={`flex-1 h-0.5 min-w-[30px] md:min-w-[80px] transition-colors ${
+                                <div className={`flex-1 h-0.5 min-w-[20px] md:min-w-[60px] transition-colors ${
                                     currentStep >= 3 ? 'bg-indigo-600' : 'bg-gray-300'
                                 }`}></div>
                                 
                                 {/* Step 3: Payment */}
                                 <div className={`flex flex-col items-center ${currentStep >= 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
-                                    <div className={`w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center font-bold text-base md:text-lg border-2 transition-all ${
+                                    <div className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-bold text-sm md:text-base border-2 transition-all ${
                                         currentStep === 3 
                                             ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg scale-110' 
                                             : 'bg-gray-200 text-gray-600 border-gray-300'
                                     }`}>
                                         3
                                     </div>
-                                    <span className={`mt-2 text-sm md:text-base font-semibold ${currentStep === 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
+                                    <span className={`mt-1.5 text-xs md:text-sm font-semibold ${currentStep === 3 ? 'text-indigo-600' : 'text-gray-400'}`}>
                                         Payment
                                     </span>
                                 </div>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                             {/* Checkout Form */}
                             <div className="lg:col-span-2">
                                 {/* Step 1: Shipping Information */}
                                 {currentStep === 1 && (
-                                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                                    <h2 className="text-xl font-bold mb-4">Step 1: Shipping Information</h2>
+                                <div className="bg-white rounded-lg shadow-md p-4 sm:p-5 lg:p-6 mb-4 sm:mb-5">
+                                    <h2 className="text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4">Step 1: Shipping Information</h2>
                                     
-                                    <div className="space-y-4">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-3 sm:space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                             <FormInput
                                                 label="Full Name"
                                                 name="name"
@@ -577,7 +577,7 @@ export default function Index() {
                                             />
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                             <FormInput
                                                 label="Receiver Name"
                                                 name="receiver_name"
@@ -600,10 +600,10 @@ export default function Index() {
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-3">
+                                            <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                                                 Address Type <span className="text-red-500">*</span>
                                             </label>
-                                            <div className="flex flex-wrap gap-4">
+                                            <div className="flex flex-wrap gap-3 sm:gap-4">
                                                 <label className="flex items-center cursor-pointer">
                                                     <input
                                                         type="radio"
@@ -657,7 +657,7 @@ export default function Index() {
                                             placeholder="Street address"
                                         />
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                             <FormInput
                                                 label="House No"
                                                 name="house_no"
@@ -698,7 +698,7 @@ export default function Index() {
                                             placeholder="Nearby landmark or area name"
                                         />
 
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                                     District <span className="text-red-500">*</span>
@@ -757,7 +757,7 @@ export default function Index() {
                                             />
                                         </div>
                                         
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                                     Country
@@ -779,8 +779,8 @@ export default function Index() {
                                         </div>
 
                                         {/* Delivery Area Selection */}
-                                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 border-2 border-indigo-200">
-                                            <label htmlFor="delivery_area" className="block text-sm font-medium text-gray-700 mb-2">
+                                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-3 sm:p-4 border-2 border-indigo-200">
+                                            <label htmlFor="delivery_area" className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                                                 Delivery Area / Store <span className="text-red-500">*</span>
                                             </label>
                                             <select
@@ -788,7 +788,7 @@ export default function Index() {
                                                 name="delivery_area"
                                                 value={formData.delivery_area}
                                                 onChange={handleInputChange}
-                                                className="w-full px-4 py-2.5 border-2 border-indigo-300 rounded-lg bg-white text-gray-900 font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
+                                                className="w-full px-3 sm:px-4 py-2 border-2 border-indigo-300 rounded-lg bg-white text-sm text-gray-900 font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:bg-gray-100 disabled:cursor-not-allowed disabled:text-gray-500"
                                                 required
                                                 disabled={!formData.district}
                                             >
@@ -804,14 +804,14 @@ export default function Index() {
                                             {errors.delivery_area && (
                                                 <p className="mt-1 text-xs text-red-600">{errors.delivery_area}</p>
                                             )}
-                                            <div className="mt-3 flex items-start gap-2">
-                                                <svg className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className="mt-2 flex items-start gap-1.5">
+                                                <svg className="w-3.5 h-3.5 text-indigo-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
-                                                <p className="text-xs text-indigo-700">
+                                                <p className="text-[10px] sm:text-xs text-indigo-700">
                                                     {formData.district 
-                                                        ? `Select the delivery area within ${formData.district}. Your order will be delivered from the nearest store.`
-                                                        : 'Please select a district first to view available delivery areas.'}
+                                                        ? `Select delivery area within ${formData.district}. Order delivered from nearest store.`
+                                                        : 'Select district first to view delivery areas.'}
                                                 </p>
                                             </div>
                                         </div>
@@ -830,14 +830,14 @@ export default function Index() {
 
                                 {/* Step 2: Order Review */}
                                 {currentStep === 2 && (
-                                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                                        <h2 className="text-xl font-bold mb-4">Step 2: Review Your Order</h2>
+                                    <div className="bg-white rounded-lg shadow-md p-4 sm:p-5 lg:p-6 mb-4 sm:mb-5">
+                                        <h2 className="text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4">Step 2: Review Your Order</h2>
                                         
                                         {/* Order Items Summary */}
-                                        <div className="mb-6">
-                                            <h3 className="text-lg font-semibold mb-4">Order Items</h3>
+                                        <div className="mb-4 sm:mb-5">
+                                            <h3 className="text-sm sm:text-base lg:text-lg font-semibold mb-3">Order Items</h3>
                                     
-                                    <div className="space-y-4">
+                                    <div className="space-y-3 sm:space-y-4">
                                         {items.map((item: any) => {
                                             const product = item.product;
                                             const variation = item.variation;
@@ -855,9 +855,9 @@ export default function Index() {
                                             const hasDiscount = discountPercent > 0 && mrp > finalPrice;
                                             
                                             return (
-                                                <div key={item.id} className="flex gap-4 pb-4 border-b last:border-b-0">
+                                                <div key={item.id} className="flex gap-2 sm:gap-3 pb-3 sm:pb-4 border-b last:border-b-0">
                                                     <div className="flex-shrink-0">
-                                                        <div className="w-20 h-20 bg-gray-200 rounded overflow-hidden">
+                                                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded overflow-hidden">
                                                             {imageUrl ? (
                                                                 <img 
                                                                     src={imageUrl} 
@@ -870,22 +870,22 @@ export default function Index() {
                                                         </div>
                                                     </div>
                                                     
-                                                    <div className="flex-1">
-                                                        <h3 className="font-semibold text-lg">
+                                                    <div className="flex-1 min-w-0">
+                                                        <h3 className="font-semibold text-sm sm:text-base lg:text-lg line-clamp-2">
                                                             {product?.product_name}
                                                         </h3>
                                                         {product?.brand && (
-                                                            <p className="text-sm text-gray-500">Brand: {product.brand}</p>
+                                                            <p className="text-xs sm:text-sm text-gray-500">Brand: {product.brand}</p>
                                                         )}
                                                         {variation && (
-                                                            <p className="text-sm text-gray-500">
+                                                            <p className="text-xs sm:text-sm text-gray-500">
                                                                 {variation.size && `Size: ${variation.size} `}
                                                                 {variation.color && `Color: ${variation.color}`}
                                                             </p>
                                                         )}
                                                         
                                                         {/* Pricing Details */}
-                                                        <div className="mt-2 space-y-1">
+                                                        <div className="mt-1.5 sm:mt-2 space-y-0.5 sm:space-y-1">
                                                             <div className="flex items-center gap-2 flex-wrap">
                                                                 {hasDiscount && (
                                                                     <>
@@ -913,15 +913,15 @@ export default function Index() {
                                                         </div>
                                                     </div>
                                                     
-                                                    <div className="text-right">
+                                                    <div className="text-right flex-shrink-0">
                                                         {hasDiscount && (
-                                                            <div className="mb-1">
-                                                                <p className="text-xs text-gray-400 line-through">
+                                                            <div className="mb-0.5 sm:mb-1">
+                                                                <p className="text-[10px] sm:text-xs text-gray-400 line-through">
                                                                     ₹{itemMrpTotal.toFixed(2)}
                                                                 </p>
                                                             </div>
                                                         )}
-                                                        <p className="font-bold text-indigo-600 text-lg">
+                                                        <p className="font-bold text-indigo-600 text-sm sm:text-base lg:text-lg">
                                                             ₹{itemSubtotal.toFixed(2)}
                                                         </p>
                                                     </div>
@@ -971,9 +971,9 @@ export default function Index() {
                                         })()}
                                         
                                         {/* Shipping Information Review */}
-                                        <div className="border-t pt-6 mt-6">
-                                            <h3 className="text-lg font-semibold mb-4">Shipping Details</h3>
-                                            <div className="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                                        <div className="border-t pt-4 sm:pt-5 mt-4 sm:mt-5">
+                                            <h3 className="text-sm sm:text-base lg:text-lg font-semibold mb-3">Shipping Details</h3>
+                                            <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                                                 <p><span className="font-semibold">Name:</span> {formData.name}</p>
                                                 <p><span className="font-semibold">Email:</span> {formData.email}</p>
                                                 {formData.receiver_name && (
@@ -1016,34 +1016,34 @@ export default function Index() {
 
                                 {/* Step 3: Payment Method */}
                                 {currentStep === 3 && (
-                                    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                                        <h2 className="text-xl font-bold mb-4">Step 3: Payment Method</h2>
+                                    <div className="bg-white rounded-lg shadow-md p-4 sm:p-5 lg:p-6 mb-4 sm:mb-5">
+                                        <h2 className="text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4">Step 3: Payment Method</h2>
                                         
-                                        <div className="space-y-4">
-                                            <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-6">
+                                        <div className="space-y-3 sm:space-y-4">
+                                            <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4 sm:p-5">
                                                 <div className="flex items-start">
                                                     <div className="flex-shrink-0">
-                                                        <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center">
-                                                            <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-indigo-600 rounded-full flex items-center justify-center">
+                                                            <svg className="h-5 w-5 sm:h-6 sm:w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                                             </svg>
                                                         </div>
                                                     </div>
-                                                    <div className="ml-4 flex-1">
-                                                        <h3 className="text-lg font-semibold text-gray-900 mb-1">Cash on Delivery</h3>
-                                                        <p className="text-sm text-gray-600 mb-3">Pay when you receive your order</p>
-                                                        <div className="bg-white rounded-md p-3 border border-indigo-200">
-                                                            <p className="text-xs text-gray-500 mb-1 font-semibold">Payment Instructions:</p>
-                                                            <ul className="text-xs text-gray-700 space-y-1 list-disc list-inside">
-                                                                <li>You will pay the delivery person when your order arrives</li>
-                                                                <li>Please have exact change ready if possible</li>
-                                                                <li>Your order will be processed immediately</li>
+                                                    <div className="ml-3 sm:ml-4 flex-1">
+                                                        <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 mb-1">Cash on Delivery</h3>
+                                                        <p className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">Pay when you receive your order</p>
+                                                        <div className="bg-white rounded-md p-2 sm:p-3 border border-indigo-200">
+                                                            <p className="text-[10px] sm:text-xs text-gray-500 mb-1 font-semibold">Payment Instructions:</p>
+                                                            <ul className="text-[10px] sm:text-xs text-gray-700 space-y-0.5 sm:space-y-1 list-disc list-inside">
+                                                                <li>Pay the delivery person when order arrives</li>
+                                                                <li>Have exact change ready if possible</li>
+                                                                <li>Order will be processed immediately</li>
                                                             </ul>
                                                         </div>
                                                     </div>
-                                                    <div className="ml-4">
-                                                        <div className="w-6 h-6 rounded-full bg-indigo-600 flex items-center justify-center">
-                                                            <svg className="h-4 w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <div className="ml-2 sm:ml-4">
+                                                        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-indigo-600 flex items-center justify-center">
+                                                            <svg className="h-3 w-3 sm:h-4 sm:w-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                                             </svg>
                                                         </div>
@@ -1057,18 +1057,18 @@ export default function Index() {
 
                             {/* Order Summary Sidebar */}
                             <div className="lg:col-span-1">
-                                <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-                                    <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+                                <div className="bg-white rounded-lg shadow-md p-4 sm:p-5 lg:p-6 sticky top-4">
+                                    <h2 className="text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4">Order Summary</h2>
                                     
                                     {/* Show coupon section only on step 1 and 2 */}
                                     {(currentStep === 1 || currentStep === 2) && (
-                                    <div className="mb-4 pb-4 border-b">
+                                    <div className="mb-3 sm:mb-4 pb-3 sm:pb-4 border-b">
                                         {!appliedCoupon ? (
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                                                     Have a coupon code?
                                                 </label>
-                                                <div className="flex gap-2">
+                                                <div className="flex gap-1.5 sm:gap-2">
                                                     <input
                                                         type="text"
                                                         value={couponCode}
@@ -1078,31 +1078,31 @@ export default function Index() {
                                                         }}
                                                         onKeyPress={(e) => e.key === 'Enter' && handleApplyCoupon()}
                                                         placeholder="Enter code"
-                                                        className="flex-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                        className="flex-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 sm:py-2 px-2 sm:px-3 text-xs sm:text-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                                                     />
                                                     <button
                                                         type="button"
                                                         onClick={handleApplyCoupon}
                                                         disabled={validatingCoupon || !couponCode.trim()}
-                                                        className="px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                        className="px-3 sm:px-4 py-1.5 sm:py-2 border border-transparent text-xs sm:text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                                     >
                                                         {validatingCoupon ? '...' : 'Apply'}
                                                     </button>
                                                 </div>
                                                 {couponError && (
-                                                    <p className="mt-1 text-sm text-red-600">{couponError}</p>
+                                                    <p className="mt-1 text-xs sm:text-sm text-red-600">{couponError}</p>
                                                 )}
                                             </div>
                                         ) : (
-                                            <div className="bg-green-50 border border-green-200 rounded-md p-3">
+                                            <div className="bg-green-50 border border-green-200 rounded-md p-2 sm:p-3">
                                                 <div className="flex items-center justify-between">
                                                     <div className="flex items-center">
-                                                        <TicketIcon className="h-5 w-5 text-green-600 mr-2" />
+                                                        <TicketIcon className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mr-1.5 sm:mr-2" />
                                                         <div>
-                                                            <p className="text-sm font-semibold text-green-800">
+                                                            <p className="text-xs sm:text-sm font-semibold text-green-800">
                                                                 {appliedCoupon.code}
                                                             </p>
-                                                            <p className="text-xs text-green-600">
+                                                            <p className="text-[10px] sm:text-xs text-green-600">
                                                                 {appliedCoupon.name}
                                                             </p>
                                                         </div>
@@ -1112,7 +1112,7 @@ export default function Index() {
                                                         onClick={handleRemoveCoupon}
                                                         className="text-green-600 hover:text-green-800"
                                                     >
-                                                        <XMarkIcon className="h-5 w-5" />
+                                                        <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -1120,7 +1120,7 @@ export default function Index() {
                                     </div>
                                     )}
                                     
-                                    <div className="space-y-3 mb-4">
+                                    <div className="space-y-2 sm:space-y-3 mb-3 sm:mb-4">
                                         {/* Calculate product discounts */}
                                         {(() => {
                                             const totalMrp = items.reduce((sum: number, item: any) => {
@@ -1134,17 +1134,17 @@ export default function Index() {
                                             return (
                                                 <>
                                                     {hasProductDiscount && (
-                                                        <div className="flex justify-between text-sm text-gray-500">
+                                                        <div className="flex justify-between text-xs sm:text-sm text-gray-500">
                                                             <span>Total MRP</span>
                                                             <span className="line-through">₹{totalMrp.toFixed(2)}</span>
                                                         </div>
                                                     )}
-                                                    <div className="flex justify-between text-sm text-gray-700">
+                                                    <div className="flex justify-between text-xs sm:text-sm text-gray-700">
                                                         <span>Subtotal ({items.length} items)</span>
                                                         <span>₹{subtotal.toFixed(2)}</span>
                                                     </div>
                                                     {hasProductDiscount && (
-                                                        <div className="flex justify-between text-sm">
+                                                        <div className="flex justify-between text-xs sm:text-sm">
                                                             <span className="text-green-600 font-medium">Product Discount</span>
                                                             <span className="text-green-600 font-semibold">-₹{productSavings.toFixed(2)}</span>
                                                         </div>
@@ -1154,24 +1154,24 @@ export default function Index() {
                                         })()}
                                         
                                         {couponDiscount > 0 && (
-                                            <div className="flex justify-between text-sm">
-                                                <span className="text-green-600 font-medium">Coupon Discount ({appliedCoupon?.code})</span>
+                                            <div className="flex justify-between text-xs sm:text-sm">
+                                                <span className="text-green-600 font-medium">Coupon ({appliedCoupon?.code})</span>
                                                 <span className="text-green-600 font-semibold">-₹{couponDiscount.toFixed(2)}</span>
                                             </div>
                                         )}
                                         
-                                        <div className="flex justify-between text-sm text-gray-700">
+                                        <div className="flex justify-between text-xs sm:text-sm text-gray-700">
                                             <span>Tax & Fees</span>
                                             <span className={tax === 0 ? 'text-green-600 font-medium' : ''}>
                                                 {tax === 0 ? 'FREE' : `₹${tax.toFixed(2)}`}
                                             </span>
                                         </div>
                                         
-                                        <div className="flex justify-between text-sm text-gray-700">
-                                            <div className="flex items-center gap-2">
-                                                <span>Delivery Charges</span>
+                                        <div className="flex justify-between text-xs sm:text-sm text-gray-700">
+                                            <div className="flex items-center gap-1.5 sm:gap-2">
+                                                <span>Delivery</span>
                                                 {shipping === 0 && (
-                                                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                                                    <span className="text-[10px] sm:text-xs bg-green-100 text-green-700 px-1.5 sm:px-2 py-0.5 rounded-full font-medium">
                                                         FREE
                                                     </span>
                                                 )}
@@ -1179,8 +1179,8 @@ export default function Index() {
                                             <span className={shipping === 0 ? 'text-green-600 font-semibold line-through' : ''}>
                                                 {shipping === 0 ? (
                                                     <span className="flex items-center gap-1">
-                                                        <span className="line-through text-gray-400">₹40</span>
-                                                        <span className="text-green-600 font-medium">FREE</span>
+                                                        <span className="line-through text-gray-400 text-[10px] sm:text-xs">₹40</span>
+                                                        <span className="text-green-600 font-medium text-xs sm:text-sm">FREE</span>
                                                     </span>
                                                 ) : (
                                                     `₹${shipping.toFixed(2)}`
@@ -1203,32 +1203,32 @@ export default function Index() {
                                         if (!hasAnySavings) return null;
                                         
                                         return (
-                                            <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+                                            <div className="bg-green-50 border border-green-200 rounded-lg p-2 sm:p-3 mb-3 sm:mb-4">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="text-sm font-medium text-green-800">Total Savings</span>
-                                                    <span className="text-base font-bold text-green-600">
+                                                    <span className="text-xs sm:text-sm font-medium text-green-800">Total Savings</span>
+                                                    <span className="text-sm sm:text-base font-bold text-green-600">
                                                         ₹{totalSavings.toFixed(2)}
                                                     </span>
                                                 </div>
-                                                <div className="mt-1 text-xs text-green-700 space-y-0.5">
+                                                <div className="mt-1 text-[10px] sm:text-xs text-green-700 space-y-0.5">
                                                     {productSavings > 0 && (
-                                                        <div>Product Discount: ₹{productSavings.toFixed(2)}</div>
+                                                        <div>Product: ₹{productSavings.toFixed(2)}</div>
                                                     )}
                                                     {couponDiscount > 0 && (
                                                         <div>Coupon: ₹{couponDiscount.toFixed(2)}</div>
                                                     )}
                                                     {shipping === 0 && (
-                                                        <div>Free Delivery: ₹40</div>
+                                                        <div>Delivery: ₹40</div>
                                                     )}
                                                 </div>
                                             </div>
                                         );
                                     })()}
                                     
-                                    <div className="border-t pt-4 mb-4">
+                                    <div className="border-t pt-3 sm:pt-4 mb-3 sm:mb-4">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-lg font-bold text-gray-900">Total Amount</span>
-                                            <span className="text-lg sm:text-xl lg:text-2xl font-bold text-indigo-600">₹{finalTotal.toFixed(2)}</span>
+                                            <span className="text-sm sm:text-base lg:text-lg font-bold text-gray-900">Total Amount</span>
+                                            <span className="text-base sm:text-lg lg:text-xl font-bold text-indigo-600">₹{finalTotal.toFixed(2)}</span>
                                         </div>
                                         {(() => {
                                             const totalMrp = items.reduce((sum: number, item: any) => {
@@ -1241,8 +1241,8 @@ export default function Index() {
                                             
                                             if (totalSavings > 0) {
                                                 return (
-                                                    <div className="mt-2 text-xs text-green-600 text-right">
-                                                        You saved ₹{totalSavings.toFixed(2)} on this order! 🎉
+                                                    <div className="mt-1.5 sm:mt-2 text-[10px] sm:text-xs text-green-600 text-right">
+                                                        You saved ₹{totalSavings.toFixed(2)}! 🎉
                                                     </div>
                                                 );
                                             }
@@ -1252,18 +1252,18 @@ export default function Index() {
                                     
                                     {/* Payment Method - Show only on step 3 */}
                                     {currentStep === 3 && (
-                                        <div className="mb-4 pb-4 border-b">
-                                            <h3 className="text-sm font-medium text-gray-700 mb-2">Payment Method</h3>
-                                            <div className="bg-indigo-50 border border-indigo-200 rounded-md p-3">
+                                        <div className="mb-3 sm:mb-4 pb-3 sm:pb-4 border-b">
+                                            <h3 className="text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">Payment Method</h3>
+                                            <div className="bg-indigo-50 border border-indigo-200 rounded-md p-2 sm:p-3">
                                                 <div className="flex items-center">
                                                     <div className="flex-shrink-0">
-                                                        <svg className="h-5 w-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <svg className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                                                         </svg>
                                                     </div>
-                                                    <div className="ml-3">
-                                                        <p className="text-sm font-medium text-gray-900">Cash on Delivery</p>
-                                                        <p className="text-xs text-gray-500">Pay when you receive your order</p>
+                                                    <div className="ml-2 sm:ml-3">
+                                                        <p className="text-xs sm:text-sm font-medium text-gray-900">Cash on Delivery</p>
+                                                        <p className="text-[10px] sm:text-xs text-gray-500">Pay when you receive</p>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1271,7 +1271,7 @@ export default function Index() {
                                     )}
                                     
                                     {/* Navigation and Action Buttons */}
-                                    <div className="space-y-3 mt-6">
+                                    <div className="space-y-2 sm:space-y-3 mt-4 sm:mt-5">
                                         {/* Step 1: Continue to Review */}
                                         {currentStep === 1 && (
                                             <button
@@ -1288,7 +1288,7 @@ export default function Index() {
                                                         }
                                                     }
                                                 }}
-                                                className="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-md"
+                                                className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-indigo-600 text-white rounded-lg text-sm sm:text-base font-semibold hover:bg-indigo-700 transition shadow-md"
                                             >
                                                 Continue to Review →
                                             </button>
@@ -1300,14 +1300,14 @@ export default function Index() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setCurrentStep(1)}
-                                                    className="w-full px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
+                                                    className="w-full px-4 sm:px-6 py-2 sm:py-2.5 bg-gray-200 text-gray-700 rounded-lg text-sm sm:text-base font-semibold hover:bg-gray-300 transition"
                                                 >
                                                     ← Back to Shipping
                                                 </button>
                                                 <button
                                                     type="button"
                                                     onClick={() => setCurrentStep(3)}
-                                                    className="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition shadow-md"
+                                                    className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-indigo-600 text-white rounded-lg text-sm sm:text-base font-semibold hover:bg-indigo-700 transition shadow-md"
                                                 >
                                                     Continue to Payment →
                                                 </button>
@@ -1320,14 +1320,14 @@ export default function Index() {
                                                 <button
                                                     type="button"
                                                     onClick={() => setCurrentStep(2)}
-                                                    className="w-full px-6 py-2.5 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
+                                                    className="w-full px-4 sm:px-6 py-2 sm:py-2.5 bg-gray-200 text-gray-700 rounded-lg text-sm sm:text-base font-semibold hover:bg-gray-300 transition"
                                                 >
                                                     ← Back to Review
                                                 </button>
                                                 <Button
                                                     type="submit"
                                                     disabled={processing}
-                                                    className="w-full"
+                                                    className="w-full text-sm sm:text-base"
                                                 >
                                                     {processing ? 'Processing...' : 'Place Order'}
                                                 </Button>
@@ -1336,7 +1336,7 @@ export default function Index() {
 
                                         {/* Show step navigation message for steps 1 and 2 */}
                                         {currentStep < 3 && (
-                                            <div className="text-center text-xs text-gray-500 pt-2">
+                                            <div className="text-center text-[10px] sm:text-xs text-gray-500 pt-1 sm:pt-2">
                                                 Complete all steps to place your order
                                             </div>
                                         )}
@@ -1344,7 +1344,7 @@ export default function Index() {
                                     
                                     <Link
                                         href="/cart"
-                                        className="block text-center text-indigo-600 hover:text-indigo-800 font-semibold mt-4"
+                                        className="block text-center text-indigo-600 hover:text-indigo-800 text-xs sm:text-sm font-semibold mt-3 sm:mt-4"
                                     >
                                         ← Back to Cart
                                     </Link>

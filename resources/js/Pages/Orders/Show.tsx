@@ -171,7 +171,7 @@ export default function Show() {
         };
 
         return (
-            <span className={`px-3 py-1 text-sm font-semibold rounded-full ${
+            <span className={`px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm font-semibold rounded-full ${
                 statusColors[status] || 'bg-gray-100 text-gray-800'
             }`}>
                 {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -182,8 +182,8 @@ export default function Show() {
     if (loading) {
         return (
             <AppLayout>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <p className="text-center text-gray-500">Loading order...</p>
+                <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6">
+                    <p className="text-center text-xs sm:text-sm text-gray-500">Loading order...</p>
                 </div>
             </AppLayout>
         );
@@ -192,12 +192,12 @@ export default function Show() {
     if (!order) {
         return (
             <AppLayout>
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <div className="bg-white rounded-lg shadow-md p-12 text-center">
-                        <p className="text-gray-500 text-lg mb-4">Order not found</p>
+                <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6">
+                    <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 lg:p-12 text-center">
+                        <p className="text-gray-500 text-sm sm:text-base lg:text-lg mb-3 sm:mb-4">Order not found</p>
                         <Link
                             href="/orders"
-                            className="inline-block bg-indigo-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition"
+                            className="inline-block bg-indigo-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg text-xs sm:text-sm font-semibold hover:bg-indigo-700 transition"
                         >
                             Back to Orders
                         </Link>
@@ -216,35 +216,34 @@ export default function Show() {
 
     return (
         <AppLayout>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <div className="mb-6">
+            <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 py-3 sm:py-4 lg:py-6">
+                <div className="mb-3 sm:mb-4">
                     <Link
                         href="/orders"
-                        className="text-indigo-600 hover:text-indigo-800 font-semibold"
+                        className="text-xs sm:text-sm text-indigo-600 hover:text-indigo-800 font-semibold"
                     >
                         ← Back to Orders
                     </Link>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <div className="flex justify-between items-start mb-4">
-                        <div>
-                            <h1 className="text-3xl font-bold mb-2">Order Details</h1>
-                            <p className="text-gray-600">
+                <div className="bg-white rounded-lg shadow-md p-4 sm:p-5 lg:p-6 mb-4 sm:mb-5">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+                        <div className="flex-1">
+                            <h1 className="text-lg sm:text-xl lg:text-2xl font-bold mb-1.5 sm:mb-2">Order Details</h1>
+                            <p className="text-xs sm:text-sm text-gray-600">
                                 Order Number: <span className="font-semibold">{order.order_number || `#${order.id}`}</span>
                             </p>
-                            <p className="text-gray-600">
+                            <p className="text-xs sm:text-sm text-gray-600">
                                 Placed on: {new Date(order.created_at).toLocaleString()}
                             </p>
                             {order.status === 'delivered' || order.otp_verified ? (
                                 order.delivered_at && (
-                                    <p className="text-gray-600 mt-1">
+                                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
                                         Delivered on: <span className="font-semibold text-green-600">
                                             {new Date(order.delivered_at).toLocaleDateString('en-US', { 
-                                                weekday: 'long', 
-                                                year: 'numeric', 
-                                                month: 'long', 
-                                                day: 'numeric' 
+                                                month: 'short', 
+                                                day: 'numeric',
+                                                year: 'numeric'
                                             })} at {new Date(order.delivered_at).toLocaleTimeString('en-US', {
                                                 hour: '2-digit',
                                                 minute: '2-digit'
@@ -253,21 +252,20 @@ export default function Show() {
                                     </p>
                                 )
                             ) : order.delivery_date ? (
-                                <p className="text-gray-600 mt-1">
+                                <p className="text-xs sm:text-sm text-gray-600 mt-1">
                                     Expected Delivery: <span className="font-semibold text-indigo-600">
                                         {new Date(order.delivery_date).toLocaleDateString('en-US', { 
-                                            weekday: 'long', 
-                                            year: 'numeric', 
-                                            month: 'long', 
-                                            day: 'numeric' 
+                                            month: 'short', 
+                                            day: 'numeric',
+                                            year: 'numeric'
                                         })}
                                     </span>
                                 </p>
                             ) : null}
                             {order.status === 'cancelled' && order.cancellation_reason && (
-                                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-md">
-                                    <p className="text-sm font-semibold text-red-900 mb-1">Cancellation Reason:</p>
-                                    <p className="text-sm text-red-800">
+                                <div className="mt-2 sm:mt-3 p-2 sm:p-3 bg-red-50 border border-red-200 rounded-md">
+                                    <p className="text-xs sm:text-sm font-semibold text-red-900 mb-1">Cancellation Reason:</p>
+                                    <p className="text-xs sm:text-sm text-red-800">
                                         {order.cancellation_reason === 'changed_mind' && 'Changed My Mind'}
                                         {order.cancellation_reason === 'found_better_price' && 'Found Better Price Elsewhere'}
                                         {order.cancellation_reason === 'wrong_item' && 'Wrong Item Ordered'}
@@ -280,22 +278,23 @@ export default function Show() {
                                         {order.cancellation_reason === 'other' && 'Other'}
                                     </p>
                                     {order.cancellation_notes && (
-                                        <p className="text-sm text-red-700 mt-2 italic">"{order.cancellation_notes}"</p>
+                                        <p className="text-xs sm:text-sm text-red-700 mt-1.5 sm:mt-2 italic">"{order.cancellation_notes}"</p>
                                     )}
                                 </div>
                             )}
                         </div>
-                        <div>
+                        <div className="flex-shrink-0">
                             {getStatusBadge(order.status)}
                         </div>
                     </div>
 
                             {order.status === 'pending' && (
-                        <div className="mt-4">
+                        <div className="mt-3 sm:mt-4">
                             <Button
                                 variant="danger"
                                 onClick={handleCancel}
                                 disabled={cancelling}
+                                className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2"
                             >
                                 {cancelling ? 'Cancelling...' : 'Cancel Order'}
                             </Button>
@@ -304,22 +303,22 @@ export default function Show() {
 
                     {(order.status === 'shipped' || order.status === 'delivered' || order.status === 'completed') && 
                      !order.return_status && (
-                        <div className="mt-4">
+                        <div className="mt-3 sm:mt-4">
                             {/* Check if all products are returnable */}
                             {order.items && order.items.some((item: any) => !(item.is_returnable ?? false)) ? (
-                                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
-                                    <div className="flex items-start gap-3">
+                                <div className="p-3 sm:p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-3 sm:mb-4">
+                                    <div className="flex items-start gap-2 sm:gap-3">
                                         <div className="flex-shrink-0">
-                                            <svg className="h-5 w-5 text-yellow-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                             </svg>
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-sm font-semibold text-yellow-900 mb-2">Return Not Available</p>
-                                            <p className="text-xs text-yellow-800 mb-2">
+                                            <p className="text-xs sm:text-sm font-semibold text-yellow-900 mb-1.5 sm:mb-2">Return Not Available</p>
+                                            <p className="text-[10px] sm:text-xs text-yellow-800 mb-1.5 sm:mb-2">
                                                 Some products in this order are not returnable:
                                             </p>
-                                            <ul className="text-xs text-yellow-700 list-disc list-inside space-y-1">
+                                            <ul className="text-[10px] sm:text-xs text-yellow-700 list-disc list-inside space-y-0.5 sm:space-y-1">
                                                 {order.items
                                                     .filter((item: any) => !(item.is_returnable ?? false))
                                                     .map((item: any, index: number) => (
@@ -334,12 +333,12 @@ export default function Show() {
                                 <button
                                     onClick={handleReturnRequest}
                                     disabled={requestingReturn}
-                                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-semibold rounded-lg shadow-md hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
+                                    className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs sm:text-sm font-semibold rounded-lg shadow-md hover:from-orange-600 hover:to-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
                                 >
-                                    <ArrowPathIcon className="h-5 w-5" />
+                                    <ArrowPathIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                                     {requestingReturn ? (
                                         <>
-                                            <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
@@ -355,22 +354,22 @@ export default function Show() {
 
                     {(order.status === 'shipped' || order.status === 'delivered' || order.status === 'completed') && 
                      !order.replacement_status && (
-                        <div className="mt-4">
+                        <div className="mt-3 sm:mt-4">
                             {/* Check if all products are replaceable */}
                             {order.items && order.items.some((item: any) => !(item.is_replaceable ?? false)) ? (
-                                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-4">
-                                    <div className="flex items-start gap-3">
+                                <div className="p-3 sm:p-4 bg-yellow-50 border border-yellow-200 rounded-lg mb-3 sm:mb-4">
+                                    <div className="flex items-start gap-2 sm:gap-3">
                                         <div className="flex-shrink-0">
-                                            <svg className="h-5 w-5 text-yellow-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <svg className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                             </svg>
                                         </div>
                                         <div className="flex-1">
-                                            <p className="text-sm font-semibold text-yellow-900 mb-2">Replacement Not Available</p>
-                                            <p className="text-xs text-yellow-800 mb-2">
+                                            <p className="text-xs sm:text-sm font-semibold text-yellow-900 mb-1.5 sm:mb-2">Replacement Not Available</p>
+                                            <p className="text-[10px] sm:text-xs text-yellow-800 mb-1.5 sm:mb-2">
                                                 Some products in this order are not replaceable:
                                             </p>
-                                            <ul className="text-xs text-yellow-700 list-disc list-inside space-y-1">
+                                            <ul className="text-[10px] sm:text-xs text-yellow-700 list-disc list-inside space-y-0.5 sm:space-y-1">
                                                 {order.items
                                                     .filter((item: any) => !(item.is_replaceable ?? false))
                                                     .map((item: any, index: number) => (
@@ -385,12 +384,12 @@ export default function Show() {
                                 <button
                                     onClick={handleReplacementRequest}
                                     disabled={requestingReplacement}
-                                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg shadow-md hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
+                                    className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 lg:px-6 py-2 sm:py-2.5 lg:py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs sm:text-sm font-semibold rounded-lg shadow-md hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
                                 >
-                                    <ArrowPathIcon className="h-5 w-5" />
+                                    <ArrowPathIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                                     {requestingReplacement ? (
                                         <>
-                                            <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <svg className="animate-spin h-4 w-4 sm:h-5 sm:w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
@@ -405,16 +404,16 @@ export default function Show() {
                     )}
 
                     {order.return_status && (
-                        <div className="mt-3 p-3 bg-orange-50 border border-orange-200 rounded-md">
-                            <p className="text-sm font-semibold text-orange-900 mb-1">Return Status:</p>
-                            <p className="text-sm text-orange-800 capitalize mb-2">
+                        <div className="mt-2 sm:mt-3 p-2 sm:p-3 bg-orange-50 border border-orange-200 rounded-md">
+                            <p className="text-xs sm:text-sm font-semibold text-orange-900 mb-1">Return Status:</p>
+                            <p className="text-xs sm:text-sm text-orange-800 capitalize mb-1.5 sm:mb-2">
                                 {order.return_status === 'pending' && '⏳ Return Request Pending'}
                                 {order.return_status === 'approved' && '✅ Return Approved - Refund Processing'}
                                 {order.return_status === 'rejected' && '❌ Return Request Rejected'}
                                 {order.return_status === 'refunded' && '💰 Refund Processed'}
                             </p>
                             {order.return_reason && (
-                                <p className="text-sm text-orange-700">
+                                <p className="text-xs sm:text-sm text-orange-700">
                                     <span className="font-semibold">Reason:</span> 
                                     {order.return_reason === 'defective_item' && ' Defective Item'}
                                     {order.return_reason === 'wrong_item' && ' Wrong Item Received'}
@@ -425,10 +424,10 @@ export default function Show() {
                                 </p>
                             )}
                             {order.return_notes && (
-                                <p className="text-sm text-orange-700 mt-1 italic">"{order.return_notes}"</p>
+                                <p className="text-xs sm:text-sm text-orange-700 mt-1 italic">"{order.return_notes}"</p>
                             )}
                             {order.refund_amount && (
-                                <p className="text-sm font-semibold text-orange-900 mt-2">
+                                <p className="text-xs sm:text-sm font-semibold text-orange-900 mt-1.5 sm:mt-2">
                                     Refund Amount: ₹{Number(order.refund_amount).toFixed(2)}
                                 </p>
                             )}
@@ -436,16 +435,16 @@ export default function Show() {
                     )}
 
                     {order.replacement_status && (
-                        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
-                            <p className="text-sm font-semibold text-blue-900 mb-1">Replacement Status:</p>
-                            <p className="text-sm text-blue-800 capitalize mb-2">
+                        <div className="mt-2 sm:mt-3 p-2 sm:p-3 bg-blue-50 border border-blue-200 rounded-md">
+                            <p className="text-xs sm:text-sm font-semibold text-blue-900 mb-1">Replacement Status:</p>
+                            <p className="text-xs sm:text-sm text-blue-800 capitalize mb-1.5 sm:mb-2">
                                 {order.replacement_status === 'pending' && '⏳ Replacement Request Pending'}
                                 {order.replacement_status === 'approved' && '✅ Replacement Approved - New Order Created'}
                                 {order.replacement_status === 'rejected' && '❌ Replacement Request Rejected'}
                                 {order.replacement_status === 'processed' && '✅ Replacement Processed'}
                             </p>
                             {order.replacement_reason && (
-                                <p className="text-sm text-blue-700">
+                                <p className="text-xs sm:text-sm text-blue-700">
                                     <span className="font-semibold">Reason:</span> 
                                     {order.replacement_reason === 'defective_item' && ' Defective Item'}
                                     {order.replacement_reason === 'wrong_item' && ' Wrong Item Received'}
@@ -455,14 +454,14 @@ export default function Show() {
                                 </p>
                             )}
                             {order.replacement_notes && (
-                                <p className="text-sm text-blue-700 mt-1 italic">"{order.replacement_notes}"</p>
+                                <p className="text-xs sm:text-sm text-blue-700 mt-1 italic">"{order.replacement_notes}"</p>
                             )}
                             {order.replacement_order_id && order.replacement_order && (
-                                <div className="mt-2 pt-2 border-t border-blue-200">
-                                    <p className="text-sm font-semibold text-blue-900 mb-1">Replacement Order:</p>
+                                <div className="mt-1.5 sm:mt-2 pt-1.5 sm:pt-2 border-t border-blue-200">
+                                    <p className="text-xs sm:text-sm font-semibold text-blue-900 mb-1">Replacement Order:</p>
                                     <Link
                                         href={`/orders/${order.replacement_order.id}`}
-                                        className="text-sm text-blue-600 hover:text-blue-800 underline"
+                                        className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 underline"
                                     >
                                         Order #{order.replacement_order.order_number || order.replacement_order.id}
                                     </Link>
@@ -473,33 +472,32 @@ export default function Show() {
                 </div>
 
                 {/* Order Timeline */}
-                <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                    <h2 className="text-xl font-bold mb-6">Order Timeline</h2>
+                <div className="bg-white rounded-lg shadow-md p-4 sm:p-5 lg:p-6 mb-4 sm:mb-5">
+                    <h2 className="text-base sm:text-lg lg:text-xl font-bold mb-4 sm:mb-5">Order Timeline</h2>
                     <div className="relative">
                         {/* Timeline Line */}
-                        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+                        <div className="absolute left-3 sm:left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
                         
-                        <div className="space-y-6">
+                        <div className="space-y-4 sm:space-y-5">
                             {/* Ordered */}
                             <div className="relative flex items-start">
-                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 ${
+                                <div className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center z-10 ${
                                     order.created_at ? 'bg-green-500' : 'bg-gray-300'
                                 }`}>
-                                    <CheckCircleIcon className={`h-5 w-5 ${
+                                    <CheckCircleIcon className={`h-4 w-4 sm:h-5 sm:w-5 ${
                                         order.created_at ? 'text-white' : 'text-gray-500'
                                     }`} />
                                 </div>
-                                <div className="ml-4 flex-1">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className={`text-sm font-semibold ${
+                                <div className="ml-3 sm:ml-4 flex-1 min-w-0">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                                        <h3 className={`text-xs sm:text-sm font-semibold ${
                                             order.created_at ? 'text-gray-900' : 'text-gray-400'
                                         }`}>
                                             Order Placed
                                         </h3>
                                         {order.created_at && (
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-[10px] sm:text-xs text-gray-500">
                                                 {new Date(order.created_at).toLocaleString('en-US', {
-                                                    year: 'numeric',
                                                     month: 'short',
                                                     day: 'numeric',
                                                     hour: '2-digit',
@@ -508,7 +506,7 @@ export default function Show() {
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">
                                         Order #{order.order_number || order.id} was successfully placed
                                     </p>
                                 </div>
@@ -516,24 +514,23 @@ export default function Show() {
 
                             {/* Under Process */}
                             <div className="relative flex items-start">
-                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 ${
+                                <div className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center z-10 ${
                                     order.processing_at ? 'bg-blue-500' : 'bg-gray-300'
                                 }`}>
-                                    <ArrowPathIcon className={`h-5 w-5 ${
+                                    <ArrowPathIcon className={`h-4 w-4 sm:h-5 sm:w-5 ${
                                         order.processing_at ? 'text-white' : 'text-gray-500'
                                     }`} />
                                 </div>
-                                <div className="ml-4 flex-1">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className={`text-sm font-semibold ${
+                                <div className="ml-3 sm:ml-4 flex-1 min-w-0">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                                        <h3 className={`text-xs sm:text-sm font-semibold ${
                                             order.processing_at ? 'text-gray-900' : 'text-gray-400'
                                         }`}>
                                             Under Process
                                         </h3>
                                         {order.processing_at && (
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-[10px] sm:text-xs text-gray-500">
                                                 {new Date(order.processing_at).toLocaleString('en-US', {
-                                                    year: 'numeric',
                                                     month: 'short',
                                                     day: 'numeric',
                                                     hour: '2-digit',
@@ -542,7 +539,7 @@ export default function Show() {
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">
                                         Order is being processed and prepared for shipment
                                     </p>
                                 </div>
@@ -550,24 +547,23 @@ export default function Show() {
 
                             {/* Shipped */}
                             <div className="relative flex items-start">
-                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 ${
+                                <div className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center z-10 ${
                                     order.shipped_at ? 'bg-purple-500' : 'bg-gray-300'
                                 }`}>
-                                    <TruckIcon className={`h-5 w-5 ${
+                                    <TruckIcon className={`h-4 w-4 sm:h-5 sm:w-5 ${
                                         order.shipped_at ? 'text-white' : 'text-gray-500'
                                     }`} />
                                 </div>
-                                <div className="ml-4 flex-1">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className={`text-sm font-semibold ${
+                                <div className="ml-3 sm:ml-4 flex-1 min-w-0">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                                        <h3 className={`text-xs sm:text-sm font-semibold ${
                                             order.shipped_at ? 'text-gray-900' : 'text-gray-400'
                                         }`}>
                                             Shipped
                                         </h3>
                                         {order.shipped_at && (
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-[10px] sm:text-xs text-gray-500">
                                                 {new Date(order.shipped_at).toLocaleString('en-US', {
-                                                    year: 'numeric',
                                                     month: 'short',
                                                     day: 'numeric',
                                                     hour: '2-digit',
@@ -576,7 +572,7 @@ export default function Show() {
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">
                                         Order has been shipped and is on its way
                                     </p>
                                 </div>
@@ -584,24 +580,23 @@ export default function Show() {
 
                             {/* Out for Delivery */}
                             <div className="relative flex items-start">
-                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 ${
+                                <div className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center z-10 ${
                                     order.out_for_delivery_at ? 'bg-indigo-500' : 'bg-gray-300'
                                 }`}>
-                                    <TruckIcon className={`h-5 w-5 ${
+                                    <TruckIcon className={`h-4 w-4 sm:h-5 sm:w-5 ${
                                         order.out_for_delivery_at ? 'text-white' : 'text-gray-500'
                                     }`} />
                                 </div>
-                                <div className="ml-4 flex-1">
-                                    <div className="flex items-center justify-between">
-                                        <h3 className={`text-sm font-semibold ${
+                                <div className="ml-3 sm:ml-4 flex-1 min-w-0">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                                        <h3 className={`text-xs sm:text-sm font-semibold ${
                                             order.out_for_delivery_at ? 'text-gray-900' : 'text-gray-400'
                                         }`}>
                                             Out for Delivery
                                         </h3>
                                         {order.out_for_delivery_at && (
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-[10px] sm:text-xs text-gray-500">
                                                 {new Date(order.out_for_delivery_at).toLocaleString('en-US', {
-                                                    year: 'numeric',
                                                     month: 'short',
                                                     day: 'numeric',
                                                     hour: '2-digit',
@@ -610,7 +605,7 @@ export default function Show() {
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-1">
+                                    <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">
                                         Order is out for delivery
                                     </p>
                                 </div>
@@ -619,17 +614,16 @@ export default function Show() {
                             {/* Delivered */}
                             {order.delivered_at && (
                                 <div className="relative flex items-start">
-                                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 bg-green-600">
-                                        <CheckCircleIcon className="h-5 w-5 text-white" />
+                                    <div className="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center z-10 bg-green-600">
+                                        <CheckCircleIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                                     </div>
-                                    <div className="ml-4 flex-1">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-sm font-semibold text-gray-900">
+                                    <div className="ml-3 sm:ml-4 flex-1 min-w-0">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                                            <h3 className="text-xs sm:text-sm font-semibold text-gray-900">
                                                 Delivered
                                             </h3>
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-[10px] sm:text-xs text-gray-500">
                                                 {new Date(order.delivered_at).toLocaleString('en-US', {
-                                                    year: 'numeric',
                                                     month: 'short',
                                                     day: 'numeric',
                                                     hour: '2-digit',
@@ -637,7 +631,7 @@ export default function Show() {
                                                 })}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-gray-500 mt-1">
+                                        <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">
                                             Order has been successfully delivered
                                         </p>
                                     </div>
@@ -647,17 +641,16 @@ export default function Show() {
                             {/* Cancelled */}
                             {order.cancelled_at && (
                                 <div className="relative flex items-start">
-                                    <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center z-10 bg-red-500">
-                                        <XCircleIcon className="h-5 w-5 text-white" />
+                                    <div className="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center z-10 bg-red-500">
+                                        <XCircleIcon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                                     </div>
-                                    <div className="ml-4 flex-1">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-sm font-semibold text-gray-900">
+                                    <div className="ml-3 sm:ml-4 flex-1 min-w-0">
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-2">
+                                            <h3 className="text-xs sm:text-sm font-semibold text-gray-900">
                                                 Cancelled
                                             </h3>
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-[10px] sm:text-xs text-gray-500">
                                                 {new Date(order.cancelled_at).toLocaleString('en-US', {
-                                                    year: 'numeric',
                                                     month: 'short',
                                                     day: 'numeric',
                                                     hour: '2-digit',
@@ -665,7 +658,7 @@ export default function Show() {
                                                 })}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-gray-500 mt-1">
+                                        <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">
                                             Order has been cancelled
                                         </p>
                                     </div>
@@ -699,26 +692,22 @@ export default function Show() {
                     orderItems={order?.items || []}
                 />
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                     {/* Order Items */}
                     <div className="lg:col-span-2">
-                        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                            <h2 className="text-xl font-bold mb-4">Order Items</h2>
+                        <div className="bg-white rounded-lg shadow-md p-4 sm:p-5 lg:p-6 mb-4 sm:mb-5">
+                            <h2 className="text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4">Order Items</h2>
                             
-                            <div className="space-y-4">
+                            <div className="space-y-3 sm:space-y-4">
                                 {items.map((item: any) => {
                                     const product = item.product;
                                     const primaryImage = product?.media?.find((m: any) => m.is_primary) || product?.media?.[0];
-                                    
-                                    // Item-level return/replacement status
-                                    const hasReturnStatus = item.return_status;
-                                    const hasReplacementStatus = item.replacement_status;
                                     const imageUrl = primaryImage?.url || primaryImage?.file_path || '';
                                     
                                     return (
-                                        <div key={item.id} className="flex gap-4 pb-4 border-b last:border-b-0">
+                                        <div key={item.id} className="flex gap-2 sm:gap-3 lg:gap-4 pb-3 sm:pb-4 border-b last:border-b-0">
                                             <div className="flex-shrink-0">
-                                                <div className="w-20 h-20 bg-gray-200 rounded overflow-hidden">
+                                                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-200 rounded overflow-hidden">
                                                     {imageUrl ? (
                                                         <img 
                                                             src={imageUrl} 
@@ -731,48 +720,48 @@ export default function Show() {
                                                 </div>
                                             </div>
                                             
-                                            <div className="flex-1">
-                                                <h3 className="font-semibold text-lg">
+                                            <div className="flex-1 min-w-0">
+                                                <h3 className="font-semibold text-sm sm:text-base lg:text-lg line-clamp-2">
                                                     {item.product_name || product?.product_name}
                                                 </h3>
                                                 {item.product_sku && (
-                                                    <p className="text-sm text-gray-500">SKU: {item.product_sku}</p>
+                                                    <p className="text-xs sm:text-sm text-gray-500">SKU: {item.product_sku}</p>
                                                 )}
                                                 {(item.size || item.color) && (
-                                                    <p className="text-sm text-gray-500">
+                                                    <p className="text-xs sm:text-sm text-gray-500">
                                                         {item.size && `Size: ${item.size} `}
                                                         {item.color && `Color: ${item.color}`}
                                                     </p>
                                                 )}
-                                                <p className="text-sm text-gray-600 mt-1">
+                                                <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">
                                                     Quantity: {item.quantity} × ₹{Number(item.price || 0).toFixed(2)}
                                                 </p>
-                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                <div className="flex flex-wrap gap-1.5 sm:gap-2 mt-1.5 sm:mt-2">
                                                     {/* Return Eligibility Badge */}
                                                     {item.is_returnable !== false ? (
-                                                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                                                        <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-medium bg-green-100 text-green-800">
                                                             ✓ Returnable
                                                         </span>
                                                     ) : (
-                                                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                        <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-medium bg-red-100 text-red-800">
                                                             ✗ Not Returnable
                                                         </span>
                                                     )}
                                                     
                                                     {/* Replacement Eligibility Badge */}
                                                     {item.is_replaceable !== false ? (
-                                                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
+                                                        <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-medium bg-blue-100 text-blue-800">
                                                             🔄 Replaceable
                                                         </span>
                                                     ) : (
-                                                        <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                                                        <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-medium bg-red-100 text-red-800">
                                                             ✗ Not Replaceable
                                                         </span>
                                                     )}
                                                     
                                                     {/* Item Return Status */}
                                                     {item.return_status && (
-                                                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                                        <span className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-medium ${
                                                             item.return_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                                                             item.return_status === 'approved' ? 'bg-green-100 text-green-800' :
                                                             item.return_status === 'rejected' ? 'bg-red-100 text-red-800' :
@@ -787,7 +776,7 @@ export default function Show() {
                                                     
                                                     {/* Item Replacement Status */}
                                                     {item.replacement_status && (
-                                                        <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                                                        <span className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs font-medium ${
                                                             item.replacement_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                                                             item.replacement_status === 'approved' ? 'bg-green-100 text-green-800' :
                                                             item.replacement_status === 'rejected' ? 'bg-red-100 text-red-800' :
@@ -802,8 +791,8 @@ export default function Show() {
                                                 </div>
                                             </div>
                                             
-                                            <div className="text-right">
-                                                <p className="font-bold text-indigo-600">
+                                            <div className="text-right flex-shrink-0">
+                                                <p className="font-bold text-sm sm:text-base lg:text-lg text-indigo-600">
                                                     ₹{Number(item.subtotal || 0).toFixed(2)}
                                                 </p>
                                             </div>
@@ -814,24 +803,24 @@ export default function Show() {
                         </div>
 
                         {/* Shipping Information */}
-                        <div className="bg-white rounded-lg shadow-md p-6">
-                            <h2 className="text-xl font-bold mb-4">Shipping Information</h2>
+                        <div className="bg-white rounded-lg shadow-md p-4 sm:p-5 lg:p-6">
+                            <h2 className="text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4">Shipping Information</h2>
                             
-                            <div className="space-y-3">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2 sm:space-y-3">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                                     <div>
-                                        <p><span className="font-semibold">Name:</span> {order.name}</p>
-                                        <p><span className="font-semibold">Email:</span> {order.email}</p>
+                                        <p className="text-xs sm:text-sm"><span className="font-semibold">Name:</span> {order.name}</p>
+                                        <p className="text-xs sm:text-sm"><span className="font-semibold">Email:</span> {order.email}</p>
                                         {order.receiver_name && (
-                                            <p><span className="font-semibold">Receiver Name:</span> {order.receiver_name}</p>
+                                            <p className="text-xs sm:text-sm"><span className="font-semibold">Receiver Name:</span> {order.receiver_name}</p>
                                         )}
-                                        <p><span className="font-semibold">Receiver Number:</span> {order.receiver_number || order.phone}</p>
+                                        <p className="text-xs sm:text-sm"><span className="font-semibold">Receiver Number:</span> {order.receiver_number || order.phone}</p>
                                     </div>
                                     <div>
                                         {order.address_type && (
-                                            <p>
+                                            <p className="text-xs sm:text-sm">
                                                 <span className="font-semibold">Address Type:</span>{' '}
-                                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 capitalize">
+                                                <span className="inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium bg-indigo-100 text-indigo-800 capitalize">
                                                     {order.address_type === 'home' ? 'Home' : order.address_type === 'office' ? 'Office' : 'Other'}
                                                 </span>
                                             </p>
@@ -840,66 +829,66 @@ export default function Show() {
                                 </div>
                                 
                                 <div className="pt-2 border-t">
-                                    <p className="font-semibold mb-2">Address Details:</p>
-                                    <p><span className="font-semibold">Address:</span> {order.address}</p>
+                                    <p className="text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">Address Details:</p>
+                                    <p className="text-xs sm:text-sm"><span className="font-semibold">Address:</span> {order.address}</p>
                                     {order.house_no && (
-                                        <p><span className="font-semibold">House No:</span> {order.house_no}</p>
+                                        <p className="text-xs sm:text-sm"><span className="font-semibold">House No:</span> {order.house_no}</p>
                                     )}
                                     {order.floor_no && (
-                                        <p><span className="font-semibold">Floor No:</span> {order.floor_no}</p>
+                                        <p className="text-xs sm:text-sm"><span className="font-semibold">Floor No:</span> {order.floor_no}</p>
                                     )}
                                     {order.building_name && (
-                                        <p><span className="font-semibold">Building/Apartment:</span> {order.building_name}</p>
+                                        <p className="text-xs sm:text-sm"><span className="font-semibold">Building/Apartment:</span> {order.building_name}</p>
                                     )}
                                     {order.landmark && (
-                                        <p><span className="font-semibold">Landmark/Area:</span> {order.landmark}</p>
+                                        <p className="text-xs sm:text-sm"><span className="font-semibold">Landmark/Area:</span> {order.landmark}</p>
                                     )}
                                 </div>
                                 
                                 <div className="pt-2 border-t">
-                                    <p className="font-semibold mb-2">Location:</p>
+                                    <p className="text-xs sm:text-sm font-semibold mb-1.5 sm:mb-2">Location:</p>
                                     {order.district && (
-                                        <p><span className="font-semibold">District:</span> {order.district}</p>
+                                        <p className="text-xs sm:text-sm"><span className="font-semibold">District:</span> {order.district}</p>
                                     )}
-                                    <p><span className="font-semibold">City:</span> {order.city}</p>
-                                    <p><span className="font-semibold">Postal Code:</span> {order.postal_code}</p>
+                                    <p className="text-xs sm:text-sm"><span className="font-semibold">City:</span> {order.city}</p>
+                                    <p className="text-xs sm:text-sm"><span className="font-semibold">Postal Code:</span> {order.postal_code}</p>
                                     {order.state && (
-                                        <p><span className="font-semibold">State:</span> {order.state}</p>
+                                        <p className="text-xs sm:text-sm"><span className="font-semibold">State:</span> {order.state}</p>
                                     )}
-                                    <p><span className="font-semibold">Country:</span> {order.country}</p>
+                                    <p className="text-xs sm:text-sm"><span className="font-semibold">Country:</span> {order.country}</p>
                                 </div>
 
                                 {/* Delivery Area Display */}
                                 {order.delivery_area && (
-                                    <div className="pt-4 border-t">
-                                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-4 border-2 border-indigo-200">
-                                            <div className="flex items-center justify-between mb-3">
-                                                <p className="font-semibold text-gray-900">Delivery Area / Store:</p>
-                                                <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-green-100 text-green-800 border border-green-300">
-                                                    <svg className="w-3.5 h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <div className="pt-3 sm:pt-4 border-t">
+                                        <div className="bg-gradient-to-r from-indigo-50 to-purple-50 rounded-lg p-3 sm:p-4 border-2 border-indigo-200">
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 mb-2 sm:mb-3">
+                                                <p className="text-xs sm:text-sm font-semibold text-gray-900">Delivery Area / Store:</p>
+                                                <span className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-semibold bg-green-100 text-green-800 border border-green-300">
+                                                    <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1" fill="currentColor" viewBox="0 0 20 20">
                                                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                                     </svg>
                                                     Confirmed
                                                 </span>
                                             </div>
                                             
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+                                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                                 </svg>
-                                                <span className="text-lg font-bold text-indigo-900">
+                                                <span className="text-sm sm:text-base lg:text-lg font-bold text-indigo-900">
                                                     {deliveryAreaLabels[order.delivery_area] || order.delivery_area}
                                                 </span>
                                             </div>
                                             
-                                            <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-md p-3">
-                                                <svg className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div className="flex items-start gap-1.5 sm:gap-2 bg-blue-50 border border-blue-200 rounded-md p-2 sm:p-3">
+                                                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
                                                 <div className="flex-1">
-                                                    <p className="text-xs font-semibold text-blue-900 mb-0.5">Delivery Store Information</p>
-                                                    <p className="text-xs text-blue-700">
+                                                    <p className="text-[10px] sm:text-xs font-semibold text-blue-900 mb-0.5">Delivery Store Information</p>
+                                                    <p className="text-[10px] sm:text-xs text-blue-700">
                                                         Your order will be delivered from the nearest store to this area. 
                                                         Delivery times may vary based on area and availability.
                                                     </p>
@@ -910,7 +899,7 @@ export default function Show() {
                                 )}
                                 
                                 <div className="pt-2 border-t">
-                                    <p>
+                                    <p className="text-xs sm:text-sm">
                                         <span className="font-semibold">Payment Method:</span>{' '}
                                         <span className="capitalize">Cash on Delivery</span>
                                     </p>
@@ -918,28 +907,28 @@ export default function Show() {
                                 
                                 {/* Delivery Boy Information - Only show when order is NOT verified/delivered */}
                                 {order.delivery_boy && !order.otp_verified && order.status !== 'delivered' && (
-                                    <div className="mt-4 pt-4 border-t">
-                                        <p className="text-sm font-semibold text-gray-900 mb-2">Delivery Boy</p>
-                                        <p className="text-sm text-gray-700">{order.delivery_boy.name}</p>
+                                    <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t">
+                                        <p className="text-xs sm:text-sm font-semibold text-gray-900 mb-1.5 sm:mb-2">Delivery Boy</p>
+                                        <p className="text-xs sm:text-sm text-gray-700">{order.delivery_boy.name}</p>
                                         {order.delivery_boy.phone && (
-                                            <p className="text-sm text-gray-700">Phone: {order.delivery_boy.phone}</p>
+                                            <p className="text-xs sm:text-sm text-gray-700">Phone: {order.delivery_boy.phone}</p>
                                         )}
                                     </div>
                                 )}
 
                                 {/* OTP Display - Only show when OTP is generated and NOT verified */}
                                 {order.otp_code && !order.otp_verified && (
-                                    <div className="mt-4 pt-4 border-t">
-                                        <p className="text-sm font-semibold text-gray-900 mb-2">Delivery OTP</p>
-                                        <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4">
-                                            <p className="text-xs text-gray-600 mb-1">Share this OTP with the delivery boy to complete delivery</p>
-                                            <p className="text-2xl font-mono font-bold text-indigo-600 text-center">{order.otp_code}</p>
-                                            <p className="text-xs text-gray-500 text-center mt-2">Pending verification</p>
+                                    <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t">
+                                        <p className="text-xs sm:text-sm font-semibold text-gray-900 mb-1.5 sm:mb-2">Delivery OTP</p>
+                                        <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-3 sm:p-4">
+                                            <p className="text-[10px] sm:text-xs text-gray-600 mb-1">Share this OTP with the delivery boy to complete delivery</p>
+                                            <p className="text-xl sm:text-2xl font-mono font-bold text-indigo-600 text-center">{order.otp_code}</p>
+                                            <p className="text-[10px] sm:text-xs text-gray-500 text-center mt-1.5 sm:mt-2">Pending verification</p>
                                         </div>
                                     </div>
                                 )}
                                 {order.notes && (
-                                    <p className="mt-4">
+                                    <p className="mt-3 sm:mt-4 text-xs sm:text-sm">
                                         <span className="font-semibold">Notes:</span> {order.notes}
                                     </p>
                                 )}
@@ -949,32 +938,32 @@ export default function Show() {
 
                     {/* Order Summary */}
                     <div className="lg:col-span-1">
-                        <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-                            <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+                        <div className="bg-white rounded-lg shadow-md p-4 sm:p-5 lg:p-6 sticky top-4">
+                            <h2 className="text-base sm:text-lg lg:text-xl font-bold mb-3 sm:mb-4">Order Summary</h2>
                             
-                            <div className="space-y-2 mb-4">
-                                <div className="flex justify-between text-gray-600">
+                            <div className="space-y-1.5 sm:space-y-2 mb-3 sm:mb-4">
+                                <div className="flex justify-between text-xs sm:text-sm text-gray-600">
                                     <span>Subtotal</span>
                                     <span>₹{subtotal.toFixed(2)}</span>
                                 </div>
                                 {discount > 0 && order.coupon_code && (
-                                    <div className="flex justify-between text-green-600">
+                                    <div className="flex justify-between text-xs sm:text-sm text-green-600">
                                         <span>Discount ({order.coupon_code.code})</span>
                                         <span>-₹{discount.toFixed(2)}</span>
                                     </div>
                                 )}
-                                <div className="flex justify-between text-gray-600">
+                                <div className="flex justify-between text-xs sm:text-sm text-gray-600">
                                     <span>Tax</span>
                                     <span>₹{tax.toFixed(2)}</span>
                                 </div>
-                                <div className="flex justify-between text-gray-600">
+                                <div className="flex justify-between text-xs sm:text-sm text-gray-600">
                                     <span>Shipping</span>
                                     <span>₹{shipping.toFixed(2)}</span>
                                 </div>
                             </div>
                             
-                            <div className="border-t pt-4 mb-4">
-                                <div className="flex justify-between text-lg font-bold">
+                            <div className="border-t pt-3 sm:pt-4 mb-3 sm:mb-4">
+                                <div className="flex justify-between text-base sm:text-lg font-bold">
                                     <span>Total</span>
                                     <span>₹{total.toFixed(2)}</span>
                                 </div>
