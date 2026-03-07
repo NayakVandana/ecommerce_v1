@@ -79,41 +79,41 @@ export default function Contact() {
         <AppLayout>
             {/* Hero Section */}
             <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 text-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
                     <div className="text-center">
-                        <h1 className="text-4xl md:text-5xl font-bold mb-4">Get in Touch</h1>
-                        <p className="text-xl text-indigo-100 max-w-2xl mx-auto">
+                        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">Get in Touch</h1>
+                        <p className="text-sm sm:text-base lg:text-xl text-indigo-100 max-w-2xl mx-auto">
                             Have a question or need assistance? We're here to help! Reach out to us and we'll respond as soon as possible.
                         </p>
                     </div>
                 </div>
             </div>
 
-            <div className="bg-gray-50 py-16">
+            <div className="bg-gray-50 py-8 sm:py-12 lg:py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Contact Information Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
-                        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
-                            <div className="bg-indigo-100 w-14 h-14 rounded-lg flex items-center justify-center mb-4">
-                                <EnvelopeIcon className="h-7 w-7 text-indigo-600" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12 lg:mb-16">
+                        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow duration-300">
+                            <div className="bg-indigo-100 w-12 h-12 sm:w-14 sm:h-14 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                                <EnvelopeIcon className="h-6 w-6 sm:h-7 sm:w-7 text-indigo-600" />
                             </div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Email Us</h3>
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1.5 sm:mb-2">Email Us</h3>
                             <a href="mailto:support@selorise.com" className="text-gray-600 text-sm hover:text-indigo-600 hover:underline block">support@selorise.com</a>
                         </div>
 
-                        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
-                            <div className="bg-indigo-100 w-14 h-14 rounded-lg flex items-center justify-center mb-4">
-                                <PhoneIcon className="h-7 w-7 text-indigo-600" />
+                        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow duration-300">
+                            <div className="bg-indigo-100 w-12 h-12 sm:w-14 sm:h-14 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                                <PhoneIcon className="h-6 w-6 sm:h-7 sm:w-7 text-indigo-600" />
                             </div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Call Us</h3>
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1.5 sm:mb-2">Call Us</h3>
                             <a href="tel:8140767335" className="text-gray-600 text-sm hover:text-indigo-600 hover:underline block">8140767335</a>
                         </div>
 
-                        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
-                            <div className="bg-indigo-100 w-14 h-14 rounded-lg flex items-center justify-center mb-4">
-                                <ClockIcon className="h-7 w-7 text-indigo-600" />
+                        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 hover:shadow-xl transition-shadow duration-300">
+                            <div className="bg-indigo-100 w-12 h-12 sm:w-14 sm:h-14 rounded-lg flex items-center justify-center mb-3 sm:mb-4">
+                                <ClockIcon className="h-6 w-6 sm:h-7 sm:w-7 text-indigo-600" />
                             </div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Business Hours</h3>
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1.5 sm:mb-2">Business Hours</h3>
                             <p className="text-gray-600 text-sm">Mon - Fri: 9:00 AM - 6:00 PM</p>
                             <p className="text-gray-600 text-sm">Sat: 10:00 AM - 4:00 PM</p>
                         </div>
@@ -122,14 +122,14 @@ export default function Contact() {
 
                     {/* Contact Form Section */}
                     <div className="max-w-4xl mx-auto">
-                        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
-                            <div className="text-center mb-10">
-                                <h2 className="text-3xl font-bold text-gray-900 mb-3">Send us a Message</h2>
-                                <p className="text-gray-600">Fill out the form below and we'll get back to you within 24 hours.</p>
+                        <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 md:p-8 lg:p-12">
+                            <div className="text-center mb-6 sm:mb-8 lg:mb-10">
+                                <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">Send us a Message</h2>
+                                <p className="text-sm sm:text-base text-gray-600">Fill out the form below and we'll get back to you within 24 hours.</p>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                                     <FormInput
                                         label="Your Name"
                                         id="name"

@@ -708,11 +708,11 @@ export default function Show() {
                         </div>
                         
                         {/* Right Section - Product Details */}
-                        <div className="md:w-3/5 lg:w-1/2 p-3 sm:p-4 md:p-6 lg:p-8">
+                        <div className="md:w-3/5 lg:w-1/2 p-3 sm:p-4 md:p-5 lg:p-6">
                             {/* Product Title */}
-                            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">{product.product_name}</h1>
+                            <h1 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 sm:mb-3">{product.product_name}</h1>
                              {/* Description */}
-                            <p className="text-sm sm:text-base text-gray-700 mb-4 sm:mb-6 md:mb-8 leading-relaxed">{product.description}</p>
+                            <p className="text-xs sm:text-sm lg:text-base text-gray-700 mb-3 sm:mb-4 md:mb-6 leading-relaxed">{product.description}</p>
                                 {/* Fabrics - Only for Fashion Category */}
                             {(() => {
                                 // Check if category is Fashion or has Fashion as parent

@@ -270,7 +270,7 @@ export default function Show() {
                         </p> */}
                     </Link>
                     <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
-                        <p className="text-base sm:text-xl lg:text-2xl font-bold text-indigo-600">
+                        <p className="text-sm sm:text-base lg:text-xl font-bold text-indigo-600">
                             ₹{displayPrice}
                         </p>
                         {mrp && mrp > displayPrice && (
@@ -317,14 +317,14 @@ export default function Show() {
         return (
             <AppLayout>
                 <div className="min-h-screen bg-gray-50">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
                         <Link href="/categories" className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 mb-6">
                             <ArrowLeftIcon className="h-5 w-5" />
                             <span>Back to Categories</span>
                         </Link>
                         <div className="text-center py-20">
                             <TagIcon className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                            <h2 className="text-2xl font-bold text-gray-900 mb-2">Category Not Found</h2>
+                            <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-2">Category Not Found</h2>
                             <p className="text-gray-600 mb-6">The category you're looking for doesn't exist.</p>
                             <Link
                                 href="/"
@@ -360,7 +360,7 @@ export default function Show() {
     return (
         <AppLayout>
             <div className="min-h-screen bg-gray-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
                     {/* Breadcrumb */}
                     <nav className="mb-6">
                         <ol className="flex items-center space-x-2 text-sm">
@@ -697,8 +697,8 @@ export default function Show() {
                         {/* Products Section */}
                         <div className="flex-1">
                             {/* Mobile Category Title */}
-                            <div className="lg:hidden mb-4">
-                                <h1 className="text-2xl font-bold text-gray-900">{category.name}</h1>
+                            <div className="lg:hidden mb-3 sm:mb-4">
+                                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{category.name}</h1>
                                 {products && (
                                     <p className="text-gray-500 text-xs mt-1">
                                         {products.total || 0} {products.total === 1 ? 'product' : 'products'} found
@@ -707,9 +707,9 @@ export default function Show() {
                             </div>
 
                             {/* Header with Sort - Hidden on mobile, shown on desktop */}
-                            <div className="hidden lg:flex items-center justify-between mb-6">
+                            <div className="hidden lg:flex items-center justify-between mb-4 sm:mb-6">
                                 <div>
-                                    <h1 className="text-3xl font-bold text-gray-900">{category.name}</h1>
+                                    <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">{category.name}</h1>
                                     {products && (
                                         <p className="text-gray-500 text-sm mt-1">
                                             {products.total || 0} {products.total === 1 ? 'product' : 'products'} found

@@ -33,24 +33,24 @@ export default function FAQ() {
 
     return (
         <AppLayout>
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <h1 className="text-3xl font-bold mb-6">Frequently Asked Questions</h1>
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6">Frequently Asked Questions</h1>
                 
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                     {faqs.map((faq, index) => (
                         <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
                             <button
                                 onClick={() => setOpenIndex(openIndex === index ? -1 : index)}
-                                className="w-full px-6 py-4 text-left flex justify-between items-center hover:bg-gray-50 transition"
+                                className="w-full px-4 sm:px-6 py-3 sm:py-4 text-left flex justify-between items-center hover:bg-gray-50 transition"
                             >
-                                <span className="font-semibold text-lg">{faq.question}</span>
+                                <span className="font-semibold text-sm sm:text-base lg:text-lg">{faq.question}</span>
                                 <span className="text-gray-400">
                                     {openIndex === index ? '−' : '+'}
                                 </span>
                             </button>
                             {openIndex === index && openIndex >= 0 && (
-                                <div className="px-6 py-4 border-t border-gray-200">
-                                    <p className="text-gray-600">{faq.answer}</p>
+                                <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200">
+                                    <p className="text-sm sm:text-base text-gray-600">{faq.answer}</p>
                                 </div>
                             )}
                         </div>

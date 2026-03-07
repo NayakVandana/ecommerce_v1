@@ -118,9 +118,9 @@ export default function Index() {
 
     return (
         <AppLayout>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900">My Wishlist</h1>
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">My Wishlist</h1>
                     {wishlist.length > 0 && (
                         <button
                             onClick={handleClearWishlist}

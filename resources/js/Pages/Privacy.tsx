@@ -3,12 +3,12 @@ import AppLayout from './Layouts/AppLayout';
 export default function Privacy() {
     return (
         <AppLayout>
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <h1 className="text-3xl font-bold mb-6">Privacy Policy</h1>
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6">Privacy Policy</h1>
                 
-                <div className="bg-white rounded-lg shadow-md p-8 space-y-6">
+                <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 lg:p-8 space-y-4 sm:space-y-6">
                     <section>
-                        <h2 className="text-2xl font-semibold mb-4">Information We Collect</h2>
+                        <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 sm:mb-4">Information We Collect</h2>
                         <p className="text-gray-600 leading-relaxed mb-4">
                             We collect information that you provide directly to us, including:
                         </p>
@@ -21,7 +21,7 @@ export default function Privacy() {
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-semibold mb-4">How We Use Your Information</h2>
+                        <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 sm:mb-4">How We Use Your Information</h2>
                         <p className="text-gray-600 leading-relaxed">
                             We use the information we collect to process your orders, communicate with you about your 
                             purchases, and improve our services. We do not sell your personal information to third parties.
@@ -29,7 +29,7 @@ export default function Privacy() {
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-semibold mb-4">Data Security</h2>
+                        <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 sm:mb-4">Data Security</h2>
                         <p className="text-gray-600 leading-relaxed">
                             We implement appropriate security measures to protect your personal information. All payment 
                             transactions are encrypted and processed securely.
@@ -37,7 +37,7 @@ export default function Privacy() {
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-semibold mb-4">Cookies</h2>
+                        <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 sm:mb-4">Cookies</h2>
                         <p className="text-gray-600 leading-relaxed">
                             We use cookies to enhance your browsing experience and analyze site traffic. You can choose 
                             to disable cookies through your browser settings.
@@ -45,7 +45,7 @@ export default function Privacy() {
                     </section>
 
                     <section>
-                        <h2 className="text-2xl font-semibold mb-4">Contact Us</h2>
+                        <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold mb-2 sm:mb-4">Contact Us</h2>
                         <p className="text-gray-600 leading-relaxed">
                             If you have any questions about this Privacy Policy, please contact us at privacy@example.com.
                         </p>
