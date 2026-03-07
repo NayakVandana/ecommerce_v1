@@ -219,6 +219,37 @@ export default function Home() {
         setSpecificCategories(found);
     };
 
+    // Get category-specific image - ONLY for kurtas-suits and sarees, using user-provided PNG images
+    const getCategoryImage = (category: any): string => {
+        // First check if category has an image field (highest priority)
+        if (category.image) {
+            return category.image.startsWith('http') 
+                ? category.image 
+                : `/storage/${category.image}`;
+        }
+
+        // Strict mapping - ONLY kurtas-suits and sarees use their specific images
+        const categorySlug = (category.slug || '').toLowerCase().trim();
+        const categoryName = (category.name || '').toLowerCase().trim();
+        
+        // ONLY sarees category - use PNG image
+        if (categorySlug === 'sarees' || categoryName === 'sarees' || categoryName === 'saree') {
+            // Sarees category uses sarees image only
+            return '/images/categories/sarees-bg.png';
+        }
+        
+        // ONLY kurtas-suits category - use PNG image
+        if (categorySlug === 'kurtas-suits' || categorySlug === 'kurtas-and-suits' || 
+            categoryName === 'kurtas & suits' || categoryName === 'kurtas and suits' ||
+            categoryName === 'kurtas suits' || categoryName === 'kurtas-suits') {
+            // Kurtas-suits category uses kurtas-suits image only
+            return '/images/categories/kurtas-suits-bg.png';
+        }
+        
+        // All other categories use default (NEVER use sarees or kurtas-suits images)
+        return '/images/categories/default-bg.jpg';
+    };
+
     const handleSearch = async (e?: React.FormEvent, searchQuery?: string) => {
         if (e) {
             e.preventDefault();
@@ -575,31 +606,68 @@ export default function Home() {
 
                             {/* Featured Collections - Only show when not searching */}
                             {!searchTerm && specificCategories.length > 0 && (
-                                <div className="mb-8 sm:mb-10">                                    
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-                                        {specificCategories.map((category) => (
-                                            <Link
-                                                key={category.id}
-                                                href={`/categories/${category.slug}`}
-                                                className="group relative overflow-hidden rounded-lg bg-indigo-600 p-4 sm:p-6 text-white hover:bg-indigo-700 transition-colors"
-                                            >
-                                                <div className="flex items-center gap-3 sm:gap-4">
-                                                    <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
-                                                        <CategoryIcon 
-                                                            icon={category.icon} 
-                                                            className="h-6 w-6 sm:h-8 sm:w-8 text-white"
-                                                        />
+                                <div className="mb-6 sm:mb-8">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 lg:gap-6">
+                                        {specificCategories.map((category) => {
+                                            const categoryImage = getCategoryImage(category);
+                                            
+                                            return (
+                                                <Link
+                                                    key={category.id}
+                                                    href={`/categories/${category.slug}`}
+                                                    className="group relative overflow-hidden rounded-2xl sm:rounded-3xl h-64 sm:h-72 lg:h-80 text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-xl transform"
+                                                    style={{
+                                                        backgroundImage: `url('${categoryImage}')`,
+                                                        backgroundSize: 'cover',
+                                                        backgroundPosition: 'center',
+                                                        backgroundRepeat: 'no-repeat',
+                                                    }}
+                                                >
+                                                    {/* Gradient Overlay - Balanced for image visibility */}
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/60 via-purple-900/50 to-pink-900/60 group-hover:from-indigo-800/70 group-hover:via-purple-800/60 group-hover:to-pink-800/70 transition-all duration-300"></div>
+                                                    
+                                                    {/* Content */}
+                                                    <div className="relative z-10 h-full flex flex-col justify-between p-5 sm:p-6 lg:p-8">
+                                                        {/* Top Section */}
+                                                        <div className="flex justify-between items-start">
+                                                            <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-white/30 to-white/15 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/25 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                                                                <CategoryIcon 
+                                                                    icon={category.icon} 
+                                                                    className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-white drop-shadow-lg"
+                                                                />
+                                                            </div>
+                                                            <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full text-[10px] sm:text-xs font-bold text-white shadow-lg transform group-hover:scale-110 transition-all duration-300">
+                                                                ✨ New
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {/* Bottom Section */}
+                                                        <div className="space-y-2 sm:space-y-3">
+                                                            <div>
+                                                                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold break-words drop-shadow-lg leading-tight mb-1 sm:mb-2">
+                                                                    {category.name}
+                                                                </h3>
+                                                                <p className="text-white/90 text-sm sm:text-base lg:text-lg font-medium drop-shadow-md">
+                                                                    Discover our premium collection
+                                                                </p>
+                                                            </div>
+                                                            <div className="inline-flex items-center gap-2 bg-white text-indigo-700 px-4 py-2 sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 rounded-xl sm:rounded-2xl text-sm sm:text-base lg:text-lg font-bold shadow-lg group-hover:bg-indigo-50 group-hover:shadow-indigo-200/50 group-hover:scale-105 transition-all duration-300 transform">
+                                                                Shop Now
+                                                                <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                                                                </svg>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h3 className="text-lg sm:text-xl font-bold mb-1 break-words">{category.name}</h3>
-                                                        <p className="text-indigo-100 text-xs sm:text-sm mb-2">Explore our exclusive collection</p>
-                                                        <span className="text-xs sm:text-sm font-medium inline-flex items-center">
-                                                            Shop Now →
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </Link>
-                                        ))}
+                                                    
+                                                    {/* Animated Shine Effect */}
+                                                    <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/15 to-transparent"></div>
+                                                    
+                                                    {/* Subtle Border Glow */}
+                                                    <div className="absolute inset-0 rounded-2xl sm:rounded-3xl border border-white/20 group-hover:border-white/30 transition-all duration-300"></div>
+                                                </Link>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}
