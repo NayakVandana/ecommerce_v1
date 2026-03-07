@@ -1,8 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { 
     EnvelopeIcon, 
-    PhoneIcon, 
-    MapPinIcon
+    PhoneIcon
 } from '@heroicons/react/24/outline';
 
 export default function Footer() {
@@ -35,15 +34,11 @@ export default function Footer() {
                         <div className="space-y-3">
                             <div className="flex items-center text-gray-400 hover:text-white transition-colors">
                                 <EnvelopeIcon className="h-5 w-5 mr-3 flex-shrink-0" />
-                                <span className="text-sm">support@example.com</span>
+                                <a href="mailto:support@selorise.com" className="text-sm hover:underline">support@selorise.com</a>
                             </div>
                             <div className="flex items-center text-gray-400 hover:text-white transition-colors">
                                 <PhoneIcon className="h-5 w-5 mr-3 flex-shrink-0" />
-                                <span className="text-sm">+1 (555) 123-4567</span>
-                            </div>
-                            <div className="flex items-center text-gray-400 hover:text-white transition-colors">
-                                <MapPinIcon className="h-5 w-5 mr-3 flex-shrink-0" />
-                                <span className="text-sm">123 Business Street, City, State 12345</span>
+                                <a href="tel:8140767335" className="text-sm hover:underline">8140767335</a>
                             </div>
                         </div>
                     </div>
@@ -112,27 +107,9 @@ export default function Footer() {
                         </ul>
                     </div>
 
-                    {/* Newsletter & Social */}
+                    {/* Social Media */}
                     <div>
                         <h3 className="text-lg font-bold mb-6 text-white">Stay Connected</h3>
-                        <p className="text-gray-400 text-sm mb-4">
-                            Subscribe to our newsletter for exclusive deals and updates.
-                        </p>
-                        <div className="mb-6">
-                            <form className="flex gap-2">
-                                <input
-                                    type="email"
-                                    placeholder="Enter your email"
-                                    className="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm"
-                                />
-                                <button
-                                    type="submit"
-                                    className="px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 rounded-lg font-semibold text-white transition-all duration-200 transform hover:scale-105 text-sm"
-                                >
-                                    Subscribe
-                                </button>
-                            </form>
-                        </div>
                         <div>
                             <p className="text-gray-400 text-sm mb-3">Follow Us</p>
                             <div className="flex gap-3">

@@ -3,7 +3,7 @@ import { useState } from 'react';
 import FormInput from '../Components/FormInput/FormInput';
 import FormTextarea from '../Components/FormInput/FormTextarea';
 import Button from '../Components/Button';
-import { EnvelopeIcon, PhoneIcon, ClockIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import { EnvelopeIcon, PhoneIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { api } from '../utils/api';
 import toast from '../utils/toast';
 
@@ -92,14 +92,13 @@ export default function Contact() {
             <div className="bg-gray-50 py-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Contact Information Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
                         <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
                             <div className="bg-indigo-100 w-14 h-14 rounded-lg flex items-center justify-center mb-4">
                                 <EnvelopeIcon className="h-7 w-7 text-indigo-600" />
                             </div>
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">Email Us</h3>
-                            <p className="text-gray-600 text-sm">support@example.com</p>
-                            <p className="text-gray-600 text-sm">info@example.com</p>
+                            <a href="mailto:support@selorise.com" className="text-gray-600 text-sm hover:text-indigo-600 hover:underline block">support@selorise.com</a>
                         </div>
 
                         <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
@@ -107,8 +106,7 @@ export default function Contact() {
                                 <PhoneIcon className="h-7 w-7 text-indigo-600" />
                             </div>
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">Call Us</h3>
-                            <p className="text-gray-600 text-sm">+1 (555) 123-4567</p>
-                            <p className="text-gray-600 text-sm">+1 (555) 987-6543</p>
+                            <a href="tel:8140767335" className="text-gray-600 text-sm hover:text-indigo-600 hover:underline block">8140767335</a>
                         </div>
 
                         <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
@@ -120,14 +118,6 @@ export default function Contact() {
                             <p className="text-gray-600 text-sm">Sat: 10:00 AM - 4:00 PM</p>
                         </div>
 
-                        <div className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
-                            <div className="bg-indigo-100 w-14 h-14 rounded-lg flex items-center justify-center mb-4">
-                                <MapPinIcon className="h-7 w-7 text-indigo-600" />
-                            </div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-2">Visit Us</h3>
-                            <p className="text-gray-600 text-sm">123 Business Street</p>
-                            <p className="text-gray-600 text-sm">City, State 12345</p>
-                        </div>
                     </div>
 
                     {/* Contact Form Section */}
