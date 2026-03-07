@@ -301,10 +301,17 @@ export default function Index() {
                 // Clear cart count
                 window.dispatchEvent(new Event('cartUpdated'));
                 
-                // Redirect to order confirmation page
-                router.visit(`/orders/${response.data.data.id}`, {
-                    data: { order: response.data.data },
-                });
+                // Handle both single order and array of orders
+                const orders = Array.isArray(response.data.data) ? response.data.data : [response.data.data];
+                const firstOrder = orders[0];
+                
+                if (firstOrder && firstOrder.id) {
+                    // Redirect to order confirmation page
+                    router.visit(`/orders/${firstOrder.id}`);
+                } else {
+                    toast({ type: 'error', message: 'Order created but could not redirect. Please check your orders.' });
+                    router.visit('/orders');
+                }
             } else {
                 toast({ type: 'error', message: response.data?.message || 'Failed to place order' });
             }

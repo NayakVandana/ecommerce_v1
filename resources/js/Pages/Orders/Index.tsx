@@ -172,17 +172,19 @@ export default function Index() {
                                                     </div>
                                                     
                                                     {/* Action Button */}
-                                                    <div className="mt-4">
-                                                        <Link
-                                                            href={`/orders/${order.id}`}
-                                                            className="inline-flex items-center text-indigo-600 hover:text-indigo-900 font-medium text-sm"
-                                                        >
-                                                            View Details
-                                                            <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                                            </svg>
-                                                        </Link>
-                                                    </div>
+                                                    {order.id && (
+                                                        <div className="mt-4">
+                                                            <Link
+                                                                href={`/orders/${order.id}`}
+                                                                className="inline-flex items-center text-indigo-600 hover:text-indigo-900 font-medium text-sm"
+                                                            >
+                                                                View Details
+                                                                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                                </svg>
+                                                            </Link>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

@@ -16,7 +16,7 @@ import {
 
 export default function Show() {
     const { props } = usePage();
-    const orderId = (props as any).id;
+    const orderIdRaw = (props as any).id;
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [showCancelModal, setShowCancelModal] = useState(false);
@@ -25,6 +25,15 @@ export default function Show() {
     const [requestingReturn, setRequestingReturn] = useState(false);
     const [showReplacementModal, setShowReplacementModal] = useState(false);
     const [requestingReplacement, setRequestingReplacement] = useState(false);
+
+    // Normalize orderId to ensure it's a number
+    const getOrderId = (): number | null => {
+        if (!orderIdRaw) return null;
+        const id = typeof orderIdRaw === 'string' ? parseInt(orderIdRaw, 10) : orderIdRaw;
+        return isNaN(id) || id <= 0 ? null : id;
+    };
+
+    const orderId = getOrderId();
 
     // Delivery area label mapping
     const deliveryAreaLabels: { [key: string]: string } = {
@@ -42,18 +51,30 @@ export default function Show() {
     };
 
     useEffect(() => {
-        fetchOrder();
+        if (orderId) {
+            fetchOrder();
+        }
     }, [orderId]);
 
     const fetchOrder = async () => {
+        if (!orderId) {
+            setLoading(false);
+            toast({ type: 'error', message: 'Invalid order ID' });
+            return;
+        }
+
         try {
             setLoading(true);
             const response = await useOrderStore.show({ id: orderId });
             if (response.data?.status && response.data?.data) {
                 setOrder(response.data.data);
+            } else {
+                toast({ type: 'error', message: response.data?.message || 'Failed to fetch order' });
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching order:', error);
+            const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch order';
+            toast({ type: 'error', message: errorMessage });
         } finally {
             setLoading(false);
         }
