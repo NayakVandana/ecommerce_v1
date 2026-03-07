@@ -390,7 +390,7 @@ export default function Home() {
         return (
             <Card key={product.id} hover padding="none" className="overflow-hidden flex flex-col group bg-white border border-gray-100 hover:border-indigo-300 hover:shadow-xl transition-all duration-300">
                 <Link href={`/products/${product.id}`} className="relative overflow-hidden">
-                    <div className="h-48 sm:h-56 lg:h-64 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden">
+                    <div className="h-40 sm:h-48 lg:h-56 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center relative overflow-hidden">
                         {imageUrl ? (
                             <img 
                                 src={imageUrl} 
@@ -422,24 +422,24 @@ export default function Home() {
                         </button>
                     </div>
                 </Link>
-                <div className="p-2.5 sm:p-4 lg:p-5 flex-1 flex flex-col bg-white">
+                <div className="p-2 sm:p-3 lg:p-4 flex-1 flex flex-col bg-white">
                     <Link href={`/products/${product.id}`} className="flex-1 mb-2 sm:mb-3">
                         {product.brand && (
-                            <p className="text-[10px] sm:text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">{product.brand}</p>
+                            <p className="text-[9px] sm:text-[10px] font-semibold text-indigo-600 uppercase tracking-wider mb-0.5">{product.brand}</p>
                         )}
-                        <h3 className="font-bold text-sm sm:text-base lg:text-lg mb-1.5 sm:mb-2 line-clamp-2 hover:text-indigo-600 transition-colors text-gray-900 leading-tight sm:leading-snug">
+                        <h3 className="font-bold text-xs sm:text-sm lg:text-base mb-1 sm:mb-1.5 line-clamp-2 hover:text-indigo-600 transition-colors text-gray-900 leading-tight">
                             {product.product_name}
                         </h3>
                         {/* {product.description && (
                             <p className="text-gray-500 text-[10px] sm:text-xs lg:text-sm mb-2 sm:mb-3 line-clamp-2 leading-relaxed hidden sm:block">{product.description}</p>
                         )} */}
                     </Link>
-                    <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-4">
-                        <p className="text-base sm:text-xl lg:text-2xl font-bold text-gray-900">₹{Number(displayPrice).toFixed(2)}</p>
+                    <div className="flex items-center flex-wrap gap-1 sm:gap-1.5 mb-2 sm:mb-3">
+                        <p className="text-sm sm:text-base lg:text-lg font-bold text-gray-900">₹{Number(displayPrice).toFixed(2)}</p>
                         {mrp && mrp > displayPrice && (
                             <>
-                                <p className="text-gray-400 line-through text-xs sm:text-sm">₹{Number(mrp).toFixed(2)}</p>
-                                <span className="text-[10px] sm:text-xs font-semibold text-green-700 bg-green-100 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded">
+                                <p className="text-gray-400 line-through text-[10px] sm:text-xs">₹{Number(mrp).toFixed(2)}</p>
+                                <span className="text-[9px] sm:text-[10px] font-semibold text-green-700 bg-green-100 px-1 sm:px-1.5 py-0.5 rounded">
                                     Save ₹{Number(mrp - displayPrice).toFixed(2)}
                                 </span>
                             </>
@@ -451,7 +451,7 @@ export default function Home() {
                         <button
                             onClick={(e) => handleAddToCart(e, product)}
                             disabled={isAdding || (product.total_quantity !== null && product.total_quantity === 0)}
-                            className="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-2 sm:px-4 py-2 sm:py-2.5 lg:py-3 rounded-lg font-semibold text-xs sm:text-sm lg:text-base hover:from-indigo-700 hover:to-indigo-800 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 shadow-sm hover:shadow-md flex items-center justify-center"
+                            className="flex-1 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg font-semibold text-[10px] sm:text-xs lg:text-sm hover:from-indigo-700 hover:to-indigo-800 active:scale-95 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 shadow-sm hover:shadow-md flex items-center justify-center"
                         >
                             {isAdding ? (
                                 <span className="flex items-center justify-center gap-1 sm:gap-2">
@@ -494,13 +494,13 @@ export default function Home() {
         <AppLayout>
             <CategoriesHeader />
             {/* Search Bar */}
-            <div className="sticky top-36 z-30 bg-white border-b border-gray-200 shadow-sm py-4">
+            <div className="sticky top-36 z-30 bg-white border-b border-gray-200 shadow-sm py-2 sm:py-3">
                 <Container>
                     <div className="max-w-2xl mx-auto relative">
                                 <form onSubmit={handleSearch} className="relative">
                                     <div className="relative">
-                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                                         </div>
                                         <input
                                             ref={searchInputRef}
@@ -518,15 +518,15 @@ export default function Home() {
                                                 }
                                             }}
                                             placeholder="Search for products, brands, or keywords..."
-                                            className="block w-full pl-12 pr-12 py-4 border-2 border-gray-300 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                                            className="block w-full pl-10 sm:pl-12 pr-20 sm:pr-24 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
                                         />
                                         {searchTerm && (
                                             <button
                                                 type="button"
                                                 onClick={handleClearSearch}
-                                                className="absolute inset-y-0 right-12 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                                className="absolute inset-y-0 right-16 sm:right-20 pr-2 sm:pr-3 flex items-center text-gray-400 hover:text-gray-600"
                                             >
-                                                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <svg className="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                                 </svg>
                                             </button>
@@ -534,9 +534,9 @@ export default function Home() {
                                         <button
                                             type="submit"
                                             disabled={isSearching}
-                                            className="absolute inset-y-0 right-0 px-6 py-2 bg-indigo-600 text-white rounded-r-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                                            className="absolute inset-y-0 right-0 px-3 sm:px-4 lg:px-6 py-1.5 sm:py-2 bg-indigo-600 text-white rounded-r-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs sm:text-sm font-medium"
                                         >
-                                            {isSearching ? 'Searching...' : 'Search'}
+                                            {isSearching ? '...' : 'Search'}
                                         </button>
                                     </div>
                                 </form>
@@ -587,15 +587,15 @@ export default function Home() {
                 </Container>
             </div>
             <div className="min-h-screen bg-gray-50">
-                <Container className="py-8">
+                <Container className="py-4 sm:py-6 lg:py-8">
                     {loading ? (
                         <ProductCardSkeleton count={8} />
                     ) : (
                         <>
                             {/* Search Results Header */}
                             {searchTerm && (
-                                <div className="mb-4 sm:mb-6">
-                                    <h2 className="text-lg sm:text-xl font-semibold text-gray-900 break-words">
+                                <div className="mb-3 sm:mb-4">
+                                    <h2 className="text-sm sm:text-base font-semibold text-gray-900 break-words">
                                         {products.length > 0 
                                             ? `Search Results for "${searchTerm}" (${pagination?.total || products.length} found)`
                                             : `No products found for "${searchTerm}"`
@@ -606,8 +606,8 @@ export default function Home() {
 
                             {/* Featured Collections - Only show when not searching */}
                             {!searchTerm && specificCategories.length > 0 && (
-                                <div className="mb-6 sm:mb-8">
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 lg:gap-6">
+                                <div className="mb-4 sm:mb-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 lg:gap-5">
                                         {specificCategories.map((category) => {
                                             const categoryImage = getCategoryImage(category);
                                             
@@ -615,7 +615,7 @@ export default function Home() {
                                                 <Link
                                                     key={category.id}
                                                     href={`/categories/${category.slug}`}
-                                                    className="group relative overflow-hidden rounded-2xl sm:rounded-3xl h-64 sm:h-72 lg:h-80 text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-xl transform"
+                                                    className="group relative overflow-hidden rounded-xl sm:rounded-2xl h-48 sm:h-56 lg:h-64 text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-xl transform"
                                                     style={{
                                                         backgroundImage: `url('${categoryImage}')`,
                                                         backgroundSize: 'cover',
@@ -627,33 +627,33 @@ export default function Home() {
                                                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/60 via-purple-900/50 to-pink-900/60 group-hover:from-indigo-800/70 group-hover:via-purple-800/60 group-hover:to-pink-800/70 transition-all duration-300"></div>
                                                     
                                                     {/* Content */}
-                                                    <div className="relative z-10 h-full flex flex-col justify-between p-5 sm:p-6 lg:p-8">
+                                                    <div className="relative z-10 h-full flex flex-col justify-between p-4 sm:p-5 lg:p-6">
                                                         {/* Top Section */}
                                                         <div className="flex justify-between items-start">
-                                                            <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-white/30 to-white/15 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/25 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                                                            <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-lg sm:rounded-xl bg-gradient-to-br from-white/30 to-white/15 backdrop-blur-md flex items-center justify-center shadow-lg border border-white/25 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
                                                                 <CategoryIcon 
                                                                     icon={category.icon} 
-                                                                    className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-white drop-shadow-lg"
+                                                                    className="h-5 w-5 sm:h-6 sm:w-6 lg:h-7 lg:w-7 text-white drop-shadow-lg"
                                                                 />
                                                             </div>
-                                                            <div className="px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full text-[10px] sm:text-xs font-bold text-white shadow-lg transform group-hover:scale-110 transition-all duration-300">
+                                                            <div className="px-2 py-1 sm:px-3 sm:py-1.5 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full text-[9px] sm:text-[10px] font-bold text-white shadow-lg transform group-hover:scale-110 transition-all duration-300">
                                                                 ✨ New
                                                             </div>
                                                         </div>
                                                         
                                                         {/* Bottom Section */}
-                                                        <div className="space-y-2 sm:space-y-3">
+                                                        <div className="space-y-1.5 sm:space-y-2">
                                                             <div>
-                                                                <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold break-words drop-shadow-lg leading-tight mb-1 sm:mb-2">
+                                                                <h3 className="text-lg sm:text-xl lg:text-2xl font-extrabold break-words drop-shadow-lg leading-tight mb-1">
                                                                     {category.name}
                                                                 </h3>
-                                                                <p className="text-white/90 text-sm sm:text-base lg:text-lg font-medium drop-shadow-md">
+                                                                <p className="text-white/90 text-xs sm:text-sm lg:text-base font-medium drop-shadow-md">
                                                                     Discover our premium collection
                                                                 </p>
                                                             </div>
-                                                            <div className="inline-flex items-center gap-2 bg-white text-indigo-700 px-4 py-2 sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 rounded-xl sm:rounded-2xl text-sm sm:text-base lg:text-lg font-bold shadow-lg group-hover:bg-indigo-50 group-hover:shadow-indigo-200/50 group-hover:scale-105 transition-all duration-300 transform">
+                                                            <div className="inline-flex items-center gap-1.5 sm:gap-2 bg-white text-indigo-700 px-3 py-1.5 sm:px-4 sm:py-2 lg:px-5 lg:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm lg:text-base font-bold shadow-lg group-hover:bg-indigo-50 group-hover:shadow-indigo-200/50 group-hover:scale-105 transition-all duration-300 transform">
                                                                 Shop Now
-                                                                <svg className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <svg className="w-3 h-3 sm:w-4 sm:h-4 lg:w-5 lg:h-5 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                                                                 </svg>
                                                             </div>
@@ -685,7 +685,7 @@ export default function Home() {
                                             />
                                         </div>
                                     )}
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+                                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4">
                                         {products.map((product: any) => renderProductCard(product))}
                                     </div>
                                     
@@ -702,7 +702,7 @@ export default function Home() {
                             )}
 
                             {/* Recently Viewed Products */}
-                            <div className="mb-10">
+                            <div className="mb-6 sm:mb-8">
                                 <RecentlyViewedProducts limit={4} showMoreLink={true} />
                             </div>
                         </>

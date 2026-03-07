@@ -154,30 +154,11 @@ export default function Footer() {
                     </div>
                 </div>
 
-                {/* Payment Methods & Bottom Bar */}
+                {/* Bottom Bar */}
                 <div className="border-t border-gray-700 pt-8">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        {/* Payment Methods */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-gray-400 text-sm mr-2">We Accept:</span>
-                            <div className="flex gap-2">
-                                <div className="w-12 h-8 bg-white rounded flex items-center justify-center">
-                                    <span className="text-xs font-bold text-gray-800">VISA</span>
-                                </div>
-                                <div className="w-12 h-8 bg-white rounded flex items-center justify-center">
-                                    <span className="text-xs font-bold text-gray-800">MC</span>
-                                </div>
-                                <div className="w-12 h-8 bg-white rounded flex items-center justify-center">
-                                    <span className="text-xs font-bold text-gray-800">AMEX</span>
-                                </div>
-                                <div className="w-12 h-8 bg-white rounded flex items-center justify-center">
-                                    <span className="text-xs font-bold text-gray-800">PayPal</span>
-                                </div>
-                            </div>
-                        </div>
-
+                    <div className="flex justify-center items-center">
                         {/* Copyright */}
-                        <div className="text-center md:text-right">
+                        <div className="text-center">
                             <p className="text-gray-400 text-sm">
                                 &copy; {currentYear} <span className="font-display font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">Selorise</span>. All rights reserved.
                             </p>
