@@ -22,12 +22,12 @@ export default function Footer() {
                     {/* Company Info */}
                     <div className="lg:col-span-1">
                         <Link href="/" className="inline-block mb-6 group">
-                            <span className="relative inline-block px-4 py-2 rounded-lg">
-                                <span className="absolute inset-0 rounded-lg bg-gradient-to-r from-indigo-400/20 via-purple-400/20 to-pink-400/20 opacity-100 group-hover:opacity-100 transition-opacity duration-300"></span>
-                                <h2 className="relative text-2xl font-display font-extrabold bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent group-hover:from-indigo-300 group-hover:via-purple-300 group-hover:to-pink-300 transition-all tracking-tight drop-shadow-md">
-                                    Selorise
-                                </h2>
-                            </span>
+                            <img 
+                                src="/images/logo/light-mode-logo.png" 
+                                alt="Selorise Logo" 
+                                className="h-16 w-auto sm:h-20 sm:w-auto lg:h-24 lg:w-auto object-contain flex-shrink-0 transition-transform group-hover:scale-105"
+                                loading="eager"
+                            />
                         </Link>
                         <p className="text-gray-400 mb-6 leading-relaxed">
                             Your trusted destination for quality products. We bring you the best shopping experience with premium quality and excellent service.

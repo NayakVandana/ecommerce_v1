@@ -141,8 +141,13 @@ export default function AdminLayout({ children, currentPath }: any) {
                 <div className="flex flex-col h-full">
                     {/* Logo */}
                     <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-                        <Link href="/admin" className="flex items-center">
-                            <span className="text-xl font-bold text-indigo-600">Admin Panel</span>
+                        <Link href="/admin" className="flex items-center group">
+                            <img 
+                                src="/images/logo/light-mode-logo.png" 
+                                alt="Selorise Logo" 
+                                className="h-14 w-auto sm:h-16 sm:w-auto object-contain flex-shrink-0 transition-transform group-hover:scale-105"
+                                loading="eager"
+                            />
                         </Link>
                         <button
                             onClick={() => setSidebarOpen(false)}
