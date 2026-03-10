@@ -1,6 +1,6 @@
 import AppLayout from '../Layouts/AppLayout';
 import { Link } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import FormInput from '../../Components/FormInput/FormInput';
 import Button from '../../Components/Button';
 import { useAuthStore } from './useAuthStore';
@@ -20,7 +20,6 @@ export default function ForgotPassword() {
     const [passwordReset, setPasswordReset] = useState(false);
     const [verificationToken, setVerificationToken] = useState<string | null>(null);
     const [userEmail, setUserEmail] = useState<string | null>(null);
-    const [resendCooldown, setResendCooldown] = useState(0);
     const [resending, setResending] = useState(false);
 
     const handleSubmit = async (e: any) => {
@@ -57,7 +56,6 @@ export default function ForgotPassword() {
                 setOtpSent(true);
                 setVerificationToken(response.data.data?.verification_token || null);
                 setUserEmail(response.data.data?.email || null);
-                setResendCooldown(60); // Start 60 second cooldown
                 
                 // In development, log the OTP
                 if (response.data.data?.otp && import.meta.env.DEV) {
@@ -125,7 +123,7 @@ export default function ForgotPassword() {
     };
 
     const handleResendOtp = async () => {
-        if (resendCooldown > 0 || resending) return;
+        if (resending) return;
         
         try {
             setResending(true);
@@ -138,7 +136,6 @@ export default function ForgotPassword() {
             if (response.data?.status) {
                 setVerificationToken(response.data.data?.verification_token || null);
                 setUserEmail(response.data.data?.email || null);
-                setResendCooldown(60); // Start 60 second cooldown
                 setData({ ...data, otp: '' }); // Clear OTP input
                 
                 // In development, log the OTP
@@ -161,16 +158,6 @@ export default function ForgotPassword() {
             setResending(false);
         }
     };
-
-    // Countdown timer for resend OTP
-    useEffect(() => {
-        if (resendCooldown > 0) {
-            const timer = setTimeout(() => {
-                setResendCooldown(resendCooldown - 1);
-            }, 1000);
-            return () => clearTimeout(timer);
-        }
-    }, [resendCooldown]);
 
     const handleResetPassword = async (e: any) => {
         e.preventDefault();
@@ -352,20 +339,14 @@ export default function ForgotPassword() {
                             <div className="text-center space-y-2">
                                 <div className="flex items-center justify-center gap-2">
                                     <span className="text-sm text-gray-600">Didn't receive OTP?</span>
-                                    {resendCooldown > 0 ? (
-                                        <span className="text-sm text-gray-500">
-                                            Resend in {resendCooldown}s
-                                        </span>
-                                    ) : (
-                                        <button
-                                            type="button"
-                                            onClick={handleResendOtp}
-                                            disabled={resending}
-                                            className="text-sm font-medium text-indigo-600 hover:text-indigo-500 disabled:text-gray-400 disabled:cursor-not-allowed"
-                                        >
-                                            {resending ? 'Sending...' : 'Resend OTP'}
-                                        </button>
-                                    )}
+                                    <button
+                                        type="button"
+                                        onClick={handleResendOtp}
+                                        disabled={resending}
+                                        className="text-sm font-medium text-indigo-600 hover:text-indigo-500 disabled:text-gray-400 disabled:cursor-not-allowed"
+                                    >
+                                        {resending ? 'Sending...' : 'Resend OTP'}
+                                    </button>
                                 </div>
                                 <button
                                     type="button"
@@ -373,7 +354,6 @@ export default function ForgotPassword() {
                                         setOtpSent(false);
                                         setData({ ...data, otp: '' });
                                         setErrors({});
-                                        setResendCooldown(0);
                                     }}
                                     className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
                                 >

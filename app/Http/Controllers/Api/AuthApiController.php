@@ -10,6 +10,7 @@ use App\Models\UserLoginLog;
 use App\Models\VerificationToken;
 use App\Services\SessionTrackingService;
 use App\Services\TokenService;
+use App\Services\EmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -261,11 +262,10 @@ class AuthApiController extends Controller
             ]);
         }
 
-        // TODO: Send OTP via Email
-        // if ($userEmail) {
-        //     // Send Email with OTP
-        //     // Mail::to($userEmail)->send(new PasswordResetOTP($otp));
-        // }
+        // Send OTP via Email
+        if ($userEmail) {
+            EmailService::sendPasswordResetOTP($userEmail, $otp, $user->name ?? 'User');
+        }
 
         return $this->sendJsonResponse(true, 'If that email exists, we have sent an OTP.', [
             'verification_token' => app()->environment(['local', 'testing']) ? $verificationToken : null, // Only in dev
@@ -342,7 +342,10 @@ class AuthApiController extends Controller
             ]);
         }
 
-        // TODO: Send OTP via SMS/Email
+        // Send OTP via Email
+        if ($userEmail) {
+            EmailService::sendPasswordResetOTP($userEmail, $otp, $user->name ?? 'User');
+        }
         // if ($userPhone) {
         //     // Send SMS with OTP
         // }

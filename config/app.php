@@ -27,5 +27,9 @@ return [
     ])->toArray(),
   'payment_qr_code_url' => env('PAYMENT_QR_CODE_URL', ''),
   'payment_upi_id' => env('PAYMENT_UPI_ID', 'vandunayak4000@okaxis'),
+  'logo_url' => env('APP_LOGO_URL', '/images/logo/light-mode-logo.png'),
+  'app_store_url' => env('APP_STORE_URL', ''),
+  'play_store_url' => env('PLAY_STORE_URL', ''),
+  'website_url' => env('APP_URL', 'http://localhost'),
 ];
 

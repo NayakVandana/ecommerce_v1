@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Contact;
+use App\Services\EmailService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
 class ContactApiController extends Controller
@@ -37,9 +37,8 @@ class ContactApiController extends Controller
                 'subject' => $request->subject,
             ]);
 
-            // Here you can add email sending functionality if needed
-            // For example:
-            // Mail::to(config('mail.contact_email', 'support@example.com'))->send(new ContactFormMail($request->all()));
+            // Send email notification to support
+            EmailService::sendContactForm($request->all());
 
             return $this->sendJsonResponse(true, 'Thank you for contacting us! We will get back to you soon.', [], 200);
         } catch (\Exception $e) {
