@@ -329,7 +329,21 @@ export default function Navigation() {
                         </Link>
                         )}
                     </div>
-                    <div className="sm:hidden flex items-center">
+                    <div className="sm:hidden flex items-center gap-2">
+                        {/* Cart Icon for Mobile */}
+                        <Link
+                            href="/cart"
+                            className="relative inline-flex items-center justify-center p-2 rounded-md text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+                            title="Cart"
+                        >
+                            <ShoppingCartIcon className="h-6 w-6" />
+                            {cartCount > 0 && (
+                                <span className="absolute -top-1 -right-1 block min-w-[1.25rem] h-5 px-1.5 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-600 text-white text-xs font-bold flex items-center justify-center shadow-lg">
+                                    {cartCount > 99 ? '99+' : cartCount}
+                                </span>
+                            )}
+                        </Link>
+                        {/* Hamburger Menu Button */}
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                             className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition-colors"
